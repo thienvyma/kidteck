@@ -23,6 +23,9 @@
 # misc
 .DS_Store
 *.pem
+.agent/
+analysis_results.md
+architecture_state.json
 
 # debug
 npm-debug.log*

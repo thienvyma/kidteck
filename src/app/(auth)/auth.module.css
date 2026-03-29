@@ -1,0 +1,170 @@
+.authContainer {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gradient-primary);
+  padding: var(--space-md);
+}
+
+.authCard {
+  width: 100%;
+  max-width: 480px;
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  padding: var(--space-2xl);
+  position: relative;
+  overflow: hidden;
+}
+
+.logoContainer {
+  text-align: center;
+  margin-bottom: var(--space-xl);
+}
+
+.logo {
+  text-decoration: none;
+  display: inline-flex;
+}
+
+.title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-dark);
+  text-align: center;
+  margin-bottom: var(--space-xs);
+}
+
+.subtitle {
+  text-align: center;
+  color: var(--color-gray-700);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-xl);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.passwordHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-xs);
+}
+
+.passwordHeader .label {
+  margin-bottom: 0;
+}
+
+.forgotLink {
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.forgotLink:hover {
+  text-decoration: underline;
+}
+
+.passwordWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passwordWrapper input {
+  padding-right: 2.5rem;
+}
+
+.togglePassword {
+  position: absolute;
+  right: 0.75rem;
+  color: var(--color-gray-500);
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.togglePassword:hover {
+  color: var(--color-dark);
+}
+
+.submitBtn {
+  margin-top: var(--space-sm);
+  width: 100%;
+}
+
+.errorAlert {
+  background-color: rgba(225, 112, 85, 0.1);
+  color: var(--color-error);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-md);
+  border: 1px solid rgba(225, 112, 85, 0.2);
+  display: flex;
+  align-items: center;
+}
+
+.footer {
+  margin-top: var(--space-xl);
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-700);
+}
+
+.footerLink {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.footerLink:hover {
+  text-decoration: underline;
+}
+
+/* Two columns grid for register form */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+.checkboxContainer {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
+.checkboxContainer input[type="checkbox"] {
+  margin-top: 0.25rem;
+  accent-color: var(--color-primary);
+}
+
+.checkboxLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-700);
+  line-height: 1.4;
+}
+
+@media (max-width: 480px) {
+  .authCard {
+    padding: var(--space-xl) var(--space-lg);
+  }
+  
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
