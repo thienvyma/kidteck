@@ -33,7 +33,38 @@ function createAdminClient() {
 }
 
 function generateTemporaryPassword() {
-  return `KidTech@${Math.random().toString(36).slice(-6).toUpperCase()}`
+  return `AIgenlabs@${Math.random().toString(36).slice(-6).toUpperCase()}`
+}
+
+async function purgeStudentData(adminClient, studentId) {
+  const cleanupSummary = {
+    progress: 0,
+    enrollments: 0,
+    payments: 0,
+    profiles: 0,
+  }
+
+  const purgeTargets = [
+    ['progress', 'student_id', 'progress'],
+    ['enrollments', 'student_id', 'enrollments'],
+    ['payments', 'student_id', 'payments'],
+    ['profiles', 'id', 'profiles'],
+  ]
+
+  for (const [table, column, summaryKey] of purgeTargets) {
+    const { error, count } = await adminClient
+      .from(table)
+      .delete({ count: 'exact' })
+      .eq(column, studentId)
+
+    if (error) {
+      throw new Error(`Cleanup ${table} failed: ${error.message}`)
+    }
+
+    cleanupSummary[summaryKey] = count || 0
+  }
+
+  return cleanupSummary
 }
 
 export async function GET(request) {
@@ -156,14 +187,69 @@ export async function DELETE(request) {
       return NextResponse.json({ error: 'Missing id param' }, { status: 400 })
     }
 
-    const adminClient = createAdminClient()
-    const { error } = await adminClient.auth.admin.deleteUser(studentId)
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
+    if (studentId === auth.user?.id) {
+      return NextResponse.json(
+        { error: 'You cannot delete your own admin account' },
+        { status: 400 }
+      )
     }
 
-    return NextResponse.json({ success: true })
+    const adminClient = createAdminClient()
+    const { data: studentProfile, error: profileError } = await adminClient
+      .from('profiles')
+      .select('id, role, full_name')
+      .eq('id', studentId)
+      .maybeSingle()
+
+    if (profileError) {
+      return NextResponse.json({ error: profileError.message }, { status: 400 })
+    }
+
+    if (!studentProfile) {
+      return NextResponse.json({ error: 'Student profile not found' }, { status: 404 })
+    }
+
+    if (studentProfile.role !== 'student') {
+      return NextResponse.json(
+        { error: 'Only student accounts can be deleted from this endpoint' },
+        { status: 400 }
+      )
+    }
+
+    const deleteResult = await adminClient.auth.admin.deleteUser(studentId)
+    let fallbackCleanup = false
+
+    if (deleteResult.error) {
+      const errorMessage = deleteResult.error.message || ''
+      const constraintHint = /(foreign key|constraint|references|dependent)/i.test(
+        errorMessage
+      )
+
+      if (!constraintHint) {
+        return NextResponse.json({ error: errorMessage }, { status: 400 })
+      }
+
+      await purgeStudentData(adminClient, studentId)
+      fallbackCleanup = true
+
+      const retryDelete = await adminClient.auth.admin.deleteUser(studentId)
+      const retryErrorMessage = retryDelete.error?.message || ''
+      const userAlreadyMissing = /user not found/i.test(retryErrorMessage)
+
+      if (retryDelete.error && !userAlreadyMissing) {
+        return NextResponse.json({ error: retryErrorMessage }, { status: 400 })
+      }
+    }
+
+    const cleanup = await purgeStudentData(adminClient, studentId)
+
+    return NextResponse.json({
+      success: true,
+      studentId,
+      studentName: studentProfile.full_name || null,
+      cleanup,
+      fallbackCleanup,
+    })
   } catch (err) {
     console.error('update-student DELETE error:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

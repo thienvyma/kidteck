@@ -2,7 +2,7 @@ import StudentSidebar from '@/components/student/Sidebar'
 import styles from './student.module.css'
 
 export const metadata = {
-  title: 'KidTech — Student Portal',
+  title: 'AIgenlabs — Student Portal',
 }
 
 export default function StudentLayout({ children }) {

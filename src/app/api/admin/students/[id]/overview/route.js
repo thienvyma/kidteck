@@ -71,6 +71,7 @@ export async function GET(_request, { params }) {
       { data: enrollments, error: enrollmentsError },
       { data: progressRows, error: progressError },
       { data: payments, error: paymentsError },
+      { data: authUserData, error: authUserError },
     ] = await Promise.all([
       adminClient
         .from('levels')
@@ -112,10 +113,11 @@ export async function GET(_request, { params }) {
         .from('payments')
         .select('id, level_id, amount, status, method, transaction_id, created_at, paid_at')
         .eq('student_id', id),
+      adminClient.auth.admin.getUserById(id),
     ])
 
     const firstError =
-      levelsError || enrollmentsError || progressError || paymentsError
+      levelsError || enrollmentsError || progressError || paymentsError || authUserError
 
     if (firstError) {
       return NextResponse.json({ error: firstError.message }, { status: 400 })
@@ -210,8 +212,15 @@ export async function GET(_request, { params }) {
       }
     })
 
+    const account = {
+      email: authUserData?.user?.email || '',
+      lastSignInAt: authUserData?.user?.last_sign_in_at || null,
+      emailConfirmedAt: authUserData?.user?.email_confirmed_at || null,
+    }
+
     return NextResponse.json({
       profile,
+      account,
       packages,
       recentCompletions: recentCompletions.slice(0, 12),
       hasPaymentRecords: (payments || []).length > 0,

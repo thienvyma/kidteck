@@ -10,7 +10,7 @@ export const defaultLandingContent = {
     eyebrow: 'AI Literacy • Problem Solving • Project thật',
     title: 'Học AI để hiểu công nghệ, biết tự học đúng và làm chủ một dự án nhỏ',
     description:
-      'KidTech giúp học viên chuyển từ nhịp tiêu thụ màn hình ngắn sang nhịp học sâu hơn: biết tìm thông tin đáng tin, biết giải quyết vấn đề, hiểu AI đang phát triển tới đâu và dùng công nghệ như một công cụ để tạo ra giá trị thật.',
+      'AIgenlabs giúp học viên chuyển từ nhịp tiêu thụ màn hình ngắn sang nhịp học sâu hơn: biết tìm thông tin đáng tin, biết giải quyết vấn đề, hiểu AI đang phát triển tới đâu và dùng công nghệ như một công cụ để tạo ra giá trị thật.',
     primaryCtaLabel: 'Nhận lộ trình phù hợp',
     secondaryCtaLabel: 'Xem các level hiện có',
     trustItems: [
@@ -20,7 +20,7 @@ export const defaultLandingContent = {
     ],
   },
   pain: {
-    title: 'Những pain point cốt lõi mà KidTech đang giải quyết',
+    title: 'Những pain point cốt lõi mà AIgenlabs đang giải quyết',
     subtitle:
       'Trước khi nói đến build app hay làm project, nhiều học viên đang mắc kẹt ở 4 vấn đề nền tảng: nhịp tập trung, cách học, cách giải quyết vấn đề và cách hiểu về làn sóng AI.',
     items: [
@@ -55,7 +55,7 @@ export const defaultLandingContent = {
     ],
   },
   solution: {
-    title: 'KidTech thiên về tư duy điều phối và triển khai',
+    title: 'AIgenlabs thiên về tư duy điều phối và triển khai',
     subtitle:
       'Thay vì dừng ở prompt hay vibe coding, học viên được rèn 4 lớp nền tảng đi cùng nhau: tập trung sâu hơn, học đúng hơn, giải quyết vấn đề có hệ thống hơn và hiểu AI ở mức đủ chắc để thích nghi với sự thay đổi công nghệ.',
     beforeTitle: 'Làm theo cảm hứng',
@@ -170,7 +170,7 @@ export const defaultLandingContent = {
   commitment: {
     title: 'Những điều gia đình có thể kiểm chứng trong quá trình học',
     subtitle:
-      'KidTech ưu tiên trải nghiệm học thật, dữ liệu thật và sự minh bạch thay vì kể quá tay những điều sản phẩm chưa có.',
+      'AIgenlabs ưu tiên trải nghiệm học thật, dữ liệu thật và sự minh bạch thay vì kể quá tay những điều sản phẩm chưa có.',
     items: [
       {
         icon: '📊',
@@ -199,7 +199,7 @@ export const defaultLandingContent = {
     ],
     guaranteeTitle: 'Buổi đầu để kiểm tra độ phù hợp',
     guaranteeText:
-      'Nếu sau buổi học đầu tiên học viên thấy cách học chưa phù hợp, KidTech vẫn giữ chính sách hoàn tiền 100%.',
+      'Nếu sau buổi học đầu tiên học viên thấy cách học chưa phù hợp, AIgenlabs vẫn giữ chính sách hoàn tiền 100%.',
   },
   faq: {
     title: 'Câu hỏi thường gặp',
@@ -212,9 +212,9 @@ export const defaultLandingContent = {
           'Có. Điểm xuất phát không phải là syntax, mà là cách nghĩ về bài toán và workflow. AI hỗ trợ phần kỹ thuật, mentor hỗ trợ cách triển khai từng bước.',
       },
       {
-        question: 'KidTech khác gì với các khóa học prompt hay vibe coding ngắn hạn?',
+        question: 'AIgenlabs khác gì với các khóa học prompt hay vibe coding ngắn hạn?',
         answer:
-          'Prompt hay vibe coding chỉ là một phần. KidTech đi xa hơn ở tư duy vận hành: xác định mục tiêu, breakdown task, kiểm chất lượng, demo và cải tiến dự án.',
+          'Prompt hay vibe coding chỉ là một phần. AIgenlabs đi xa hơn ở tư duy vận hành: xác định mục tiêu, breakdown task, kiểm chất lượng, demo và cải tiến dự án.',
       },
       {
         question: 'Học viên có cần laptop mạnh không?',
@@ -234,21 +234,21 @@ export const defaultLandingContent = {
       {
         question: 'Nếu chưa phù hợp thì sao?',
         answer:
-          'KidTech vẫn giữ chính sách học thử và hoàn tiền sau buổi đầu nếu học viên chưa thấy phù hợp với cách học và cách triển khai.',
+          'AIgenlabs vẫn giữ chính sách học thử và hoàn tiền sau buổi đầu nếu học viên chưa thấy phù hợp với cách học và cách triển khai.',
       },
     ],
   },
   cta: {
     title: 'Trao đổi để chọn lộ trình phù hợp',
     description:
-      'KidTech sẽ cùng bạn nhìn vào độ tuổi, trải nghiệm hiện tại và mục tiêu của học viên để gợi ý level nên bắt đầu, dạng project phù hợp và cách nhập cuộc nhẹ nhàng.',
+      'AIgenlabs sẽ cùng bạn nhìn vào độ tuổi, trải nghiệm hiện tại và mục tiêu của học viên để gợi ý level nên bắt đầu, dạng project phù hợp và cách nhập cuộc nhẹ nhàng.',
     benefits: [
       'Gợi ý level nên bắt đầu',
       'Định hướng dạng project phù hợp với học viên',
       'Làm rõ output và cách học ở từng giai đoạn',
       'Có thể sắp xếp buổi học thử trước khi quyết định',
     ],
-    formTitle: 'Để lại thông tin để KidTech liên hệ',
+    formTitle: 'Để lại thông tin để AIgenlabs liên hệ',
     formNote: 'Thông tin chỉ dùng để tư vấn lộ trình và sắp xếp buổi trao đổi phù hợp.',
     submitLabel: 'Nhận tư vấn lộ trình',
   },
@@ -276,7 +276,7 @@ export const defaultLandingContent = {
         href: '#',
       },
     ],
-    copyright: '© 2026 KidTech — Nền tảng AI & Tech cho học sinh. All rights reserved.',
+    copyright: '© 2026 AIgenlabs — Nền tảng AI & Tech cho học sinh. All rights reserved.',
   },
 }
 

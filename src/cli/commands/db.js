@@ -11,7 +11,7 @@ import { Command } from 'commander';
 import { formatOutput, success, error } from '../utils/output.js';
 
 /**
- * Demo seed data for KidTech
+ * Demo seed data for AIgenlabs
  */
 const SEED_DATA = {
   levels: [
@@ -40,13 +40,13 @@ const SEED_DATA = {
     { name: 'Research & Innovation', level_id: 3, description: 'Nghiên cứu khoa học, innovation lab' },
   ],
   demo_students: [
-    { full_name: 'Nguyễn Minh Anh', email: 'minhanh@demo.kidtech.vn', phone: '0901234567', level: 1, parent_name: 'Nguyễn Văn Hùng' },
-    { full_name: 'Trần Gia Bảo', email: 'giabao@demo.kidtech.vn', phone: '0912345678', level: 2, parent_name: 'Trần Thị Mai' },
-    { full_name: 'Lê Phương Thảo', email: 'phuongthao@demo.kidtech.vn', phone: '0923456789', level: 3, parent_name: 'Lê Quốc Tuấn' },
+    { full_name: 'Nguyễn Minh Anh', email: 'minhanh@demo.aigenlabs.vn', phone: '0901234567', level: 1, parent_name: 'Nguyễn Văn Hùng' },
+    { full_name: 'Trần Gia Bảo', email: 'giabao@demo.aigenlabs.vn', phone: '0912345678', level: 2, parent_name: 'Trần Thị Mai' },
+    { full_name: 'Lê Phương Thảo', email: 'phuongthao@demo.aigenlabs.vn', phone: '0923456789', level: 3, parent_name: 'Lê Quốc Tuấn' },
   ],
   admin: {
-    email: 'admin@kidtech.vn',
-    full_name: 'KidTech Admin',
+    email: 'admin@aigenlabs.vn',
+    full_name: 'AIgenlabs Admin',
     role: 'admin'
   }
 };

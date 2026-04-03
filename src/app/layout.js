@@ -8,12 +8,12 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "KidTech — Vibe Coding Academy | Dạy lập trình AI cho học sinh",
+  title: "AIgenlabs — Vibe Coding Academy | Dạy lập trình AI cho học sinh",
   description:
     "Khóa học Vibe Coding cho học sinh từ 15 tuổi. Tạo App thật chỉ bằng lời nói với Cursor, Claude Code. Không cần biết code truyền thống.",
-  keywords: "vibe coding, học lập trình, AI coding, kidtech, cursor, claude code, học sinh",
+  keywords: "vibe coding, học lập trình, AI coding, aigenlabs, cursor, claude code, học sinh",
   openGraph: {
-    title: "KidTech — Vibe Coding Academy",
+    title: "AIgenlabs — Vibe Coding Academy",
     description: "Tạo App thật chỉ bằng lời nói — Không cần biết code",
     type: "website",
   },

@@ -231,7 +231,7 @@ export default function RegisterPage() {
             required
           />
           <label htmlFor="agreeTerms" className={styles.checkboxLabel}>
-            Tôi đồng ý với Điều khoản sử dụng và Chính sách bảo mật của KidTech.
+            Tôi đồng ý với Điều khoản sử dụng và Chính sách bảo mật của AIgenlabs.
           </label>
         </div>
 

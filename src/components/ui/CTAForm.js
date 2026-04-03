@@ -63,7 +63,7 @@ export default function CTAForm({
         <div style={{ fontSize: '2.75rem', marginBottom: '1rem' }}>✓</div>
         <div className={styles['cta-final__form-title']}>Đã nhận thông tin</div>
         <p style={{ color: 'var(--color-gray-700)', marginTop: '0.5rem', lineHeight: 1.7 }}>
-          Đội ngũ KidTech sẽ liên hệ <strong>{submittedLead.name}</strong> qua số{' '}
+          Đội ngũ AIgenlabs sẽ liên hệ <strong>{submittedLead.name}</strong> qua số{' '}
           <strong>{submittedLead.phone}</strong> để trao đổi thêm về lộ trình phù hợp.
         </p>
         <p className={styles['cta-final__form-note']} style={{ marginTop: '1rem' }}>

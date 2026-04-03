@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState, useCallback } from 'react'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import styles from '../../admin.module.css'
 
 const enrollmentStateMap = {
@@ -56,6 +57,7 @@ function buildPaymentDrafts(packages = []) {
 
 export default function StudentDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const studentId = Array.isArray(params?.id) ? params.id[0] : params?.id
 
   const [overview, setOverview] = useState(null)
@@ -72,6 +74,7 @@ export default function StudentDetailPage() {
   const [feedback, setFeedback] = useState(null)
   const [loading, setLoading] = useState(true)
   const [actionKey, setActionKey] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const loadStudent = useCallback(async (showLoader = true) => {
     if (!studentId) {
@@ -83,20 +86,17 @@ export default function StudentDetailPage() {
     }
 
     try {
-      const [overviewResponse, accountResponse] = await Promise.all([
-        fetch(`/api/admin/students/${studentId}/overview`, { cache: 'no-store' }),
-        fetch(`/api/admin/update-student?id=${studentId}`, { cache: 'no-store' }),
-      ])
-
+      const overviewResponse = await fetch(`/api/admin/students/${studentId}/overview`, {
+        cache: 'no-store',
+      })
       const overviewResult = await overviewResponse.json()
-      const accountResult = accountResponse.ok ? await accountResponse.json() : null
 
       if (!overviewResponse.ok) {
         throw new Error(overviewResult.error || 'Không thể tải hồ sơ học sinh')
       }
 
       setOverview(overviewResult)
-      setAccountInfo(accountResult)
+      setAccountInfo(overviewResult.account || null)
       setProfileForm({
         fullName: overviewResult.profile?.full_name || '',
         phone: overviewResult.profile?.phone || '',
@@ -329,6 +329,29 @@ export default function StudentDetailPage() {
     }
   }
 
+  async function handleDeleteStudent() {
+    setActionKey('delete-student')
+    setFeedback(null)
+
+    try {
+      const response = await fetch(`/api/admin/update-student?id=${studentId}`, {
+        method: 'DELETE',
+      })
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Không thể xóa tài khoản học viên')
+      }
+
+      router.push('/admin/students')
+    } catch (error) {
+      showFeedback('error', error.message)
+    } finally {
+      setActionKey('')
+      setConfirmDelete(false)
+    }
+  }
+
   function renderBadge(stateMap, status) {
     const view = stateMap[status] || stateMap.none || stateMap.inactive
     return (
@@ -379,6 +402,14 @@ export default function StudentDetailPage() {
           <Link href={`/admin/payments?studentId=${studentId}`} className={`${styles.quickActionBtn} ${styles['quickActionBtn--primary']}`}>
             Sổ thanh toán
           </Link>
+          <button
+            type="button"
+            className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
+            onClick={() => setConfirmDelete(true)}
+            disabled={isBusy('delete-student')}
+          >
+            {isBusy('delete-student') ? 'Đang xóa...' : 'Xóa tài khoản'}
+          </button>
         </div>
       </div>
 
@@ -858,6 +889,22 @@ export default function StudentDetailPage() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmDelete}
+        title="Xóa tài khoản học viên"
+        message={`Bạn có chắc muốn xóa "${studentName}"? Tài khoản đăng nhập, profile và toàn bộ dữ liệu học tập sẽ bị xóa.`}
+        confirmText="Xóa học viên"
+        cancelText="Hủy"
+        variant="danger"
+        loading={isBusy('delete-student')}
+        onConfirm={handleDeleteStudent}
+        onCancel={() => {
+          if (!isBusy('delete-student')) {
+            setConfirmDelete(false)
+          }
+        }}
+      />
     </>
   )
 }

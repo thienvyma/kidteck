@@ -1,12 +1,13 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import ProgressRing from '@/components/student/ProgressRing'
 import styles from './student.module.css'
 
 export default function StudentDashboard() {
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
   const [name, setName] = useState('')
   const [enrollment, setEnrollment] = useState(null)
   const [overallPct, setOverallPct] = useState(0)
@@ -19,91 +20,114 @@ export default function StudentDashboard() {
     const quoteList = [
       '"Hành trình vạn dặm bắt đầu từ một bước chân." — Lão Tử',
       '"Tương lai thuộc về người học hỏi không ngừng." — Eric Hoffer',
-      '"Code today, change the world tomorrow." — KidTech',
+      '"Code today, change the world tomorrow." — AIgenlabs',
     ]
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setQuote(quoteList[Math.floor(Math.random() * quoteList.length)])
   }, [])
+
   useEffect(() => {
-    const fetch = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+    const fetchDashboard = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        const user = session?.user
 
-      // Profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', user.id)
-        .single()
-      setName(profile?.full_name || 'Học sinh')
-
-      // Active enrollment
-      const { data: enr } = await supabase
-        .from('enrollments')
-        .select('*, levels(id, name, subject_count)')
-        .eq('student_id', user.id)
-        .eq('status', 'active')
-        .limit(1)
-        .single()
-      setEnrollment(enr)
-
-      // Progress for current level
-      if (enr?.levels?.id) {
-        const { data: subjects } = await supabase
-          .from('subjects')
-          .select('id, name')
-          .eq('level_id', enr.levels.id)
-          .order('sort_order')
-
-        const { data: prog } = await supabase
-          .from('progress')
-          .select('subject_id, completed')
-          .eq('student_id', user.id)
-
-        const progMap = {}
-        ;(prog || []).forEach((p) => { progMap[p.subject_id] = p.completed })
-
-        const total = subjects?.length || 1
-        const done = (subjects || []).filter((s) => progMap[s.id]).length
-        setOverallPct(Math.round((done / total) * 100))
-
-        // Find next incomplete subject
-        const next = (subjects || []).find((s) => !progMap[s.id])
-        setNextSubject(next || null)
-      }
-
-      // All levels summary
-      const { data: levels } = await supabase
-        .from('levels')
-        .select('id, name, subject_count')
-        .order('sort_order')
-
-      const { data: allEnrollments } = await supabase
-        .from('enrollments')
-        .select('level_id, status')
-        .eq('student_id', user.id)
-
-      const { data: allProgress } = await supabase
-        .from('progress')
-        .select('subject_id, completed, subjects(level_id)')
-        .eq('student_id', user.id)
-
-      const levelSummary = (levels || []).map((level) => {
-        const enrolled = (allEnrollments || []).find((e) => e.level_id === level.id)
-        const progForLevel = (allProgress || []).filter(
-          (p) => p.subjects?.level_id === level.id && p.completed
-        )
-        return {
-          ...level,
-          enrolled: !!enrolled,
-          completedCount: progForLevel.length,
-          totalCount: level.subject_count || 1,
+        if (!user) {
+          return
         }
-      })
-      setAllLevels(levelSummary)
-      setLoading(false)
+
+        const [profileResult, levelsResult, enrollmentsResult, progressResult] =
+          await Promise.all([
+            supabase.from('profiles').select('full_name').eq('id', user.id).maybeSingle(),
+            supabase
+              .from('levels')
+              .select('id, name, subject_count, sort_order, subjects(id, name, sort_order)')
+              .order('sort_order'),
+            supabase
+              .from('enrollments')
+              .select('level_id, status, enrolled_at')
+              .eq('student_id', user.id)
+              .order('enrolled_at', { ascending: false }),
+            supabase
+              .from('progress')
+              .select('subject_id, completed, subjects(level_id)')
+              .eq('student_id', user.id),
+          ])
+
+        const profile = profileResult.data
+        const levels = levelsResult.data || []
+        const enrollments = enrollmentsResult.data || []
+        const progressRows = progressResult.data || []
+
+        setName(profile?.full_name || 'Học sinh')
+
+        const progressBySubject = {}
+        const completedByLevel = {}
+
+        for (const row of progressRows) {
+          progressBySubject[row.subject_id] = row.completed
+          if (row.completed && row.subjects?.level_id) {
+            const levelId = row.subjects.level_id
+            completedByLevel[levelId] = (completedByLevel[levelId] || 0) + 1
+          }
+        }
+
+        const activeEnrollment = enrollments.find((item) => item.status === 'active') || null
+        const activeLevel = activeEnrollment
+          ? levels.find((level) => level.id === activeEnrollment.level_id) || null
+          : null
+
+        setEnrollment(
+          activeEnrollment
+            ? {
+                ...activeEnrollment,
+                levels: activeLevel
+                  ? {
+                      id: activeLevel.id,
+                      name: activeLevel.name,
+                      subject_count: activeLevel.subject_count,
+                    }
+                  : null,
+              }
+            : null
+        )
+
+        if (activeLevel) {
+          const activeSubjects = [...(activeLevel.subjects || [])].sort(
+            (a, b) => (a.sort_order || 0) - (b.sort_order || 0)
+          )
+          const total = activeSubjects.length || activeLevel.subject_count || 1
+          const done = activeSubjects.filter((subject) => progressBySubject[subject.id]).length
+
+          setOverallPct(Math.round((done / total) * 100))
+          setNextSubject(activeSubjects.find((subject) => !progressBySubject[subject.id]) || null)
+        } else {
+          setOverallPct(0)
+          setNextSubject(null)
+        }
+
+        setAllLevels(
+          levels.map((level) => {
+            const enrolled = enrollments.some((item) => item.level_id === level.id)
+            const totalCount = level.subject_count || level.subjects?.length || 1
+
+            return {
+              ...level,
+              enrolled,
+              completedCount: completedByLevel[level.id] || 0,
+              totalCount,
+            }
+          })
+        )
+      } catch (error) {
+        console.error('Student dashboard fetch error:', error)
+      } finally {
+        setLoading(false)
+      }
     }
-    fetch()
+
+    fetchDashboard()
   }, [supabase])
 
   if (loading) {
@@ -112,14 +136,12 @@ export default function StudentDashboard() {
 
   return (
     <>
-      {/* Section 1: Greeting */}
       <div className={styles.dashGreeting}>
         <h2 className={styles.dashGreetingTitle}>👋 Chào {name}!</h2>
         <p className={styles.dashQuote}>{quote}</p>
       </div>
 
       <div className={styles.dashGrid}>
-        {/* Section 2: Current Level + ProgressRing */}
         <div className={styles.dashCard}>
           <h3 className={styles.dashCardTitle}>
             {enrollment ? enrollment.levels?.name : 'Chưa đăng ký khóa nào'}
@@ -130,7 +152,6 @@ export default function StudentDashboard() {
           <p className={styles.dashCardSub}>Tiến độ tổng thể</p>
         </div>
 
-        {/* Section 3: Next Lesson */}
         <div className={styles.dashCard}>
           <h3 className={styles.dashCardTitle}>Bài học tiếp theo</h3>
           {nextSubject ? (
@@ -138,9 +159,9 @@ export default function StudentDashboard() {
               <span className={styles.dashNextIcon}>📖</span>
               <div>
                 <p className={styles.dashNextName}>{nextSubject.name}</p>
-                <a href={`/student/courses/${nextSubject.id}`} className={styles.dashNextLink}>
+                <Link href={`/student/courses/${nextSubject.id}`} className={styles.dashNextLink}>
                   Tiếp tục học →
-                </a>
+                </Link>
               </div>
             </div>
           ) : (
@@ -151,7 +172,6 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* Section 4: All levels progress */}
       <div className={styles.dashCard} style={{ marginTop: 'var(--space-lg)' }}>
         <h3 className={styles.dashCardTitle}>Tổng quan các Level</h3>
         <div className={styles.levelProgressList}>
@@ -164,10 +184,7 @@ export default function StudentDashboard() {
                   <span className={styles.levelProgressPct}>{pct}%</span>
                 </div>
                 <div className={styles.progressBar}>
-                  <div
-                    className={styles.progressBarFill}
-                    style={{ width: `${pct}%` }}
-                  />
+                  <div className={styles.progressBarFill} style={{ width: `${pct}%` }} />
                 </div>
               </div>
             )

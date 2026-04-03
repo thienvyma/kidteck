@@ -1,10 +1,10 @@
-# 🧠 CLAUDE.md — KidTech AI Memory File
+# 🧠 CLAUDE.md — AIgenlabs AI Memory File
 
 > ⚠️ ĐỌC FILE NÀY ĐẦU TIÊN MỖI SESSION.
 > Sau đó đọc theo thứ tự: PROGRESS.md → architecture_state.json → SESSIONS.md → Phase README
 
 ## Dự Án
-**KidTech** — Nền tảng dạy AI & Vibe Coding cho học sinh 12-17 tuổi.
+**AIgenlabs** — Nền tảng dạy AI & Vibe Coding cho học sinh 12-17 tuổi.
 Target: Phụ huynh (buyer). Learner: Teen (user).
 
 ## Trạng Thái
@@ -23,8 +23,8 @@ node src/cli/index.js course summary  # Curriculum overview
 node src/cli/index.js student list    # Student list
 node src/cli/index.js db seed         # Seed demo data
 ```
-**Skills**: `.agent/skills/kidtech-cli/SKILL.md` (command reference)
-**Playbooks**: `.agent/skills/kidtech-operations/SKILL.md` (5 playbooks)
+**Skills**: `.agent/skills/aigenlabs-cli/SKILL.md` (command reference)
+**Playbooks**: `.agent/skills/aigenlabs-operations/SKILL.md` (5 playbooks)
 
 ## Bộ Tài Liệu BẮT BUỘC ĐỌC
 
@@ -39,7 +39,7 @@ node src/cli/index.js db seed         # Seed demo data
 ### Khi cần context:
 - `ARCHITECTURE.md` → Kiến trúc tổng quan (5 tầng + component tree)
 - `DECISIONS.md` → D1-D8 quyết định thiết kế
-- `docs/kidtech-prd.md` → Master Reference Document (specs gốc §8-9)
+- `docs/aigenlabs-prd.md` → Master Reference Document (specs gốc §8-9)
 - `docs/database-schema.md` → SQL schema + RLS + triggers
 - `docs/VIBECODING_GUIDE.md` → Methodology (Anthropic + obra/superpowers)
 

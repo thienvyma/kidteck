@@ -17,7 +17,7 @@ Route group (auth) — không tạo URL segment
 UI:
   - Background: gradient primary → secondary
   - Card: white, border-radius lg, shadow xl, max-width 480px, centered
-  - KidTech logo ở trên form
+  - AIgenlabs logo ở trên form
   - Không có Navbar/Sidebar
 CSS tokens: var(--color-primary), var(--shadow-xl), var(--radius-lg)
 ```
@@ -26,7 +26,7 @@ CSS tokens: var(--color-primary), var(--shadow-xl), var(--radius-lg)
 ```
 Type: "use client" (useState, form handling)
 Sections:
-  - KidTech logo + "Đăng nhập" heading
+  - AIgenlabs logo + "Đăng nhập" heading
   - Email input (required, type=email)
   - Password input (required, show/hide toggle)
   - "Quên mật khẩu?" link (placeholder)
@@ -61,8 +61,8 @@ Errors: "Email đã được sử dụng", "Mật khẩu phải ≥ 6 ký tự",
 
 ## Verify
 1. Register → profile tạo trong Supabase → redirect /student
-2. Login admin@kidtech.vn → redirect /admin
-3. Login student@kidtech.vn → redirect /student
+2. Login admin@aigenlabs.vn → redirect /admin
+3. Login student@aigenlabs.vn → redirect /student
 4. Access /admin as student → redirect /student
 5. Responsive 375px
 6. `npm run build` pass

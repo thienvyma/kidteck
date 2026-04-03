@@ -79,7 +79,7 @@ function checkFiles() {
 }
 
 export const statusCommand = new Command('status')
-  .description('Check KidTech system health and configuration')
+  .description('Check AIgenlabs system health and configuration')
   .option('--json', 'Output as JSON')
   .action(async (options) => {
     try {
@@ -95,7 +95,7 @@ export const statusCommand = new Command('status')
       }
       
       const status = {
-        project: archState.project || 'kidtech-app',
+        project: archState.project || 'aigenlabs-app',
         version: archState.version || '0.1.0',
         phase: archState.phase || 'unknown',
         current_session: archState.current_session || 'unknown',

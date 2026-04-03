@@ -1,4 +1,4 @@
-# Database Schema — KidTech
+# Database Schema — AIgenlabs
 
 ## Supabase Configuration
 - Project URL: (set in .env.local as NEXT_PUBLIC_SUPABASE_URL)

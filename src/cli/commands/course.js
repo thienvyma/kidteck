@@ -83,7 +83,7 @@ courseCommand
         }
         
         if (!options.json) {
-          console.log('📚 Toàn bộ chương trình KidTech\n');
+          console.log('📚 Toàn bộ chương trình AIgenlabs\n');
           for (const [level, data] of Object.entries(CURRICULUM)) {
             console.log(`\n🎯 ${data.name} (${data.age}) — ${data.subjects.length} môn`);
             for (const s of data.subjects) {
@@ -146,7 +146,7 @@ courseCommand
     }));
     
     if (!options.json) {
-      console.log('📊 KidTech Curriculum Summary\n');
+      console.log('📊 AIgenlabs Curriculum Summary\n');
     }
     formatOutput(summary, options);
   });

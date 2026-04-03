@@ -1,4 +1,4 @@
-# 📏 RULES.md — Luật Chơi Cho AI (KidTech)
+# 📏 RULES.md — Luật Chơi Cho AI (AIgenlabs)
 
 > ⚠️ **BẮT BUỘC**: Mọi AI assistant làm việc trên dự án này PHẢI đọc file này ĐẦU TIÊN.
 > File này là LUẬT — không phải gợi ý. Vi phạm = revert.

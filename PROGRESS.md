@@ -1,4 +1,4 @@
-# 📊 PROGRESS.md — Nhật Ký Tiến Trình KidTech
+# 📊 PROGRESS.md — Nhật Ký Tiến Trình AIgenlabs
 
 ## Session Hiện Tại: S15 — UX Polish
 **Status**: ✅ Completed
@@ -131,7 +131,7 @@
 ## Session 3 — Tóm tắt
 
 ### Đã hoàn thành:
-- ✅ Tạo Supabase project `kidtech` (Singapore, ref: jqnibauevpuaeohqksse)
+- ✅ Tạo Supabase project `aigenlabs` (Singapore, ref: jqnibauevpuaeohqksse)
 - ✅ `.env.local` với URL + Anon Key
 - ✅ `npm install @supabase/supabase-js @supabase/ssr`
 - ✅ `src/lib/supabase.js` — Browser client (createBrowserClient)

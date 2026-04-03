@@ -3,14 +3,12 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase'
 import LessonContent from '@/components/student/LessonContent'
 import styles from '../../student.module.css'
 
 export default function CourseDetailPage() {
   const { id } = useParams()
   const router = useRouter()
-  const [supabase] = useState(() => createClient())
 
   const [subject, setSubject] = useState(null)
   const [siblings, setSiblings] = useState([])
@@ -20,55 +18,57 @@ export default function CourseDetailPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let cancelled = false
+
     const fetchData = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      try {
+        const response = await fetch(`/api/student/subjects/${id}`, {
+          cache: 'no-store',
+        })
+        const result = await response.json()
 
-      if (!user) {
-        setLoading(false)
-        return
-      }
-
-      setStudentId(user.id)
-
-      const response = await fetch(`/api/student/subjects/${id}`, {
-        cache: 'no-store',
-      })
-      const result = await response.json()
-
-      if (!response.ok) {
-        if (response.status === 403) {
-          const levelName = result.levelName || 'khóa học này'
-          setBlockedMessage(
-            `${levelName} chưa được kích hoạt cho tài khoản này hoặc đang bị tạm dừng.`
-          )
+        if (cancelled) {
+          return
         }
-        setLoading(false)
-        return
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            router.push('/login')
+            return
+          }
+
+          if (response.status === 403) {
+            const levelName = result.levelName || 'khóa học này'
+            setBlockedMessage(
+              `${levelName} chưa được kích hoạt cho tài khoản này hoặc đang bị tạm dừng.`
+            )
+          }
+
+          setLoading(false)
+          return
+        }
+
+        setSubject(result.subject)
+        setSiblings(result.siblings || [])
+        setProgressMap(result.progressMap || {})
+        setStudentId(result.studentId || null)
+      } catch (error) {
+        console.error('Course detail fetch error:', error)
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
       }
-
-      setSubject(result.subject)
-      setSiblings(result.siblings || [])
-
-      const { data: progressRows } = await supabase
-        .from('progress')
-        .select('subject_id, completed')
-        .eq('student_id', user.id)
-        .in('subject_id', (result.siblings || []).map((item) => item.id))
-
-      const nextMap = {}
-      ;(progressRows || []).forEach((row) => {
-        nextMap[row.subject_id] = row.completed
-      })
-      setProgressMap(nextMap)
-      setLoading(false)
     }
 
     if (id) {
       fetchData()
     }
-  }, [id, supabase])
+
+    return () => {
+      cancelled = true
+    }
+  }, [id, router])
 
   if (loading) {
     return <p style={{ color: 'var(--color-gray-500)' }}>Đang tải...</p>
@@ -89,10 +89,7 @@ export default function CourseDetailPage() {
     return (
       <div>
         <p>Không tìm thấy môn học.</p>
-        <button
-          className={styles.courseCardLink}
-          onClick={() => router.push('/student/courses')}
-        >
+        <button className={styles.courseCardLink} onClick={() => router.push('/student/courses')}>
           ← Quay lại
         </button>
       </div>

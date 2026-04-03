@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * KidTech CLI — Agent-Native Command Interface
+ * AIgenlabs CLI — Agent-Native Command Interface
  * 
  * Structured CLI for both humans and AI agents.
  * All commands support --json flag for machine-readable output.
@@ -13,7 +13,7 @@
  *   kt student list        List students
  *   kt course list         List courses
  * 
- * @see .agent/skills/kidtech-cli/SKILL.md for agent discovery
+ * @see .agent/skills/aigenlabs-cli/SKILL.md for agent discovery
  */
 
 import { Command } from 'commander';
@@ -29,7 +29,7 @@ loadLocalEnv();
 
 program
   .name('kt')
-  .description('KidTech CLI — Agent-Native Platform Management')
+  .description('AIgenlabs CLI — Agent-Native Platform Management')
   .version('0.1.0');
 
 // Register command groups

@@ -341,7 +341,7 @@ export default async function Home() {
             </div>
 
             <p className={styles.pricing__note}>
-              * Đội ngũ KidTech sẽ xác nhận lại level phù hợp dựa trên độ tuổi, trải nghiệm hiện tại
+              * Đội ngũ AIgenlabs sẽ xác nhận lại level phù hợp dựa trên độ tuổi, trải nghiệm hiện tại
               và mục tiêu học viên trước khi đăng ký.
             </p>
           </div>

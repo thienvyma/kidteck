@@ -16,44 +16,56 @@ export default function StudentCoursesPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetch = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) return
+    const fetchCourses = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        const user = session?.user
 
-      const { data: lvls } = await supabase
-        .from('levels')
-        .select('id, name, sort_order, subjects(id, name, description, sort_order)')
-        .order('sort_order')
+        if (!user) {
+          return
+        }
 
-      setLevels(lvls || [])
+        const [levelsResult, enrollmentResult, progressResult] = await Promise.all([
+          supabase
+            .from('levels')
+            .select('id, name, sort_order, subjects(id, name, description, sort_order)')
+            .order('sort_order'),
+          supabase
+            .from('enrollments')
+            .select('level_id, status')
+            .eq('student_id', user.id),
+          supabase
+            .from('progress')
+            .select('subject_id, completed')
+            .eq('student_id', user.id),
+        ])
 
-      const { data: enrollments } = await supabase
-        .from('enrollments')
-        .select('level_id, status')
-        .eq('student_id', user.id)
+        const nextLevels = levelsResult.data || []
+        const enrollments = enrollmentResult.data || []
+        const progressRows = progressResult.data || []
 
-      setEnrolledIds(
-        (enrollments || [])
-          .filter((item) => ACCESSIBLE_STATUSES.has(item.status))
-          .map((item) => item.level_id)
-      )
+        setLevels(nextLevels)
+        setEnrolledIds(
+          enrollments
+            .filter((item) => ACCESSIBLE_STATUSES.has(item.status))
+            .map((item) => item.level_id)
+        )
 
-      const { data: prog } = await supabase
-        .from('progress')
-        .select('subject_id, completed')
-        .eq('student_id', user.id)
-
-      const map = {}
-      ;(prog || []).forEach((row) => {
-        map[row.subject_id] = row.completed
-      })
-      setProgressMap(map)
-      setLoading(false)
+        const map = {}
+        for (const row of progressRows) {
+          map[row.subject_id] = row.completed
+        }
+        setProgressMap(map)
+      } catch (error) {
+        console.error('Student courses fetch error:', error)
+      } finally {
+        setLoading(false)
+      }
     }
 
-    fetch()
+    fetchCourses()
   }, [supabase])
 
   if (loading) {
@@ -86,7 +98,8 @@ export default function StudentCoursesPage() {
 
       {isLocked && (
         <div className={styles.lockedBanner}>
-          🔒 Gói học này chưa được kích hoạt cho tài khoản của bạn. Hãy liên hệ admin để mở khóa.
+          🔒 Gói học này chưa được kích hoạt cho tài khoản của bạn. Hãy liên hệ admin để mở
+          khóa.
         </div>
       )}
 
@@ -96,7 +109,11 @@ export default function StudentCoursesPage() {
           return (
             <CourseCard
               key={subject.id}
-              subject={{ id: subject.id, name: subject.name, level_name: currentLevel.name }}
+              subject={{
+                id: subject.id,
+                name: subject.name,
+                level_name: currentLevel.name,
+              }}
               progress={{ completed: isCompleted ? 1 : 0, total: 1 }}
               locked={isLocked}
             />

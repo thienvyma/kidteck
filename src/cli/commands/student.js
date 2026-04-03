@@ -24,7 +24,7 @@ function createAdminClient() {
 
 function generatePassword() {
   const suffix = Math.random().toString(36).slice(-6).toUpperCase()
-  return `KidTech@${suffix}`
+  return `AIgenlabs@${suffix}`
 }
 
 function formatDate(value) {

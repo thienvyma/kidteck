@@ -1,4 +1,4 @@
-# 🏗️ ARCHITECTURE.md — Kiến Trúc KidTech Platform
+# 🏗️ ARCHITECTURE.md — Kiến Trúc AIgenlabs Platform
 
 ## Tổng Quan
 

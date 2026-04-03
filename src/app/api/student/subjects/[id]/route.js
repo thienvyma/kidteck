@@ -69,14 +69,28 @@ export async function GET(_request, { params }) {
       )
     }
 
-    const { data: siblings, error: siblingsError } = await adminClient
-      .from('subjects')
-      .select('id, name, sort_order')
-      .eq('level_id', subject.level_id)
-      .order('sort_order', { ascending: true })
+    const [{ data: siblings, error: siblingsError }, { data: progressRows, error: progressError }] =
+      await Promise.all([
+        adminClient
+          .from('subjects')
+          .select('id, name, sort_order')
+          .eq('level_id', subject.level_id)
+          .order('sort_order', { ascending: true }),
+        supabase
+          .from('progress')
+          .select('subject_id, completed, subjects!inner(level_id)')
+          .eq('student_id', user.id)
+          .eq('subjects.level_id', subject.level_id),
+      ])
 
-    if (siblingsError) {
-      return NextResponse.json({ error: siblingsError.message }, { status: 400 })
+    const firstError = siblingsError || progressError
+    if (firstError) {
+      return NextResponse.json({ error: firstError.message }, { status: 400 })
+    }
+
+    const progressMap = {}
+    for (const row of progressRows || []) {
+      progressMap[row.subject_id] = row.completed
     }
 
     return NextResponse.json({
@@ -85,6 +99,8 @@ export async function GET(_request, { params }) {
         content: decryptSubjectContent(subject.content),
       },
       siblings: siblings || [],
+      progressMap,
+      studentId: user.id,
       enrollment: {
         id: enrollment.id,
         status: enrollment.status,

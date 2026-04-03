@@ -20,7 +20,7 @@ export default function BrandLogo({
         compact ? styles['brandLogo--compact'] : '',
         className
       )}
-      aria-label="KidTech"
+      aria-label="AIgenlabs"
     >
       <span className={styles.brandLogo__mark} aria-hidden="true">
         <svg

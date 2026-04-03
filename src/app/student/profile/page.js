@@ -6,7 +6,7 @@ import PageSkeleton from '@/components/student/PageSkeleton'
 import styles from '../student.module.css'
 
 export default function ProfilePage() {
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
   const [profile, setProfile] = useState(null)
   const [enrollments, setEnrollments] = useState([])
   const [github, setGithub] = useState('')
@@ -16,40 +16,55 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetch = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+    const fetchProfile = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        const user = session?.user
 
-      const { data: prof } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
+        if (!user) {
+          return
+        }
 
-      setProfile({ ...prof, email: user.email })
-      setGithub(prof?.avatar_url || '')
-      setWebsite(prof?.website_url || '')
+        const [profileResult, enrollmentResult] = await Promise.all([
+          supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
+          supabase
+            .from('enrollments')
+            .select('id, status, enrolled_at, levels(name)')
+            .eq('student_id', user.id)
+            .order('enrolled_at', { ascending: false }),
+        ])
 
-      const { data: enr } = await supabase
-        .from('enrollments')
-        .select('*, levels(name)')
-        .eq('student_id', user.id)
-        .order('enrolled_at', { ascending: false })
+        const prof = profileResult.data
+        const enrollmentRows = enrollmentResult.data || []
 
-      setEnrollments(
-        (enr || []).map((e) => ({
-          id: e.id,
-          level: e.levels?.name || '—',
-          status: e.status,
-          date: new Date(e.enrolled_at).toLocaleDateString('vi-VN'),
-        }))
-      )
-      setLoading(false)
+        setProfile({ ...prof, email: user.email })
+        setGithub(prof?.avatar_url || '')
+        setWebsite(prof?.website_url || '')
+        setEnrollments(
+          enrollmentRows.map((item) => ({
+            id: item.id,
+            level: item.levels?.name || '—',
+            status: item.status,
+            date: new Date(item.enrolled_at).toLocaleDateString('vi-VN'),
+          }))
+        )
+      } catch (error) {
+        console.error('Profile fetch error:', error)
+      } finally {
+        setLoading(false)
+      }
     }
-    fetch()
+
+    fetchProfile()
   }, [supabase])
 
   const handleSave = async () => {
+    if (!profile?.id) {
+      return
+    }
+
     setSaving(true)
     setMessage('')
     const { error } = await supabase
@@ -58,7 +73,7 @@ export default function ProfilePage() {
       .eq('id', profile.id)
 
     if (error) {
-      setMessage('❌ Lỗi: ' + error.message)
+      setMessage(`❌ Lỗi: ${error.message}`)
     } else {
       setMessage('✅ Đã lưu!')
     }
@@ -81,7 +96,7 @@ export default function ProfilePage() {
 
   const initials = (profile?.full_name || 'S')
     .split(' ')
-    .map((w) => w[0])
+    .map((word) => word[0])
     .join('')
     .toUpperCase()
     .slice(0, 2)
@@ -92,7 +107,6 @@ export default function ProfilePage() {
         <h2 className={styles.pageTitle}>Hồ sơ cá nhân</h2>
       </div>
 
-      {/* Section 1: Avatar + Name */}
       <div className={styles.profileHeader}>
         <div className={styles.profileAvatar}>{initials}</div>
         <div>
@@ -101,7 +115,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Section 2: Contact info */}
       <div className={styles.profileCard}>
         <h4 className={styles.profileCardTitle}>📋 Thông tin liên hệ</h4>
         <div className={styles.profileGrid}>
@@ -121,7 +134,6 @@ export default function ProfilePage() {
         <p className={styles.profileNote}>Liên hệ admin để thay đổi thông tin cá nhân.</p>
       </div>
 
-      {/* Section 3: Enrollments */}
       <div className={styles.profileCard}>
         <h4 className={styles.profileCardTitle}>📚 Lịch sử đăng ký</h4>
         {enrollments.length === 0 ? (
@@ -136,11 +148,11 @@ export default function ProfilePage() {
               </tr>
             </thead>
             <tbody>
-              {enrollments.map((e) => (
-                <tr key={e.id}>
-                  <td>{e.level}</td>
-                  <td>{renderStatus(e.status)}</td>
-                  <td>{e.date}</td>
+              {enrollments.map((item) => (
+                <tr key={item.id}>
+                  <td>{item.level}</td>
+                  <td>{renderStatus(item.status)}</td>
+                  <td>{item.date}</td>
                 </tr>
               ))}
             </tbody>
@@ -148,7 +160,6 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* Section 4: Portfolio */}
       <div className={styles.profileCard}>
         <h4 className={styles.profileCardTitle}>🔗 Portfolio</h4>
         <div className={styles.profileField}>
@@ -156,7 +167,7 @@ export default function ProfilePage() {
           <input
             type="url"
             value={github}
-            onChange={(e) => setGithub(e.target.value)}
+            onChange={(event) => setGithub(event.target.value)}
             placeholder="https://github.com/username"
             className={styles.profileInput}
           />
@@ -166,30 +177,31 @@ export default function ProfilePage() {
           <input
             type="url"
             value={website}
-            onChange={(e) => setWebsite(e.target.value)}
+            onChange={(event) => setWebsite(event.target.value)}
             placeholder="https://myportfolio.com"
             className={styles.profileInput}
           />
         </div>
         {message && (
-          <p style={{ color: message.startsWith('✅') ? 'var(--color-success)' : 'var(--color-error)', fontWeight: 500, marginTop: 'var(--space-sm)' }}>
+          <p
+            style={{
+              color: message.startsWith('✅') ? 'var(--color-success)' : 'var(--color-error)',
+              fontWeight: 500,
+              marginTop: 'var(--space-sm)',
+            }}
+          >
             {message}
           </p>
         )}
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className={styles.profileSaveBtn}
-        >
+        <button onClick={handleSave} disabled={saving} className={styles.profileSaveBtn}>
           {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
         </button>
       </div>
 
-      {/* Section 5: Certificates */}
       <div className={styles.profileCard}>
         <h4 className={styles.profileCardTitle}>🏆 Chứng chỉ</h4>
         <p style={{ color: 'var(--color-gray-500)', fontStyle: 'italic' }}>
-          Tính năng đang được phát triển. Sắp ra mắt! 🚀
+          Tính năng đang được phát triển. Sắp ra mắt!
         </p>
       </div>
     </>

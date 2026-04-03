@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import DataTable from '@/components/admin/DataTable'
 import CreateStudentModal from '@/components/admin/CreateStudentModal'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import styles from '../admin.module.css'
 
 export default function StudentsPage() {
@@ -13,6 +14,9 @@ export default function StudentsPage() {
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
+  const [feedback, setFeedback] = useState(null)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleting, setDeleting] = useState(false)
 
   const fetchStudents = useCallback(async () => {
     try {
@@ -30,6 +34,10 @@ export default function StudentsPage() {
 
       if (error) {
         console.error('Error fetching students:', error)
+        setFeedback({
+          type: 'error',
+          text: error.message || 'Không thể tải danh sách học viên',
+        })
         return
       }
 
@@ -55,6 +63,10 @@ export default function StudentsPage() {
       )
     } catch (err) {
       console.error('Students fetch error:', err)
+      setFeedback({
+        type: 'error',
+        text: 'Không thể tải danh sách học viên',
+      })
     } finally {
       setLoading(false)
     }
@@ -67,6 +79,41 @@ export default function StudentsPage() {
   const handleStudentCreated = () => {
     setLoading(true)
     fetchStudents()
+  }
+
+  async function handleDeleteStudent() {
+    if (!deleteTarget?.id) {
+      return
+    }
+
+    setDeleting(true)
+    setFeedback(null)
+
+    try {
+      const response = await fetch(`/api/admin/update-student?id=${deleteTarget.id}`, {
+        method: 'DELETE',
+      })
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Không thể xóa tài khoản học viên')
+      }
+
+      setFeedback({
+        type: 'success',
+        text: `Đã xóa học viên "${deleteTarget.full_name}" và đồng bộ dữ liệu liên quan`,
+      })
+      setDeleteTarget(null)
+      setLoading(true)
+      await fetchStudents()
+    } catch (error) {
+      setFeedback({
+        type: 'error',
+        text: error.message || 'Không thể xóa tài khoản học viên',
+      })
+    } finally {
+      setDeleting(false)
+    }
   }
 
   const renderStatus = (status) => {
@@ -106,6 +153,18 @@ export default function StudentsPage() {
         </button>
       </div>
 
+      {feedback && (
+        <div
+          className={`${styles.feedbackBanner} ${
+            feedback.type === 'success'
+              ? styles.feedbackBannerSuccess
+              : styles.feedbackBannerError
+          }`}
+        >
+          {feedback.text}
+        </div>
+      )}
+
       <DataTable
         columns={columns}
         data={students}
@@ -117,6 +176,11 @@ export default function StudentsPage() {
             label: 'Xem',
             onClick: (row) => router.push(`/admin/students/${row.id}`),
           },
+          {
+            label: 'Xóa',
+            onClick: (row) => setDeleteTarget(row),
+            disabled: () => deleting,
+          },
         ]}
       />
 
@@ -124,6 +188,26 @@ export default function StudentsPage() {
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         onCreated={handleStudentCreated}
+      />
+
+      <ConfirmDialog
+        isOpen={Boolean(deleteTarget)}
+        title="Xóa học viên"
+        message={
+          deleteTarget
+            ? `Bạn có chắc muốn xóa học viên "${deleteTarget.full_name}"? Tài khoản đăng nhập, profile và dữ liệu học tập sẽ bị xóa.`
+            : ''
+        }
+        confirmText="Xóa học viên"
+        cancelText="Hủy"
+        variant="danger"
+        loading={deleting}
+        onConfirm={handleDeleteStudent}
+        onCancel={() => {
+          if (!deleting) {
+            setDeleteTarget(null)
+          }
+        }}
       />
     </>
   )

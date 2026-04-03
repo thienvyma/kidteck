@@ -6,11 +6,11 @@ import styles from '@/app/page.module.css'
 const defaultFaqData = [
   {
     q: 'Con chưa biết gì về lập trình, có học được không?',
-    a: 'Hoàn toàn được! KidTech dùng AI làm trợ lý — con chỉ cần mô tả ý tưởng bằng tiếng Việt, AI sẽ hỗ trợ phần kỹ thuật. Điều quan trọng là học tư duy, không phải syntax.'
+    a: 'Hoàn toàn được! AIgenlabs dùng AI làm trợ lý — con chỉ cần mô tả ý tưởng bằng tiếng Việt, AI sẽ hỗ trợ phần kỹ thuật. Điều quan trọng là học tư duy, không phải syntax.'
   },
   {
     q: 'Con cần máy tính như thế nào?',
-    a: 'Laptop phổ thông là đủ (Windows/Mac, RAM 8GB). Không cần máy gaming hay cấu hình cao. Nếu gia đình chưa có laptop, KidTech có thể hỗ trợ tư vấn.'
+    a: 'Laptop phổ thông là đủ (Windows/Mac, RAM 8GB). Không cần máy gaming hay cấu hình cao. Nếu gia đình chưa có laptop, AIgenlabs có thể hỗ trợ tư vấn.'
   },
   {
     q: 'Lịch học như thế nào? Có ảnh hưởng đến việc học trường không?',
@@ -18,7 +18,7 @@ const defaultFaqData = [
   },
   {
     q: 'Giáo viên là ai?',
-    a: 'Giảng viên KidTech là các developer, engineer có kinh nghiệm thực tế trong ngành tech và đam mê giáo dục. Được đào tạo phương pháp dạy cho lứa tuổi teen.'
+    a: 'Giảng viên AIgenlabs là các developer, engineer có kinh nghiệm thực tế trong ngành tech và đam mê giáo dục. Được đào tạo phương pháp dạy cho lứa tuổi teen.'
   },
   {
     q: 'Học Vibe Coding có khác gì học lập trình truyền thống?',
@@ -26,7 +26,7 @@ const defaultFaqData = [
   },
   {
     q: 'Nếu con không thích thì sao?',
-    a: 'KidTech cam kết hoàn tiền 100% sau buổi học đầu tiên nếu con không thích. Không câu hỏi, không điều kiện. Phụ huynh hoàn toàn yên tâm.'
+    a: 'AIgenlabs cam kết hoàn tiền 100% sau buổi học đầu tiên nếu con không thích. Không câu hỏi, không điều kiện. Phụ huynh hoàn toàn yên tâm.'
   }
 ]
 

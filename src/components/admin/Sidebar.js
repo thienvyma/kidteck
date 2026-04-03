@@ -94,17 +94,23 @@ const menuItems = [
   },
 ]
 
-export default function Sidebar({ isOpen, onClose }) {
+export default function Sidebar({ isOpen, onClose, adminName: initialAdminName }) {
   const pathname = usePathname()
   const router = useRouter()
-  const supabase = createClient()
-  const [adminName, setAdminName] = useState('Admin')
+  const [supabase] = useState(() => createClient())
+  const [adminName, setAdminName] = useState(initialAdminName || 'Admin')
+  const displayAdminName = initialAdminName || adminName || 'Admin'
 
   useEffect(() => {
+    if (initialAdminName) {
+      return
+    }
+
     const fetchProfile = async () => {
       const {
-        data: { user },
-      } = await supabase.auth.getUser()
+        data: { session },
+      } = await supabase.auth.getSession()
+      const user = session?.user
 
       if (!user) {
         return
@@ -114,7 +120,7 @@ export default function Sidebar({ isOpen, onClose }) {
         .from('profiles')
         .select('full_name')
         .eq('id', user.id)
-        .single()
+        .maybeSingle()
 
       if (data?.full_name) {
         setAdminName(data.full_name)
@@ -122,7 +128,7 @@ export default function Sidebar({ isOpen, onClose }) {
     }
 
     fetchProfile()
-  }, [supabase])
+  }, [initialAdminName, supabase])
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -160,11 +166,9 @@ export default function Sidebar({ isOpen, onClose }) {
 
       <div className={styles.sidebarFooter}>
         <div className={styles.adminProfile}>
-          <div className={styles.adminAvatar}>
-            {adminName.charAt(0).toUpperCase()}
-          </div>
+          <div className={styles.adminAvatar}>{displayAdminName.charAt(0).toUpperCase()}</div>
           <div>
-            <div style={{ fontWeight: 600 }}>{adminName}</div>
+            <div style={{ fontWeight: 600 }}>{displayAdminName}</div>
             <div style={{ fontSize: '0.75rem', color: 'var(--color-gray-500)' }}>
               Quản trị viên
             </div>

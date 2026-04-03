@@ -3,7 +3,7 @@ import BrandLogo from '@/components/ui/BrandLogo'
 import styles from './auth.module.css'
 
 export const metadata = {
-  title: 'Đăng nhập / Đăng ký - KidTech',
+  title: 'Đăng nhập / Đăng ký - AIgenlabs',
   description: 'Giao diện đăng nhập và đăng ký nền tảng học Vibe Coding',
 }
 

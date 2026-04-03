@@ -22,7 +22,7 @@
 | File | Vai trò | Đọc khi |
 |---|---|---|
 | `docs/database-schema.md` | SQL schema + RLS | Code auth, CRUD |
-| `docs/kidtech-prd.md` | Master spec (§8-9 chi tiết) | Cần context sâu |
+| `docs/aigenlabs-prd.md` | Master spec (§8-9 chi tiết) | Cần context sâu |
 | `docs/VIBECODING_GUIDE.md` | Methodology reference | Cần hiểu workflow |
 
 ## Root Docs

@@ -7,7 +7,7 @@ import { sanitizeHTML } from '@/lib/sanitize'
 import styles from '@/app/student/student.module.css'
 
 export default function LessonContent({ subject, progress, studentId, onComplete }) {
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
   const [completed, setCompleted] = useState(progress?.completed || false)
   const [saving, setSaving] = useState(false)
 

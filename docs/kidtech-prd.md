@@ -1,4 +1,4 @@
-# KidTech Project — Master Reference Document (PRD)
+# AIgenlabs Project — Master Reference Document (PRD)
 ## Dùng cho mọi AI IDE: Antigravity, Cursor, Claude Code
 
 ---
@@ -54,7 +54,7 @@ Hệ thống gồm 3 module chính hoạt động trên cùng 1 Next.js app.
 ## 3. CẤU TRÚC DỰ ÁN HIỆN TẠI
 
 ```
-kidtech-app/
+aigenlabs-app/
 ├── CLAUDE.md                          ← AI agent memory (ngắn gọn)
 ├── AGENTS.md                          ← Next.js rules (auto-generated)
 ├── .env.local                         ← [CẦN TẠO] Supabase credentials
@@ -64,7 +64,7 @@ kidtech-app/
 ├── docs/                              ← Tài liệu kỹ thuật chi tiết
 │   ├── INDEX.md                       ← Bản đồ cross-reference
 │   ├── database-schema.md             ← SQL schema + RLS + seed data
-│   ├── kidtech-prd.md                 ← Master Reference Document (file này)
+│   ├── aigenlabs-prd.md                 ← Master Reference Document (file này)
 │   ├── VIBECODING_GUIDE.md            ← Methodology reference
 │   └── phases/                        ← 1 Phase = 1 Session (9 directories)
 │       ├── phase-03-auth-core/        ← S3: Supabase clients + middleware
@@ -457,7 +457,7 @@ CSS: Max-width content area, video responsive (16:9), clean typography
 ```
 Layout: Centered card on gradient background
 Sections:
-  - KidTech logo + "Đăng nhập" heading
+  - AIgenlabs logo + "Đăng nhập" heading
   - Email input (required, type=email)
   - Password input (required, show/hide toggle)
   - "Quên mật khẩu?" link (optional, Phase 6)
@@ -619,7 +619,7 @@ Sections:
 
 ### Khi bắt đầu phiên mới (prompt template)
 ```
-Hãy đọc file docs/kidtech-prd.md (Master Reference Document) để hiểu toàn bộ 
+Hãy đọc file docs/aigenlabs-prd.md (Master Reference Document) để hiểu toàn bộ 
 project context. Sau đó cho biết:
 1. Tiến độ hiện tại (Phase nào đã xong, Phase nào đang làm)
 2. Files nào đã tạo, files nào cần tạo
@@ -628,12 +628,12 @@ project context. Sau đó cho biết:
 
 ### Khi code (prompt template)  
 ```
-Đọc Section [N] trong docs/kidtech-prd.md. Tạo [file path] theo đúng spec.
+Đọc Section [N] trong docs/aigenlabs-prd.md. Tạo [file path] theo đúng spec.
 Tham khảo pattern từ [file đã có]. Dùng design tokens từ globals.css.
 ```
 
 ### Khi mất kết nối
 ```
-Tất cả context đã được lưu trong docs/kidtech-prd.md. AI mới chỉ cần đọc
+Tất cả context đã được lưu trong docs/aigenlabs-prd.md. AI mới chỉ cần đọc
 file đó là có ĐỦ thông tin để tiếp tục. Không cần hỏi lại bất kỳ điều gì.
 ```
