@@ -87,8 +87,8 @@ export default function BrandLogo({
 
       <span className={styles.brandLogo__text}>
         <span className={styles.brandLogo__wordmark}>
-          <span className={styles.brandLogo__word}>Kid</span>
-          <span className={styles.brandLogo__accent}>Tech</span>
+          <span className={styles.brandLogo__word}>AIgen</span>
+          <span className={styles.brandLogo__accent}>labs</span>
         </span>
         <span className={styles.brandLogo__subtitle}>{subtitle}</span>
       </span>

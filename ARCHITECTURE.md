@@ -4,7 +4,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                    KIDTECH PLATFORM                  │
+│                    AIGENLABS PLATFORM                │
 ├────────────┬────────────────┬───────────────────────┤
 │  Landing   │  Admin Dashboard│  Student Portal       │
 │  (Public)  │  (/admin/*)     │  (/student/*)         │
