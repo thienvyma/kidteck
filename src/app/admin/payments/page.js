@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import DataTable from '@/components/admin/DataTable'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
@@ -38,7 +38,7 @@ export default function PaymentsPage() {
   const [confirmAction, setConfirmAction] = useState(null)
   const [actionLoading, setActionLoading] = useState(false)
 
-  async function fetchPayments() {
+  const fetchPayments = useCallback(async () => {
     setLoading(true)
 
     try {
@@ -76,11 +76,11 @@ export default function PaymentsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filter, studentId])
 
   useEffect(() => {
     fetchPayments()
-  }, [filter, studentId])
+  }, [fetchPayments])
 
   function renderPaymentStatus(status) {
     const map = {

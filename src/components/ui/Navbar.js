@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import BrandLogo from './BrandLogo'
 import styles from './Navbar.module.css'
 
@@ -55,6 +56,9 @@ export default function Navbar({ header }) {
           <a href="#faq" className={styles.navbar__link} onClick={handleLinkClick}>
             {labels.faqLabel}
           </a>
+          <Link href="/login" className={styles.navbar__link} onClick={handleLinkClick}>
+            Đăng nhập
+          </Link>
           <a
             href="#cta"
             className={`btn btn--primary btn--sm ${styles.navbar__cta}`}

@@ -1,7 +1,8 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import styles from '../admin.module.css'
@@ -35,7 +36,7 @@ export default function CoursesPage() {
   const [confirmDeleteLevel, setConfirmDeleteLevel] = useState(null)
   const [deletingLevel, setDeletingLevel] = useState(false)
 
-  async function fetchLevels(preferredLevelId) {
+  const fetchLevels = useCallback(async (preferredLevelId) => {
     const { data, error } = await supabase
       .from('levels')
       .select(`
@@ -82,11 +83,11 @@ export default function CoursesPage() {
       return normalizedLevels[0]?.id || null
     })
     setLoading(false)
-  }
+  }, [supabase])
 
   useEffect(() => {
     fetchLevels()
-  }, [])
+  }, [fetchLevels])
 
   const selectedLevel = levels.find((level) => level.id === selectedLevelId) || null
   const selectedSubjects = selectedLevel?.subjects || []

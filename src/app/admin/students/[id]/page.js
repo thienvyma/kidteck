@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import styles from '../../admin.module.css'
 
 const enrollmentStateMap = {
@@ -73,7 +73,7 @@ export default function StudentDetailPage() {
   const [loading, setLoading] = useState(true)
   const [actionKey, setActionKey] = useState('')
 
-  async function loadStudent(showLoader = true) {
+  const loadStudent = useCallback(async (showLoader = true) => {
     if (!studentId) {
       return
     }
@@ -115,11 +115,11 @@ export default function StudentDetailPage() {
         setLoading(false)
       }
     }
-  }
+  }, [studentId])
 
   useEffect(() => {
     loadStudent()
-  }, [studentId])
+  }, [loadStudent])
 
   const progressSummary = useMemo(() => {
     const packages = overview?.packages || []

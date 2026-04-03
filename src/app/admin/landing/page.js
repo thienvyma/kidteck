@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { useEffect, useState, useCallback } from 'react'
 import { cloneDefaultLandingContent } from '@/lib/landing-defaults'
 import styles from '../admin.module.css'
 
@@ -40,7 +41,7 @@ export default function AdminLandingPage() {
   const [feedback, setFeedback] = useState(null)
   const [activeSection, setActiveSection] = useState('header')
 
-  async function fetchContent({ silent = false } = {}) {
+  const fetchContent = useCallback(async ({ silent = false } = {}) => {
     if (!silent) {
       setLoading(true)
     }
@@ -67,11 +68,11 @@ export default function AdminLandingPage() {
         setLoading(false)
       }
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchContent()
-  }, [])
+  }, [fetchContent])
 
   function updateSection(section, field, value) {
     setContent((current) => ({
@@ -262,12 +263,12 @@ export default function AdminLandingPage() {
               Tên gói, mô tả, giá, thời lượng và danh sách môn hiển thị ở roadmap/pricing luôn
               lấy từ phần Khóa học trong admin.
             </p>
-            <a
+            <Link
               href="/admin/courses"
               className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
             >
               Mở quản lý khóa học
-            </a>
+            </Link>
           </div>
 
           <nav className={styles.landingEditorNav}>

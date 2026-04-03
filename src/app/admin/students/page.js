@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import DataTable from '@/components/admin/DataTable'
@@ -14,7 +14,7 @@ export default function StudentsPage() {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
 
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -58,11 +58,11 @@ export default function StudentsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [supabase])
 
   useEffect(() => {
     fetchStudents()
-  }, [supabase])
+  }, [fetchStudents])
 
   const handleStudentCreated = () => {
     setLoading(true)

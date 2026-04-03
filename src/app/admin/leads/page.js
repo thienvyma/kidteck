@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import DataTable from '@/components/admin/DataTable'
 import styles from '../admin.module.css'
 
@@ -45,7 +45,7 @@ export default function LeadsPage() {
   const [notesDraft, setNotesDraft] = useState('')
   const [feedback, setFeedback] = useState(null)
 
-  async function fetchLeads() {
+  const fetchLeads = useCallback(async () => {
     setLoading(true)
 
     try {
@@ -98,11 +98,11 @@ export default function LeadsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filter])
 
   useEffect(() => {
     fetchLeads()
-  }, [filter])
+  }, [fetchLeads])
 
   const selectedLead = useMemo(
     () => leads.find((lead) => lead.id === selectedLeadId) || null,

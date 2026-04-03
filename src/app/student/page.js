@@ -13,14 +13,17 @@ export default function StudentDashboard() {
   const [nextSubject, setNextSubject] = useState(null)
   const [allLevels, setAllLevels] = useState([])
   const [loading, setLoading] = useState(true)
+  const [quote, setQuote] = useState('')
 
-  const quotes = [
-    '"Hành trình vạn dặm bắt đầu từ một bước chân." — Lão Tử',
-    '"Tương lai thuộc về người học hỏi không ngừng." — Eric Hoffer',
-    '"Code today, change the world tomorrow." — KidTech',
-  ]
-  const quote = quotes[Math.floor(Math.random() * quotes.length)]
-
+  useEffect(() => {
+    const quoteList = [
+      '"Hành trình vạn dặm bắt đầu từ một bước chân." — Lão Tử',
+      '"Tương lai thuộc về người học hỏi không ngừng." — Eric Hoffer',
+      '"Code today, change the world tomorrow." — KidTech',
+    ]
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setQuote(quoteList[Math.floor(Math.random() * quoteList.length)])
+  }, [])
   useEffect(() => {
     const fetch = async () => {
       const { data: { user } } = await supabase.auth.getUser()
