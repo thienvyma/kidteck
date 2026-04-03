@@ -56,7 +56,11 @@ export default function Navbar({ header }) {
           <a href="#faq" className={styles.navbar__link} onClick={handleLinkClick}>
             {labels.faqLabel}
           </a>
-          <Link href="/login" className={styles.navbar__link} onClick={handleLinkClick}>
+          <Link
+            href="/login"
+            className={`btn btn--secondary btn--sm ${styles.navbar__cta}`}
+            onClick={handleLinkClick}
+          >
             Đăng nhập
           </Link>
           <a
