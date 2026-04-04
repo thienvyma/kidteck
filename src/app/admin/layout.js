@@ -9,47 +9,33 @@ import styles from './admin.module.css'
 export default function AdminLayout({ children }) {
   const [supabase] = useState(() => createClient())
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [authorized, setAuthorized] = useState(false)
-  const [checking, setChecking] = useState(true)
   const [adminName, setAdminName] = useState('Admin')
-  const router = useRouter()
 
   useEffect(() => {
-    const checkRole = async () => {
+    const fetchProfile = async () => {
       try {
         const {
           data: { session },
         } = await supabase.auth.getSession()
-        const user = session?.user
 
-        if (!user) {
-          router.push('/login')
-          return
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', session.user.id)
+            .maybeSingle()
+
+          if (profile?.full_name) {
+            setAdminName(profile.full_name)
+          }
         }
-
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role, full_name')
-          .eq('id', user.id)
-          .maybeSingle()
-
-        if (profile?.role !== 'admin') {
-          router.push('/student')
-          return
-        }
-
-        setAdminName(profile.full_name || 'Admin')
-        setAuthorized(true)
       } catch (err) {
-        console.error('Role check error:', err)
-        router.push('/login')
-      } finally {
-        setChecking(false)
+        console.error('Profile fetch error:', err)
       }
     }
 
-    checkRole()
-  }, [router, supabase])
+    fetchProfile()
+  }, [supabase])
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen)
@@ -61,28 +47,6 @@ export default function AdminLayout({ children }) {
     }
   }
 
-  if (checking || !authorized) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: 'var(--app-viewport-height, 100vh)',
-          background: 'var(--color-light)',
-        }}
-      >
-        <div
-          style={{
-            textAlign: 'center',
-            color: 'var(--color-gray-500)',
-          }}
-        >
-          Đang kiểm tra quyền truy cập...
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className={styles.adminLayout}>
