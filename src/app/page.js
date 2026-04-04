@@ -170,10 +170,6 @@ export default async function Home() {
                         </div>
                       ))}
                     </div>
-                    <div className={styles['roadmap__card-result']}>
-                      Tập trung vào{' '}
-                      <strong>tư duy hệ thống, workflow rõ và output có thể demo</strong>
-                    </div>
                   </div>
                 )
               })}

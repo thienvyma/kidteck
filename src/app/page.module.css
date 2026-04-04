@@ -1082,15 +1082,6 @@
   color: var(--color-gray-700);
 }
 
-.roadmap__card-result {
-  padding: var(--space-md);
-  background: linear-gradient(180deg, rgba(236, 242, 255, 0.92), rgba(228, 237, 255, 0.78));
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  text-align: center;
-}
-
 /* --- Results --- */
 .results {
   background:
