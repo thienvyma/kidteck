@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useEffect, useState, useCallback, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import DataTable from '@/components/admin/DataTable'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import styles from '../admin.module.css'
@@ -26,7 +26,7 @@ function formatDate(value, withTime = false) {
   return withTime ? date.toLocaleString('vi-VN') : date.toLocaleDateString('vi-VN')
 }
 
-export default function PaymentsPage() {
+function PaymentsContent() {
   const searchParams = useSearchParams()
   const studentId = searchParams.get('studentId') || ''
 
@@ -279,5 +279,17 @@ export default function PaymentsPage() {
         loading={actionLoading}
       />
     </>
+  )
+}
+
+export default function PaymentsPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-gray-500)' }}>
+        Đang tải sổ thanh toán...
+      </div>
+    }>
+      <PaymentsContent />
+    </Suspense>
   )
 }
