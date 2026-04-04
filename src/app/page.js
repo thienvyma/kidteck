@@ -164,13 +164,6 @@ export default async function Home() {
                         {level.duration_weeks || '?'} tuần
                       </span>
                     </div>
-                    <div className={styles['roadmap__card-subjects']}>
-                      {level.subjects.slice(0, 5).map((subject) => (
-                        <div key={subject.id} className={styles['roadmap__card-subject']}>
-                          • {subject.description || subject.name}
-                        </div>
-                      ))}
-                    </div>
                   </div>
                 )
               })}
@@ -318,12 +311,9 @@ export default async function Home() {
                       {level.duration_weeks || '?'} tuần
                     </div>
                     <div className={styles['pricing__card-features']}>
-                      {level.subjects.slice(0, 5).map((subject) => (
-                        <div key={subject.id} className={styles['pricing__card-feature']}>
-                          <span className={styles['pricing__card-feature-icon']}>✓</span>
-                          <span>{subject.description || subject.name}</span>
-                        </div>
-                      ))}
+                      <span style={{ fontSize: '0.95rem', color: 'var(--color-text-secondary)', lineHeight: 1.6, display: 'block', minHeight: '60px' }}>
+                        {level.description || 'Chưa có mô tả gói học.'}
+                      </span>
                     </div>
                     <a
                       href="#cta"
