@@ -1,5 +1,5 @@
 import styles from './page.module.css'
-import { connection } from 'next/server'
+
 import Navbar from '@/components/ui/Navbar'
 import FAQSection from '@/components/ui/FAQSection'
 import CTAForm from '@/components/ui/CTAForm'
@@ -12,8 +12,9 @@ const pricingButtonVariants = ['secondary', 'primary', 'accent']
 const pricingBadgeVariants = ['success', 'primary', 'accent']
 const pricingStages = ['Khởi đầu', 'Tăng tốc', 'Đi sâu']
 
+export const revalidate = 60
+
 export default async function Home() {
-  await connection()
 
   const { content, levels } = await getLandingPageData()
 
