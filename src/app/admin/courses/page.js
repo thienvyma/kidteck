@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
+import EditSubjectModal from '@/components/admin/EditSubjectModal'
 import styles from '../admin.module.css'
 
 const emptyLevelForm = {
@@ -35,6 +36,9 @@ export default function CoursesPage() {
   const [message, setMessage] = useState(null)
   const [confirmDeleteLevel, setConfirmDeleteLevel] = useState(null)
   const [deletingLevel, setDeletingLevel] = useState(false)
+  const [editingSubjectId, setEditingSubjectId] = useState(null)
+  const [confirmDeleteSubject, setConfirmDeleteSubject] = useState(null)
+  const [deletingSubject, setDeletingSubject] = useState(false)
 
   const fetchLevels = useCallback(async (preferredLevelId) => {
     const { data, error } = await supabase
@@ -239,6 +243,35 @@ export default function CoursesPage() {
     setConfirmDeleteLevel(null)
     await fetchLevels()
     setDeletingLevel(false)
+  }
+
+  const handleDeleteSubject = async () => {
+    if (!confirmDeleteSubject?.id) return
+
+    setDeletingSubject(true)
+    setMessage(null)
+
+    const response = await fetch('/api/admin/curriculum', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'deleteSubject',
+        subjectId: confirmDeleteSubject.id,
+      }),
+    })
+
+    const result = await response.json()
+
+    if (!response.ok) {
+      showFeedback('error', result.error || 'Không thể xóa môn học')
+      setDeletingSubject(false)
+      return
+    }
+
+    showFeedback('success', `Đã xóa môn "${confirmDeleteSubject.name}" khỏi hệ thống.`)
+    setConfirmDeleteSubject(null)
+    await fetchLevels(selectedLevel.id)
+    setDeletingSubject(false)
   }
 
   const handleCreateSubject = async (event) => {
@@ -714,12 +747,21 @@ export default function CoursesPage() {
                         </div>
 
                         <div className={styles.subjectManagerActions}>
-                          <Link
-                            href={`/admin/courses/${subject.id}`}
-                            className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
+                          <button
+                            type="button"
+                            onClick={() => setEditingSubjectId(subject.id)}
+                            className={`${styles.quickActionBtn} ${styles['quickActionBtn--primary']}`}
                           >
                             Chỉnh môn học
-                          </Link>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteSubject({ id: subject.id, name: subject.name })}
+                            className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
+                            style={{ marginLeft: '8px', color: 'var(--color-error)', borderColor: 'rgba(225, 112, 85, 0.3)', backgroundColor: 'transparent' }}
+                          >
+                            Xóa
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -753,6 +795,33 @@ export default function CoursesPage() {
         }}
         loading={deletingLevel}
       />
+
+      <ConfirmDialog
+        isOpen={Boolean(confirmDeleteSubject)}
+        title="Xóa môn học"
+        message={
+          confirmDeleteSubject
+            ? `Bạn có chắc muốn xóa môn học "${confirmDeleteSubject.name}"? Thao tác này sẽ loại bỏ nội dung vĩnh viễn khỏi gói.`
+            : ''
+        }
+        confirmText="Xóa nhanh"
+        variant="danger"
+        onConfirm={handleDeleteSubject}
+        onCancel={() => {
+          if (!deletingSubject) {
+            setConfirmDeleteSubject(null)
+          }
+        }}
+        loading={deletingSubject}
+      />
+
+      {editingSubjectId && (
+        <EditSubjectModal 
+          subjectId={editingSubjectId} 
+          onClose={() => setEditingSubjectId(null)} 
+          onSaveSuccess={() => fetchLevels(selectedLevel.id)}
+        />
+      )}
     </>
   )
 }

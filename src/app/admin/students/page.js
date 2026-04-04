@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import DataTable from '@/components/admin/DataTable'
 import CreateStudentModal from '@/components/admin/CreateStudentModal'
+import StudentDetailModal from '@/components/admin/StudentDetailModal'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import styles from '../admin.module.css'
 
@@ -17,6 +18,9 @@ export default function StudentsPage() {
   const [feedback, setFeedback] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  
+  const [filter, setFilter] = useState('all')
+  const [activeStudentId, setActiveStudentId] = useState(null)
 
   const fetchStudents = useCallback(async () => {
     try {
@@ -80,6 +84,11 @@ export default function StudentsPage() {
     setLoading(true)
     fetchStudents()
   }
+
+  const filteredStudents = useMemo(() => {
+    if (filter === 'all') return students
+    return students.filter(student => student.status === filter)
+  }, [students, filter])
 
   async function handleDeleteStudent() {
     if (!deleteTarget?.id) {
@@ -165,19 +174,37 @@ export default function StudentsPage() {
         </div>
       )}
 
+      <div className={styles.filterBar}>
+        {['all', 'active', 'inactive', 'completed'].map((item) => (
+          <button
+            key={item}
+            className={`${styles.filterBtn} ${filter === item ? styles.filterBtnActive : ''}`}
+            onClick={() => setFilter(item)}
+          >
+            {item === 'all'
+              ? 'Tất cả'
+              : item === 'active'
+                ? 'Đang học'
+                : item === 'inactive'
+                  ? 'Chưa kích hoạt'
+                  : 'Hoàn thành'}
+          </button>
+        ))}
+      </div>
+
       <DataTable
         columns={columns}
-        data={students}
+        data={filteredStudents}
         searchKey="full_name"
         loading={loading}
         emptyMessage="Chưa có học sinh nào"
         actions={[
           {
-            label: 'Xem',
-            onClick: (row) => router.push(`/admin/students/${row.id}`),
+            label: 'Hồ sơ',
+            onClick: (row) => setActiveStudentId(row.id),
           },
           {
-            label: 'Xóa',
+            label: 'Xóa nhanh',
             onClick: (row) => setDeleteTarget(row),
             disabled: () => deleting,
           },
@@ -209,6 +236,14 @@ export default function StudentsPage() {
           }
         }}
       />
+
+      {activeStudentId && (
+        <StudentDetailModal
+          studentId={activeStudentId}
+          onClose={() => setActiveStudentId(null)}
+          onRefreshList={fetchStudents}
+        />
+      )}
     </>
   )
 }

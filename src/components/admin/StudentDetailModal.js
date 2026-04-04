@@ -1,10 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
-import styles from '../../admin.module.css'
+import styles from '@/app/admin/admin.module.css'
 
 const enrollmentStateMap = {
   inactive: { label: 'Chưa kích hoạt', tone: 'badge--inactive' },
@@ -55,10 +54,7 @@ function buildPaymentDrafts(packages = []) {
   }, {})
 }
 
-export default function StudentDetailPage() {
-  const params = useParams()
-  const router = useRouter()
-  const studentId = Array.isArray(params?.id) ? params.id[0] : params?.id
+export default function StudentDetailModal({ studentId, onClose, onRefreshList }) {
 
   const [overview, setOverview] = useState(null)
   const [accountInfo, setAccountInfo] = useState(null)
@@ -343,7 +339,8 @@ export default function StudentDetailPage() {
         throw new Error(result.error || 'Không thể xóa tài khoản học viên')
       }
 
-      router.push('/admin/students')
+      if (onRefreshList) onRefreshList()
+      onClose()
     } catch (error) {
       showFeedback('error', error.message)
     } finally {
@@ -363,10 +360,15 @@ export default function StudentDetailPage() {
 
   if (loading) {
     return (
-      <div className={styles.pageHeader}>
-        <div>
-          <h2 className={styles.pageTitle}>Chi tiết học sinh</h2>
-          <p className={styles.curriculumLead}>Đang tải hồ sơ học sinh...</p>
+      <div className={styles.modalOverlay} onClick={onClose}>
+        <div className={`${styles.modalContent} ${styles.largeModalContent}`} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.modalHeader}>
+            <h3>Chi tiết học sinh</h3>
+            <button className={styles.modalClose} onClick={onClose}>✕</button>
+          </div>
+          <div className={styles.modalBodyScroll} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <p style={{ color: 'var(--color-gray-500)' }}>Đang tải hồ sơ học sinh...</p>
+          </div>
         </div>
       </div>
     )
@@ -374,10 +376,15 @@ export default function StudentDetailPage() {
 
   if (!overview?.profile) {
     return (
-      <div className={styles.pageHeader}>
-        <div>
-          <h2 className={styles.pageTitle}>Chi tiết học sinh</h2>
-          <p className={styles.curriculumLead}>Không tìm thấy học sinh này.</p>
+      <div className={styles.modalOverlay} onClick={onClose}>
+        <div className={`${styles.modalContent} ${styles.largeModalContent}`} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.modalHeader}>
+            <h3>Chi tiết học sinh</h3>
+            <button className={styles.modalClose} onClick={onClose}>✕</button>
+          </div>
+          <div className={styles.modalBodyScroll} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <p style={{ color: 'var(--color-gray-500)' }}>Không tìm thấy học sinh này.</p>
+          </div>
         </div>
       </div>
     )
@@ -387,31 +394,45 @@ export default function StudentDetailPage() {
   const studentInitial = studentName.charAt(0).toUpperCase()
 
   return (
-    <>
-      <div className={styles.pageHeader}>
-        <div>
-          <h2 className={styles.pageTitle}>Chi tiết học sinh</h2>
-          <p className={styles.curriculumLead}>
-            Ghi nhận thanh toán thủ công, kích hoạt gói học và kiểm tra tiến độ tại cùng một nơi.
-          </p>
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={`${styles.modalContent} ${styles.largeModalContent}`} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
+             <div className={styles.detailAvatar} style={{width: 32, height: 32, fontSize: 16}}>{studentInitial}</div>
+             <h3 style={{margin: 0}}>Chi tiết: {studentName}</h3>
+          </div>
+          <div className={styles.quickActions}>
+            <a 
+              target="_blank"
+              rel="noopener noreferrer"
+              href={`/admin/payments?studentId=${studentId}`} 
+              className={`${styles.quickActionBtn} ${styles['quickActionBtn--primary']}`}
+            >
+              Sổ thanh toán
+            </a>
+            <button className={styles.modalClose} onClick={onClose}>✕</button>
+          </div>
         </div>
-        <div className={styles.quickActions}>
-          <Link href="/admin/students" className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}>
-            ← Danh sách học sinh
-          </Link>
-          <Link href={`/admin/payments?studentId=${studentId}`} className={`${styles.quickActionBtn} ${styles['quickActionBtn--primary']}`}>
-            Sổ thanh toán
-          </Link>
-          <button
-            type="button"
-            className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
-            onClick={() => setConfirmDelete(true)}
-            disabled={isBusy('delete-student')}
-          >
-            {isBusy('delete-student') ? 'Đang xóa...' : 'Xóa tài khoản'}
-          </button>
-        </div>
-      </div>
+
+        <div className={styles.modalBodyScroll}>
+          <div className={styles.pageHeader} style={{ marginBottom: '1rem' }}>
+            <div>
+              <p className={styles.curriculumLead} style={{ marginTop: 0 }}>
+                Ghi nhận thanh toán thủ công, kích hoạt gói học và kiểm tra tiến độ tại cùng một nơi.
+              </p>
+            </div>
+            <div className={styles.quickActions}>
+              <button
+                type="button"
+                className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
+                onClick={() => setConfirmDelete(true)}
+                disabled={isBusy('delete-student')}
+                style={{ color: 'var(--color-error)', borderColor: 'rgba(225, 112, 85, 0.3)', minHeight: 32 }}
+              >
+                {isBusy('delete-student') ? 'Đang xóa...' : 'Xóa tài khoản'}
+              </button>
+            </div>
+          </div>
 
       {feedback && (
         <div
@@ -905,6 +926,8 @@ export default function StudentDetailPage() {
           }
         }}
       />
-    </>
+        </div>
+      </div>
+    </div>
   )
 }
