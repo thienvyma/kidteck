@@ -13,6 +13,7 @@ export default function ProfilePage() {
   const [website, setWebsite] = useState('')
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
+  const [oldPassword, setOldPassword] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [passwordSaving, setPasswordSaving] = useState(false)
@@ -87,8 +88,13 @@ export default function ProfilePage() {
   const handleSavePassword = async () => {
     setPasswordMessage('')
     
+    if (!oldPassword) {
+      setPasswordMessage('❌ Lỗi: Vui lòng nhập mật khẩu hiện tại.')
+      return
+    }
+
     if (password.length < 6) {
-      setPasswordMessage('❌ Lỗi: Mật khẩu phải có ít nhất 6 ký tự.')
+      setPasswordMessage('❌ Lỗi: Mật khẩu mới phải có ít nhất 6 ký tự.')
       return
     }
     
@@ -98,12 +104,36 @@ export default function ProfilePage() {
     }
 
     setPasswordSaving(true)
+
+    // Lấy thông tin email từ session hiện tại
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user?.email) {
+      setPasswordMessage('❌ Lỗi: Không tìm thấy thông tin phiên đăng nhập.')
+      setPasswordSaving(false)
+      return
+    }
+
+    // Xác thực người dùng bằng mật khẩu hiện tại (Re-authenticate)
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: oldPassword,
+    })
+
+    if (signInError) {
+      setPasswordMessage('❌ Lỗi: Mật khẩu hiện tại không đúng.')
+      setPasswordSaving(false)
+      return
+    }
+
+    // Tiến hành đổi sang mật khẩu mới
     const { error } = await supabase.auth.updateUser({ password })
 
     if (error) {
       setPasswordMessage(`❌ Lỗi: ${error.message}`)
     } else {
       setPasswordMessage('✅ Đổi mật khẩu thành công!')
+      setOldPassword('')
       setPassword('')
       setConfirmPassword('')
     }
@@ -230,6 +260,16 @@ export default function ProfilePage() {
 
       <div className={styles.profileCard}>
         <h4 className={styles.profileCardTitle}>🔒 Đổi mật khẩu</h4>
+        <div className={styles.profileField}>
+          <label className={styles.profileFieldLabel}>Mật khẩu hiện tại</label>
+          <input
+            type="password"
+            value={oldPassword}
+            onChange={(event) => setOldPassword(event.target.value)}
+            placeholder="Nhập mật khẩu hiện tại"
+            className={styles.profileInput}
+          />
+        </div>
         <div className={styles.profileField}>
           <label className={styles.profileFieldLabel}>Mật khẩu mới</label>
           <input

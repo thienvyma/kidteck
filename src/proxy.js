@@ -56,12 +56,28 @@ export async function proxy(request) {
     return supabaseResponse
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-  const role = profile?.role || 'student'
+  // 1. Tối ưu: Đọc Cookie trước để tiết kiệm Database request
+  const cookieName = `x-role-${user.id}`
+  let role = request.cookies.get(cookieName)?.value
+
+  // 2. Nếu chưa có Cookie, tiến hành Query DB và lưu ngay vào Cookie
+  if (!role) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+      
+    role = profile?.role || 'student'
+
+    // Cache kết quả vào Cookie để skip Database cho các đợt duyệt trang tiếp theo
+    supabaseResponse.cookies.set(cookieName, role, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7, // 1 tuần
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    })
+  }
 
   if (pathname === '/login' || pathname === '/register') {
     const url = request.nextUrl.clone()
