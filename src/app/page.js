@@ -153,15 +153,24 @@ export default async function Home() {
                     key={level.id}
                     className={`${styles.roadmap__card} ${styles[`roadmap__card--${variant}`]}`}
                   >
+                    <div className={styles['roadmap__card-price-wrapper']}>
+                      <span className={`${styles['roadmap__card-price']} gradient-text`}>
+                        {new Intl.NumberFormat('vi-VN').format(level.price || 0)}
+                      </span>
+                      <span className={styles['roadmap__card-currency']}>đ</span>
+                    </div>
+
                     <div className={styles['roadmap__card-age']}>Level {index + 1}</div>
+                    
                     <h3 className={styles['roadmap__card-name']}>{level.name}</h3>
-                    <p className={styles['roadmap__card-goal']}>{level.description}</p>
+                    <p className={styles['roadmap__card-goal']}>{level.description || 'Chưa có mô tả'}</p>
+                    
                     <div className={styles['roadmap__card-meta']}>
                       <span className={`badge badge--${badgeVariant}`}>
-                        {level.subject_count || level.subjects.length} môn
+                        {level.subject_count || level.subjects.length} MÔN
                       </span>
                       <span className={`badge badge--${badgeVariant}`}>
-                        {level.duration_weeks || '?'} tuần
+                        {level.duration_weeks || '?'} TUẦN
                       </span>
                     </div>
                   </div>
@@ -304,16 +313,34 @@ export default async function Home() {
                     </div>
                     <div className={styles['pricing__card-name']}>{level.name}</div>
                     <div className={`${styles['pricing__card-price']} gradient-text`}>
-                      {new Intl.NumberFormat('vi-VN').format(level.price || 0)}đ
-                    </div>
-                    <div className={styles['pricing__card-period']}>
-                      {level.subject_count || level.subjects.length} môn •{' '}
-                      {level.duration_weeks || '?'} tuần
-                    </div>
-                    <div className={styles['pricing__card-features']}>
-                      <span style={{ fontSize: '0.95rem', color: 'var(--color-text-secondary)', lineHeight: 1.6, display: 'block', minHeight: '60px' }}>
-                        {level.description || 'Chưa có mô tả gói học.'}
+                      <span className={styles['price-number']}>
+                        {new Intl.NumberFormat('vi-VN').format(level.price || 0)}
                       </span>
+                      <span className={styles['price-currency']}>đ</span>
+                    </div>
+                    <div className={styles['pricing__card-period-wrap']}>
+                      <span className={styles['pricing-badge']}>
+                        {level.subject_count || level.subjects.length} MÔN
+                      </span>
+                      <span className={styles['pricing-badge']}>
+                        {level.duration_weeks || '?'} TUẦN
+                      </span>
+                    </div>
+                    
+                    <div className={styles['pricing__card-divider']}></div>
+
+                    <div className={styles['pricing__card-features']}>
+                      <div className={styles['pricing__features-title']}>Bạn sẽ nhận được:</div>
+                      {level.subjects.slice(0, 5).map((subject) => (
+                        <div key={subject.id} className={styles['pricing__card-feature']}>
+                          <div className={styles['pricing__card-feature-icon']}>
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                               <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </div>
+                          <span>{subject.description || subject.name}</span>
+                        </div>
+                      ))}
                     </div>
                     <a
                       href="#cta"
