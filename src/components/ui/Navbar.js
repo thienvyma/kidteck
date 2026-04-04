@@ -22,12 +22,14 @@ export default function Navbar({ header }) {
   }
 
   useEffect(() => {
+    const options = { passive: true }
+
     function handleScroll() {
       setScrolled(window.scrollY > 50)
     }
 
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
+    window.addEventListener('scroll', handleScroll, options)
+    return () => window.removeEventListener('scroll', handleScroll, options)
   }, [])
 
   function handleLinkClick() {

@@ -5,6 +5,7 @@
 /* --- Hero --- */
 .hero {
   min-height: 100vh;
+  min-height: var(--app-viewport-height, 100vh);
   display: flex;
   align-items: center;
   position: relative;
@@ -78,6 +79,7 @@
     linear-gradient(rgba(108, 92, 231, 0.06) 1px, transparent 1px),
     linear-gradient(90deg, rgba(108, 92, 231, 0.06) 1px, transparent 1px);
   background-size: 120px 120px;
+  -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 88%);
   mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 88%);
 }
 
@@ -103,6 +105,7 @@
   background: rgba(255, 255, 255, 0.55);
   border: 1px solid rgba(108, 92, 231, 0.16);
   box-shadow: 0 14px 40px rgba(108, 92, 231, 0.08);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   border-radius: var(--radius-full);
   font-size: var(--font-size-sm);
@@ -280,6 +283,7 @@
   border-radius: 1rem;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
 }
 
@@ -324,6 +328,7 @@
   background: rgba(255, 255, 255, 0.82);
   border: 1px solid rgba(255, 255, 255, 0.7);
   box-shadow: 0 22px 48px rgba(45, 52, 54, 0.1);
+  -webkit-backdrop-filter: blur(18px);
   backdrop-filter: blur(18px);
   transform-style: preserve-3d;
 }
@@ -426,6 +431,7 @@
   transform: rotateX(78deg) translateZ(0);
   transform-origin: center;
   opacity: 0.8;
+  -webkit-mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.95), transparent 72%);
   mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.95), transparent 72%);
 }
 
@@ -479,6 +485,7 @@
 .futureSceneChip {
   position: absolute;
   z-index: 2;
+  -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
 }
 
@@ -692,6 +699,7 @@
   isolation: isolate;
   border: 1px solid rgba(108, 92, 231, 0.12);
   box-shadow: 0 30px 80px rgba(20, 33, 72, 0.1);
+  -webkit-backdrop-filter: blur(18px);
   backdrop-filter: blur(18px);
 }
 
@@ -709,6 +717,7 @@
     linear-gradient(90deg, rgba(108, 92, 231, 0.08) 1px, transparent 1px);
   background-size: 88px 88px;
   opacity: 0.34;
+  -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.65), transparent 92%);
   mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.65), transparent 92%);
   z-index: 0;
 }
@@ -780,6 +789,7 @@
 .cta-final__form {
   position: relative;
   overflow: hidden;
+  -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
 }
 
@@ -1705,6 +1715,51 @@
   text-align: center;
   color: var(--color-gray-500);
   font-size: var(--font-size-sm);
+}
+
+/* --- Safari Compatibility --- */
+:global(html[data-browser='safari']) .hero__visual,
+:global(html[data-browser='safari']) .hero__visualStage,
+:global(html[data-browser='safari']) .futureScene {
+  perspective: none;
+  transform-style: flat;
+}
+
+:global(html[data-browser='safari']) .futureSceneAura,
+:global(html[data-browser='safari']) .futureSceneStars,
+:global(html[data-browser='safari']) .futureScenePanelLeft,
+:global(html[data-browser='safari']) .futureScenePanelRight,
+:global(html[data-browser='safari']) .futureSceneMiniPanelLeft,
+:global(html[data-browser='safari']) .futureSceneMiniPanelRight,
+:global(html[data-browser='safari']) .futureSceneChipTop,
+:global(html[data-browser='safari']) .futureSceneChipBottom,
+:global(html[data-browser='safari']) .futureSceneRobotSvg {
+  transform: none;
+}
+
+:global(html[data-browser='safari']) .futureSceneRobotFloat,
+:global(html[data-browser='safari']) .futureSceneRobotHead,
+:global(html[data-browser='safari']) .futureSceneRobotCore,
+:global(html[data-browser='safari']) .futureSceneRobotHalo,
+:global(html[data-browser='safari']) .futureSceneRobotOrbit,
+:global(html[data-browser='safari']) .futureSceneRobotScan,
+:global(html[data-browser='safari']) .futureScenePanelLeft,
+:global(html[data-browser='safari']) .futureScenePanelRight,
+:global(html[data-browser='safari']) .futureSceneMiniPanelLeft,
+:global(html[data-browser='safari']) .futureSceneMiniPanelRight,
+:global(html[data-browser='safari']) .futureSceneChipTop,
+:global(html[data-browser='safari']) .futureSceneChipBottom {
+  animation: none;
+}
+
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .hero__eyebrow,
+  .hero__windowCard,
+  .hero__windowMetric,
+  .hero__floatingCard,
+  .sectionShell {
+    background: rgba(255, 255, 255, 0.95);
+  }
 }
 
 @keyframes heroDrift {

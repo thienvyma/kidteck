@@ -68,7 +68,7 @@ export default function AdminLayout({ children }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          minHeight: '100vh',
+          minHeight: 'var(--app-viewport-height, 100vh)',
           background: 'var(--color-light)',
         }}
       >

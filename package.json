@@ -17,6 +17,13 @@
     "kt:courses": "node src/cli/index.js course list",
     "content:encrypt": "node scripts/encrypt-subject-content.mjs"
   },
+  "browserslist": [
+    "chrome >= 111",
+    "edge >= 111",
+    "firefox >= 111",
+    "safari >= 15",
+    "ios_saf >= 15"
+  ],
   "dependencies": {
     "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.100.0",
