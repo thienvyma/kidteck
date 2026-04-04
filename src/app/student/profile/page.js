@@ -13,6 +13,10 @@ export default function ProfilePage() {
   const [website, setWebsite] = useState('')
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordSaving, setPasswordSaving] = useState(false)
+  const [passwordMessage, setPasswordMessage] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -78,6 +82,32 @@ export default function ProfilePage() {
       setMessage('✅ Đã lưu!')
     }
     setSaving(false)
+  }
+
+  const handleSavePassword = async () => {
+    setPasswordMessage('')
+    
+    if (password.length < 6) {
+      setPasswordMessage('❌ Lỗi: Mật khẩu phải có ít nhất 6 ký tự.')
+      return
+    }
+    
+    if (password !== confirmPassword) {
+      setPasswordMessage('❌ Lỗi: Xác nhận mật khẩu không khớp.')
+      return
+    }
+
+    setPasswordSaving(true)
+    const { error } = await supabase.auth.updateUser({ password })
+
+    if (error) {
+      setPasswordMessage(`❌ Lỗi: ${error.message}`)
+    } else {
+      setPasswordMessage('✅ Đổi mật khẩu thành công!')
+      setPassword('')
+      setConfirmPassword('')
+    }
+    setPasswordSaving(false)
   }
 
   const renderStatus = (status) => {
@@ -195,6 +225,44 @@ export default function ProfilePage() {
         )}
         <button onClick={handleSave} disabled={saving} className={styles.profileSaveBtn}>
           {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+        </button>
+      </div>
+
+      <div className={styles.profileCard}>
+        <h4 className={styles.profileCardTitle}>🔒 Đổi mật khẩu</h4>
+        <div className={styles.profileField}>
+          <label className={styles.profileFieldLabel}>Mật khẩu mới</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="Nhập ít nhất 6 ký tự"
+            className={styles.profileInput}
+          />
+        </div>
+        <div className={styles.profileField}>
+          <label className={styles.profileFieldLabel}>Xác nhận mật khẩu</label>
+          <input
+            type="password"
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+            placeholder="Nhập lại mật khẩu mới"
+            className={styles.profileInput}
+          />
+        </div>
+        {passwordMessage && (
+          <p
+            style={{
+              color: passwordMessage.startsWith('✅') ? 'var(--color-success)' : 'var(--color-error)',
+              fontWeight: 500,
+              marginTop: 'var(--space-sm)',
+            }}
+          >
+            {passwordMessage}
+          </p>
+        )}
+        <button onClick={handleSavePassword} disabled={passwordSaving} className={styles.profileSaveBtn}>
+          {passwordSaving ? 'Đang cập nhật...' : 'Cập nhật mật khẩu'}
         </button>
       </div>
 
