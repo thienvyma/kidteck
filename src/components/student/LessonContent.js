@@ -106,9 +106,6 @@ export default function LessonContent({ subject, progress, studentId, onComplete
               sandbox="allow-scripts allow-same-origin"
             />
           </div>
-          <p className={styles.slidesNote}>
-            Slide được hiển thị trực tiếp trong hệ thống để học sinh theo dõi ngay tại đây.
-          </p>
         </div>
       )}
 
