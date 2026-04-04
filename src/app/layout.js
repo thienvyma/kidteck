@@ -1,6 +1,7 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
 import RuntimeCompat from '@/components/ui/RuntimeCompat';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const inter = Inter({
   variable: "--font-inter",
@@ -26,6 +27,7 @@ export default function RootLayout({ children }) {
       <body>
         <RuntimeCompat />
         {children}
+        <SpeedInsights />
       </body>
     </html>
   );
