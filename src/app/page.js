@@ -166,7 +166,7 @@ export default async function Home() {
                     <div className={styles['roadmap__card-subjects']}>
                       {level.subjects.slice(0, 5).map((subject) => (
                         <div key={subject.id} className={styles['roadmap__card-subject']}>
-                          • {subject.name}
+                          • {subject.description || subject.name}
                         </div>
                       ))}
                     </div>
@@ -320,7 +320,7 @@ export default async function Home() {
                       {level.subjects.slice(0, 5).map((subject) => (
                         <div key={subject.id} className={styles['pricing__card-feature']}>
                           <span className={styles['pricing__card-feature-icon']}>✓</span>
-                          <span>{subject.name}</span>
+                          <span>{subject.description || subject.name}</span>
                         </div>
                       ))}
                     </div>
