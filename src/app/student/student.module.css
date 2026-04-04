@@ -896,3 +896,40 @@
     padding: var(--space-md);
   }
 }
+
+/* Multiple Slides Feature */
+.slidesHeaderArea {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-bottom: var(--space-sm);
+}
+
+.slidesTabs {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.slideTabBtn {
+  background: white;
+  border: 1px solid var(--color-gray-300);
+  border-radius: 20px;
+  padding: 0.3rem 0.8rem;
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-700);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.slideTabBtn:hover {
+  background-color: var(--color-gray-100);
+}
+
+.slideTabBtnActive {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}

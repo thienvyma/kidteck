@@ -12,8 +12,10 @@ export default function CourseEditPage() {
 
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [content, setContent] = useState('')
-  const [slidesUrl, setSlidesUrl] = useState('')
+  const [videoUrl, setVideoUrl] = useState('')
+  const [body, setBody] = useState('')
+  const [resources, setResources] = useState([])
+  const [slides, setSlides] = useState([])
   const [levelName, setLevelName] = useState('')
   const [sortOrder, setSortOrder] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -37,8 +39,19 @@ export default function CourseEditPage() {
 
       setName(data.name || '')
       setDescription(data.description || '')
-      setContent(JSON.stringify(data.content || {}, null, 2))
-      setSlidesUrl(data.content?.google_slides_url || data.content?.slides_url || '')
+      setVideoUrl(data.content?.video_url || '')
+      setBody(data.content?.body || '')
+      setResources(data.content?.resources || [])
+      
+      let loadedSlides = data.content?.slides || []
+      if (loadedSlides.length === 0) {
+        const legacyUrl = data.content?.google_slides_url || data.content?.slides_url
+        if (legacyUrl) {
+          loadedSlides = [{ title: 'Slide bài giảng', url: legacyUrl }]
+        }
+      }
+      setSlides(loadedSlides)
+
       setLevelName(data.levels?.name || '')
       setSortOrder(data.sort_order || null)
       setLoading(false)
@@ -54,21 +67,19 @@ export default function CourseEditPage() {
     setSaving(true)
     setMessage(null)
 
-    let parsedContent = {}
-    try {
-      parsedContent = JSON.parse(content || '{}')
-    } catch {
-      setMessage({ type: 'error', text: 'Content JSON không hợp lệ' })
-      setSaving(false)
-      return
+    let parsedContent = {
+      video_url: videoUrl,
+      body: body,
+      resources: resources.filter((r) => r.title.trim() || r.url.trim()),
     }
 
-    if (slidesUrl.trim()) {
-      parsedContent.google_slides_url = slidesUrl.trim()
-    } else {
-      delete parsedContent.google_slides_url
-      delete parsedContent.slides_url
+    if (slides.length > 0) {
+      parsedContent.slides = slides.filter(s => s.url && s.url.trim())
     }
+    
+    // Xóa trường cũ để thống nhất dữ liệu
+    delete parsedContent.google_slides_url
+    delete parsedContent.slides_url
 
     const response = await fetch('/api/admin/curriculum', {
       method: 'PATCH',
@@ -186,41 +197,154 @@ export default function CourseEditPage() {
         </div>
 
         <div className={styles.formField}>
-          <label className={styles.formLabel}>Google Slides URL</label>
+          <div className={styles.slidesHeaderRow}>
+            <label className={styles.formLabel}>Slides Bài Giảng</label>
+            <button 
+              type="button" 
+              onClick={() => setSlides([...slides, { title: `Phần ${slides.length + 1}`, url: '' }])}
+              className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']} ${styles.addSlideBtn}`}
+            >
+              + Thêm Slide
+            </button>
+          </div>
           <p className={styles.courseEditorHint}>
-            Dùng link Google Slides đã publish hoặc link presentation công khai. Hệ
-            thống sẽ tự chuyển sang chế độ nhúng trong portal học sinh để hạn chế việc
-            mở trực tiếp sang Google.
+            Trường hợp khóa học có nhiều slide, bạn có thể thêm các phần ở đây. Dùng link Google Slides đã publish hoặc link presentation công khai.
           </p>
-          <input
-            type="url"
-            value={slidesUrl}
-            onChange={(event) => setSlidesUrl(event.target.value)}
-            className={styles.formInput}
-            placeholder="https://docs.google.com/presentation/d/e/.../pub?start=false&loop=false&delayms=3000"
-          />
-          {slidesUrl.trim() && !normalizeGoogleSlidesEmbedUrl(slidesUrl) && (
-            <p className={styles.courseEditorWarning}>
-              Link này chưa đúng định dạng Google Slides hỗ trợ. Hãy dùng link publish
-              hoặc embed từ Google Slides.
-            </p>
-          )}
+          
+          <div className={styles.slidesList}>
+            {slides.map((slide, index) => (
+              <div key={index} className={styles.slideItemEditor}>
+                <div className={styles.slideItemEditorMain}>
+                  <input
+                    type="text"
+                    value={slide.title}
+                    onChange={(e) => {
+                      const newSlides = [...slides]
+                      newSlides[index].title = e.target.value
+                      setSlides(newSlides)
+                    }}
+                    className={styles.formInput}
+                    placeholder="Tiêu đề (VD: Phần 1 - Lý thuyết)"
+                  />
+                  <input
+                    type="url"
+                    value={slide.url}
+                    onChange={(e) => {
+                      const newSlides = [...slides]
+                      newSlides[index].url = e.target.value
+                      setSlides(newSlides)
+                    }}
+                    className={styles.formInput}
+                    placeholder="https://docs.google.com/presentation/d/e/.../pub?start=false&loop=false&delayms=3000"
+                  />
+                  {slide.url.trim() && !normalizeGoogleSlidesEmbedUrl(slide.url) && (
+                    <p className={styles.courseEditorWarning}>
+                      Link này chưa đúng định dạng. Hãy dùng link publish hoặc embed từ Google Slides.
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newSlides = [...slides]
+                    newSlides.splice(index, 1)
+                    setSlides(newSlides)
+                  }}
+                  className={styles.deleteSlideItemBtn}
+                  title="Xóa slide này"
+                >
+                  Xóa
+                </button>
+              </div>
+            ))}
+            {slides.length === 0 && (
+              <div className={styles.slidesEmpty}>Chưa có slide nào. Bấm "+ Thêm Slide" để bắt đầu.</div>
+            )}
+          </div>
         </div>
 
         <div className={styles.formField}>
-          <label className={styles.formLabel}>Content (JSON)</label>
-          <p className={styles.courseEditorHint}>
-            Sử dụng cấu trúc như{' '}
-            <code>{'{ "body": "", "video_url": "", "google_slides_url": "", "resources": [] }'}</code>
-            {' '}để trang học sinh hiển thị đúng video, slide, nội dung, và tài liệu.
-          </p>
-          <textarea
-            value={content}
-            onChange={(event) => setContent(event.target.value)}
-            rows={14}
-            className={`${styles.formTextarea} ${styles.formTextareaMono}`}
-            placeholder='{"body": "", "video_url": "", "resources": []}'
+          <label className={styles.formLabel}>Link Video bài giảng (YouTube/Vimeo)</label>
+          <input
+            type="url"
+            value={videoUrl}
+            onChange={(event) => setVideoUrl(event.target.value)}
+            className={styles.formInput}
+            placeholder="VD: https://www.youtube.com/watch?v=..."
           />
+        </div>
+
+        <div className={styles.formField}>
+          <label className={styles.formLabel}>Nội dung chi tiết (Văn bản / HTML)</label>
+          <textarea
+            value={body}
+            onChange={(event) => setBody(event.target.value)}
+            rows={10}
+            className={styles.formTextarea}
+            placeholder="Nội dung diễn giải, hướng dẫn bài học..."
+          />
+        </div>
+
+        <div className={styles.formField}>
+          <div className={styles.slidesHeaderRow}>
+            <label className={styles.formLabel}>Tài liệu tham khảo</label>
+            <button 
+              type="button" 
+              onClick={() => setResources([...resources, { title: '', url: '' }])}
+              className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']} ${styles.addSlideBtn}`}
+            >
+              + Thêm tài liệu
+            </button>
+          </div>
+          <p className={styles.courseEditorHint}>
+            Link bài viết, file PDF, repository mã nguồn hỗ trợ học tập cho học sinh.
+          </p>
+          
+          <div className={styles.slidesList}>
+            {resources.map((res, index) => (
+              <div key={index} className={styles.slideItemEditor}>
+                <div className={styles.slideItemEditorMain}>
+                  <input
+                    type="text"
+                    value={res.title}
+                    onChange={(e) => {
+                      const newRes = [...resources]
+                      newRes[index].title = e.target.value
+                      setResources(newRes)
+                    }}
+                    className={styles.formInput}
+                    placeholder="Tiêu đề (VD: Giáo trình PDF)"
+                  />
+                  <input
+                    type="url"
+                    value={res.url}
+                    onChange={(e) => {
+                      const newRes = [...resources]
+                      newRes[index].url = e.target.value
+                      setResources(newRes)
+                    }}
+                    className={styles.formInput}
+                    placeholder="https://..."
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newRes = [...resources]
+                    newRes.splice(index, 1)
+                    setResources(newRes)
+                  }}
+                  className={styles.deleteSlideItemBtn}
+                  title="Xóa tài liệu này"
+                >
+                  Xóa
+                </button>
+              </div>
+            ))}
+            {resources.length === 0 && (
+              <div className={styles.slidesEmpty}>Chưa có tài liệu nào. Bấm "+ Thêm tài liệu" để bắt đầu.</div>
+            )}
+          </div>
         </div>
 
         <div className={styles.formActions}>

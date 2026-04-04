@@ -10,11 +10,19 @@ export default function LessonContent({ subject, progress, studentId, onComplete
   const [supabase] = useState(() => createClient())
   const [completed, setCompleted] = useState(progress?.completed || false)
   const [saving, setSaving] = useState(false)
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0)
 
   const content = subject?.content || {}
   const videoUrl = content.video_url || ''
-  const slidesUrl = content.google_slides_url || content.slides_url || ''
   const body = content.body || ''
+  
+  let slideItems = content.slides || []
+  if (slideItems.length === 0) {
+    const legacyUrl = content.google_slides_url || content.slides_url
+    if (legacyUrl) {
+      slideItems = [{ title: 'Slide bài giảng', url: legacyUrl }]
+    }
+  }
   const resources = content.resources || []
 
   // Extract YouTube embed URL
@@ -29,7 +37,8 @@ export default function LessonContent({ subject, progress, studentId, onComplete
   }
 
   const embedUrl = getEmbedUrl(videoUrl)
-  const slidesEmbedUrl = normalizeGoogleSlidesEmbedUrl(slidesUrl)
+  const currentSlide = slideItems[activeSlideIndex]
+  const slidesEmbedUrl = currentSlide ? normalizeGoogleSlidesEmbedUrl(currentSlide.url) : null
 
   const handleToggle = async (e) => {
     const newVal = e.target.checked
@@ -70,13 +79,28 @@ export default function LessonContent({ subject, progress, studentId, onComplete
         </div>
       )}
 
-      {slidesEmbedUrl && (
+      {slideItems.length > 0 && slidesEmbedUrl && (
         <div className={styles.slidesSection}>
-          <h4 className={styles.resourcesTitle}>📑 Slide bài giảng</h4>
+          <div className={styles.slidesHeaderArea}>
+            <h4 className={styles.resourcesTitle}>📑 Slide bài giảng</h4>
+            {slideItems.length > 1 && (
+              <div className={styles.slidesTabs}>
+                {slideItems.map((slide, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveSlideIndex(idx)}
+                    className={`${styles.slideTabBtn} ${idx === activeSlideIndex ? styles.slideTabBtnActive : ''}`}
+                  >
+                    {slide.title || `Phần ${idx + 1}`}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <div className={styles.slidesWrap}>
             <iframe
               src={slidesEmbedUrl}
-              title={`${subject.name} - Google Slides`}
+              title={currentSlide.title || `${subject.name} - Google Slides`}
               loading="lazy"
               referrerPolicy="no-referrer"
               sandbox="allow-scripts allow-same-origin"

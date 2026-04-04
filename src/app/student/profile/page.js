@@ -198,12 +198,7 @@ export default function ProfilePage() {
         </button>
       </div>
 
-      <div className={styles.profileCard}>
-        <h4 className={styles.profileCardTitle}>🏆 Chứng chỉ</h4>
-        <p style={{ color: 'var(--color-gray-500)', fontStyle: 'italic' }}>
-          Tính năng đang được phát triển. Sắp ra mắt!
-        </p>
-      </div>
+
     </>
   )
 }
