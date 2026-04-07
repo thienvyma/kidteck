@@ -2,6 +2,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import RuntimeCompat from '@/components/ui/RuntimeCompat';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 const inter = Inter({
   variable: "--font-inter",
@@ -32,6 +33,7 @@ export default function RootLayout({ children }) {
         <RuntimeCompat />
         {children}
         <SpeedInsights />
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
       </body>
     </html>
   );
