@@ -29,13 +29,13 @@ export default async function Home() {
         description: content.hero.description,
         sameAs: [
           // Thêm các link mxh của anh vào mảng này (nếu có)
-          'https://www.facebook.com/aigenlabs'
+          'https://www.facebook.com/aigenlabs.vn'
         ],
         contactPoint: {
           '@type': 'ContactPoint',
-          telephone: '+84-900-000-000', // Sửa lại số Hotline thực
+          telephone: '+84909044430',
           contactType: 'customer service',
-          email: 'hello@aigenlabs.vn',  // Sửa lại Email thực
+          email: 'edu@aigenlabs.vn',
           availableLanguage: ['Vietnamese']
         }
       },
