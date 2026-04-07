@@ -39,25 +39,28 @@ export default function Navbar({ header }) {
   return (
     <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ''}`} id="navbar">
       <div className={styles.navbar__inner}>
-        <a href="#" className={styles.navbar__logo}>
+        <Link href="/" className={styles.navbar__logo}>
           <BrandLogo size="sm" compact />
-        </a>
+        </Link>
 
         <div
           className={`${styles.navbar__links} ${isOpen ? styles['navbar__links--open'] : ''}`}
         >
-          <a href="#pain" className={styles.navbar__link} onClick={handleLinkClick}>
+          <Link href="/#pain" className={styles.navbar__link} onClick={handleLinkClick}>
             {labels.painLabel}
-          </a>
-          <a href="#roadmap" className={styles.navbar__link} onClick={handleLinkClick}>
+          </Link>
+          <Link href="/#roadmap" className={styles.navbar__link} onClick={handleLinkClick}>
             {labels.roadmapLabel}
-          </a>
-          <a href="#pricing" className={styles.navbar__link} onClick={handleLinkClick}>
+          </Link>
+          <Link href="/#pricing" className={styles.navbar__link} onClick={handleLinkClick}>
             {labels.pricingLabel}
-          </a>
-          <a href="#faq" className={styles.navbar__link} onClick={handleLinkClick}>
+          </Link>
+          <Link href="/#faq" className={styles.navbar__link} onClick={handleLinkClick}>
             {labels.faqLabel}
-          </a>
+          </Link>
+          <Link href="/blog" className={styles.navbar__link} onClick={handleLinkClick}>
+            Tin Tức
+          </Link>
           <Link
             href="/login"
             className={`btn btn--secondary btn--sm ${styles.navbar__cta}`}
@@ -65,13 +68,13 @@ export default function Navbar({ header }) {
           >
             Đăng nhập
           </Link>
-          <a
-            href="#cta"
+          <Link
+            href="/#cta"
             className={`btn btn--primary btn--sm ${styles.navbar__cta}`}
             onClick={handleLinkClick}
           >
             {labels.ctaLabel}
-          </a>
+          </Link>
         </div>
 
         <button
