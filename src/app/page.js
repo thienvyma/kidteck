@@ -14,6 +14,12 @@ const pricingStages = ['Khởi đầu', 'Tăng tốc', 'Đi sâu']
 
 export const revalidate = 60
 
+export const metadata = {
+  alternates: {
+    canonical: '/',
+  },
+}
+
 export default async function Home() {
 
   const { content, levels } = await getLandingPageData()
@@ -367,11 +373,9 @@ export default async function Home() {
                       <span className={styles['price-currency']}>đ</span>
                     </div>
                     <div className={styles['pricing__card-period-wrap']}>
+                      <span className={styles['pricing-badge']}>{level.duration_weeks} TUẦN</span>
                       <span className={styles['pricing-badge']}>
-                        {level.subject_count || level.subjects.length} MÔN
-                      </span>
-                      <span className={styles['pricing-badge']}>
-                        {level.duration_weeks || '?'} TUẦN
+                        {level.subjects?.length || 1} MÔN
                       </span>
                     </div>
 

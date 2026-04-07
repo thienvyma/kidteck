@@ -147,6 +147,7 @@ CREATE TABLE blogs (
   description TEXT,
   content TEXT NOT NULL,
   cover_image_url TEXT,
+  tags TEXT[] DEFAULT '{}',
   author_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
   is_published BOOLEAN DEFAULT FALSE,
   published_at TIMESTAMPTZ,

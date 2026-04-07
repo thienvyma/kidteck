@@ -98,6 +98,53 @@ export default function BlogsAdminPage() {
     { key: 'createdDate', label: 'Ngày tạo' },
   ]
 
+  // --- New Blog Modal State ---
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [newBlogForm, setNewBlogForm] = useState({ title: '', slug: '', cover_image_url: '' })
+  const [creating, setCreating] = useState(false)
+
+  const handleNewBlogTitleChange = (val) => {
+      // Auto-generate slug while typing title if they haven't explicitly edited the slug
+      const slug = val.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-')
+      setNewBlogForm(prev => ({ ...prev, title: val, slug }))
+  }
+
+  const handleCreateBlog = async (e) => {
+      e.preventDefault()
+      if (!newBlogForm.title || !newBlogForm.slug) return
+      
+      setCreating(true)
+      setFeedback(null)
+      try {
+          const { data: { session } } = await supabase.auth.getSession()
+          
+          const payload = {
+              title: newBlogForm.title,
+              slug: newBlogForm.slug,
+              cover_image_url: newBlogForm.cover_image_url,
+              is_published: false,
+              content: '' // Explicit empty content
+          }
+          if (session?.user) {
+              payload.author_id = session.user.id
+          }
+
+          const { data, error } = await supabase.from('blogs').insert([payload]).select().single()
+          
+          if (error) throw error
+          
+          // Redirect to the newly created ID to use the full MDEditor
+          router.push(`/admin/blogs/${data.id}`)
+
+      } catch (err) {
+          console.error(err)
+          setFeedback({ type: 'error', text: err.message || 'Lỗi khi tạo mới!' })
+          setCreating(false)
+      }
+  }
+
+  // --- /New Blog Modal State ---
+
   return (
     <>
       <div className={styles.pageHeader}>
@@ -109,7 +156,7 @@ export default function BlogsAdminPage() {
         </div>
         <button
           className={`${styles.quickActionBtn} ${styles['quickActionBtn--primary']}`}
-          onClick={() => router.push('/admin/blogs/new')}
+          onClick={() => setIsModalOpen(true)}
         >
           + Viết bài mới
         </button>
@@ -177,6 +224,73 @@ export default function BlogsAdminPage() {
           if (!deleting) setDeleteTarget(null)
         }}
       />
+
+      {/* --- Topup Modal: Create New Post --- */}
+      {isModalOpen && (
+        <div className={styles.modalOverlay} style={{
+            position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', 
+            backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', 
+            justifyContent: 'center', alignItems: 'center', padding: '1rem'
+        }}>
+            <form onSubmit={handleCreateBlog} className={styles.modalContent} style={{
+                background: '#fff', padding: '2rem', borderRadius: '16px',
+                width: '100%', maxWidth: '500px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                display: 'flex', flexDirection: 'column', gap: '1.5rem',
+                border: '1px solid rgba(108, 92, 231, 0.1)'
+            }}>
+                <div>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: '0 0 0.5rem 0', color: 'var(--color-slate-800)' }}>Khởi tạo bài viết mới</h3>
+                    <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-slate-500)' }}>Nhập tiêu đề để bắt đầu, các thiết lập khác có thể bổ sung sau.</p>
+                </div>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-slate-700)' }}>Tiêu đề (Title)</span>
+                        <input
+                            required
+                            type="text"
+                            value={newBlogForm.title}
+                            onChange={(e) => handleNewBlogTitleChange(e.target.value)}
+                            placeholder="Ví dụ: Học AI từ đâu?"
+                            style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--color-gray-200)', width: '100%' }}
+                            autoFocus
+                        />
+                    </label>
+
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-slate-700)' }}>Đường dẫn tĩnh (Slug)</span>
+                        <input
+                            required
+                            type="text"
+                            value={newBlogForm.slug}
+                            onChange={(e) => setNewBlogForm(prev => ({ ...prev, slug: e.target.value }))}
+                            placeholder="hoc-ai-tu-dau"
+                            style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--color-gray-200)', width: '100%', fontFamily: 'monospace', fontSize: '0.85rem', color: 'var(--color-slate-600)', backgroundColor: '#f8fafc' }}
+                        />
+                    </label>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+                    <button 
+                        type="button" 
+                        onClick={() => setIsModalOpen(false)}
+                        disabled={creating}
+                        style={{ padding: '0.75rem 1.25rem', border: '1px solid var(--color-gray-200)', borderRadius: '8px', background: '#fff', cursor: 'pointer', fontWeight: 600 }}
+                    >
+                        Hủy bỏ
+                    </button>
+                    <button 
+                        type="submit" 
+                        disabled={creating}
+                        style={{ padding: '0.75rem 1.25rem', border: 'none', borderRadius: '8px', background: 'var(--color-primary)', color: '#fff', cursor: 'pointer', fontWeight: 600 }}
+                    >
+                        {creating ? 'Đang khởi tạo...' : 'Tạo và Viết bài →'}
+                    </button>
+                </div>
+            </form>
+        </div>
+      )}
+      
     </>
   )
 }

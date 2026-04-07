@@ -15,10 +15,10 @@ export const metadata = {
   title: "AIgenlabs — Nền tảng học AI & Product Mindset cho học sinh 12-17 tuổi",
   description:
     "Không chỉ là Vibe Coding hay Prompt. AIgenlabs rèn luyện tư duy điều phối, giải quyết vấn đề và làm chủ công nghệ AI (Cursor, Claude, Antigravity) để tạo dự án thật.",
-  keywords: "học lập trình ai, product mindset, vibe coding, aigenlabs, cursor, claude code, antigravity, học sinh 12-17 tuổi",
+  keywords: "học lập trình ai, product mindset, vibe coding, aigenlabs, cursor, claude code, antigravity, học sinh 12 tuổi trở lên",
   openGraph: {
     title: "AIgenlabs — Nền tảng học AI & Product Mindset",
-    description: "Giúp học viên 12-17 tuổi chuyển từ tiêu thụ màn hình ngắn sang học sâu, xây dựng sản phẩm thật.",
+    description: "Giúp học viên 12 tuổi trở lên chuyển từ tiêu thụ màn hình ngắn sang học sâu, xây dựng sản phẩm thật.",
     url: 'https://aigenlabs.vn',
     siteName: 'AIgenlabs',
     locale: 'vi_VN',
