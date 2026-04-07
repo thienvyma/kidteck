@@ -12,13 +12,13 @@ const inter = Inter({
 
 export const metadata = {
   metadataBase: new URL('https://aigenlabs.vn'),
-  title: "AIgenlabs — Vibe Coding Academy | Dạy lập trình AI cho học sinh",
+  title: "AIgenlabs — Nền tảng học AI & Product Mindset cho học sinh 12-17 tuổi",
   description:
-    "Khóa học Vibe Coding cho học sinh từ 15 tuổi. Tạo App thật chỉ bằng lời nói với Cursor, Claude Code , antigravity. Không cần biết code truyền thống.",
-  keywords: "vibe coding, học lập trình, AI coding, aigenlabs, cursor, claude code, antigravity, học sinh",
+    "Không chỉ là Vibe Coding hay Prompt. AIgenlabs rèn luyện tư duy điều phối, giải quyết vấn đề và làm chủ công nghệ AI (Cursor, Claude, Antigravity) để tạo dự án thật.",
+  keywords: "học lập trình ai, product mindset, vibe coding, aigenlabs, cursor, claude code, antigravity, học sinh 12-17 tuổi",
   openGraph: {
-    title: "AIgenlabs — Vibe Coding Academy",
-    description: "Tạo App thật chỉ bằng lời nói — Không cần biết code",
+    title: "AIgenlabs — Nền tảng học AI & Product Mindset",
+    description: "Giúp học viên 12-17 tuổi chuyển từ tiêu thụ màn hình ngắn sang học sâu, xây dựng sản phẩm thật.",
     url: 'https://aigenlabs.vn',
     siteName: 'AIgenlabs',
     locale: 'vi_VN',
