@@ -18,8 +18,46 @@ export default async function Home() {
 
   const { content, levels } = await getLandingPageData()
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'EducationalOrganization',
+        name: 'AIgenlabs',
+        url: 'https://aigenlabs.vn',
+        logo: 'https://aigenlabs.vn/icon.svg',
+        description: content.hero.description,
+      },
+      ...(levels || []).map(level => ({
+        '@type': 'Course',
+        name: level.name,
+        description: level.description || 'Khóa học lập trình AI Vibe Coding',
+        provider: {
+          '@type': 'EducationalOrganization',
+          name: 'AIgenlabs',
+          sameAs: 'https://aigenlabs.vn'
+        },
+        hasCourseInstance: {
+          '@type': 'CourseInstance',
+          courseMode: 'online',
+          duration: `P${level.duration_weeks || 4}W`
+        },
+        offers: {
+          '@type': 'Offer',
+          category: 'Paid',
+          priceCurrency: 'VND',
+          price: level.price || 0
+        }
+      }))
+    ]
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Navbar header={content.header} />
 
       <section className={styles.hero} id="hero">
