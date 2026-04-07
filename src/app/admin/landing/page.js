@@ -16,6 +16,7 @@ const LANDING_SECTIONS = [
   { id: 'commitment', label: 'Commitment', badge: 'Trust' },
   { id: 'faq', label: 'FAQ', badge: 'Answer' },
   { id: 'cta', label: 'CTA', badge: 'Lead' },
+  { id: 'contact', label: 'Contact', badge: 'Direct' },
   { id: 'footer', label: 'Footer', badge: 'Brand' },
 ]
 
@@ -1112,6 +1113,42 @@ export default function AdminLandingPage() {
                 rows={3}
                 value={content.cta.formNote}
                 onChange={(event) => updateSection('cta', 'formNote', event.target.value)}
+              />
+            </label>
+          </div>
+        </section>
+
+        <section
+          id="landing-section-contact"
+          className={`${styles.sectionCard} ${styles.landingEditorSection}`}
+        >
+          <div className={styles.landingEditorSectionHead}>
+            <div>
+              <div className={styles.sectionCardHeader}>Direct Contact</div>
+              <p className={styles.landingEditorSectionLead}>
+                Chỉnh sửa khối thông tin Liên hệ trực tiếp. Khối này sẽ tự động lấy các nút Liên hệ từ mục Footer.
+              </p>
+            </div>
+            <span className={styles.landingEditorSectionBadge}>Direct</span>
+          </div>
+          <div className={styles.accountSection}>
+            <div className={styles.contentEditorGrid}>
+              <label className={styles.contentEditorCard}>
+                <span className={styles.formLabel}>Tiêu đề chính</span>
+                <input
+                  className={styles.formInput}
+                  value={content.contactDirect?.title || ''}
+                  onChange={(event) => updateSection('contactDirect', 'title', event.target.value)}
+                />
+              </label>
+            </div>
+            <label className={styles.contentEditorCard}>
+              <span className={styles.formLabel}>Tiêu đề phụ (mô tả)</span>
+              <textarea
+                className={styles.formTextarea}
+                rows={3}
+                value={content.contactDirect?.subtitle || ''}
+                onChange={(event) => updateSection('contactDirect', 'subtitle', event.target.value)}
               />
             </label>
           </div>

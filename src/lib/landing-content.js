@@ -181,6 +181,10 @@ export function normalizeLandingContent(input) {
       formNote: readString(input?.cta?.formNote, fallback.cta.formNote),
       submitLabel: readString(input?.cta?.submitLabel, fallback.cta.submitLabel),
     },
+    contactDirect: {
+      title: readString(input?.contactDirect?.title, fallback.contactDirect?.title || 'Liên hệ trực tiếp'),
+      subtitle: readString(input?.contactDirect?.subtitle, fallback.contactDirect?.subtitle),
+    },
     footer: {
       logoSubtitle: readString(input?.footer?.logoSubtitle, fallback.footer.logoSubtitle),
       description: readString(input?.footer?.description, fallback.footer.description),

@@ -252,6 +252,10 @@ export const defaultLandingContent = {
     formNote: 'Thông tin chỉ dùng để tư vấn lộ trình và sắp xếp buổi trao đổi phù hợp.',
     submitLabel: 'Nhận tư vấn lộ trình',
   },
+  contactDirect: {
+    title: 'Liên hệ trực tiếp',
+    subtitle: 'Đội ngũ AIgenlabs luôn sẵn sàng hỗ trợ và giải đáp thắc mắc của phụ huynh và học viên.',
+  },
   footer: {
     logoSubtitle: 'AI Project Studio',
     description:
