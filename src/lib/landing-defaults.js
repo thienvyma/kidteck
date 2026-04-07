@@ -264,16 +264,16 @@ export const defaultLandingContent = {
     contactTitle: 'Liên hệ',
     contactLinks: [
       {
-        label: 'Hotline',
-        href: '#',
+        label: 'Hotline: 0909.044.430',
+        href: 'tel:+84909044430',
       },
       {
-        label: 'Zalo OA',
-        href: '#',
+        label: 'Fanpage AIgenlabs',
+        href: 'https://www.facebook.com/aigenlabs.vn',
       },
       {
-        label: 'Email',
-        href: '#',
+        label: 'Email: edu@aigenlabs.vn',
+        href: 'mailto:edu@aigenlabs.vn',
       },
     ],
     copyright: '© 2026 AIgenlabs — Nền tảng AI & Tech cho học sinh. All rights reserved.',

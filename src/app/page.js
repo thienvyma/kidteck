@@ -20,6 +20,29 @@ export const metadata = {
   },
 }
 
+function formatExternalUrl(url) {
+  if (!url) return '#'
+  let clean = String(url).replace(/['"]+/g, '').trim()
+  if (clean === '#' || clean.startsWith('#') || clean.startsWith('/')) return clean
+
+  if (clean.includes('@') && !clean.startsWith('mailto:') && !clean.startsWith('http')) {
+    return `mailto:${clean}`
+  }
+  if (/^[\+\d\s\.\-\(\)]+$/.test(clean) && clean.replace(/\D/g, '').length >= 8) {
+    return `tel:${clean.replace(/[\s\.\-\(\)]/g, '')}`
+  }
+  if (clean.startsWith('https:/') && !clean.startsWith('https://')) {
+    clean = clean.replace('https:/', 'https://')
+  } else if (clean.startsWith('http:/') && !clean.startsWith('http://')) {
+    clean = clean.replace('http:/', 'http://')
+  }
+  if (!clean.startsWith('http://') && !clean.startsWith('https://') && !clean.startsWith('mailto:') && !clean.startsWith('tel:')) {
+    clean = `https://${clean}`
+  }
+
+  return clean
+}
+
 export default async function Home() {
 
   const { content, levels } = await getLandingPageData()
@@ -383,15 +406,18 @@ export default async function Home() {
 
                     <div className={styles['pricing__card-features']}>
                       <div className={styles['pricing__features-title']}>Bạn sẽ nhận được:</div>
-                      {level.subjects.slice(0, 5).map((subject) => (
-                        <div key={subject.id} className={styles['pricing__card-feature']}>
-                          <div className={styles['pricing__card-feature-icon']}>
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                              <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
+                      {(level.description || 'Chưa có mô tả')
+                        .split('\n')
+                        .filter((line) => line.trim())
+                        .map((line, idx) => (
+                          <div key={idx} className={styles['pricing__card-feature']}>
+                            <div className={styles['pricing__card-feature-icon']}>
+                              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            </div>
+                            <span>{line.trim()}</span>
                           </div>
-                          <span>{subject.description || subject.name}</span>
-                        </div>
                       ))}
                     </div>
                     <a
@@ -484,15 +510,21 @@ export default async function Home() {
             </div>
             <div>
               <div className={styles['footer__col-title']}>{content.footer.contactTitle}</div>
-              {content.footer.contactLinks.map((item) => (
-                <a
-                  key={`${item.label}-${item.href}`}
-                  href={item.href || '#'}
-                  className={styles.footer__link}
-                >
-                  {item.label}
-                </a>
-              ))}
+              {content.footer.contactLinks.map((item) => {
+                const href = formatExternalUrl(item.href);
+                const isExternal = href.startsWith('http');
+                return (
+                  <a
+                    key={`${item.label}-${item.href}`}
+                    href={href}
+                    target={isExternal ? '_blank' : undefined}
+                    rel={isExternal ? 'noopener noreferrer' : undefined}
+                    className={styles.footer__link}
+                  >
+                    {item.label}
+                  </a>
+                );
+              })}
             </div>
           </div>
           <div className={styles.footer__bottom}>{content.footer.copyright}</div>
