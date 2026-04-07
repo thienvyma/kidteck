@@ -10,13 +10,17 @@ const inter = Inter({
 });
 
 export const metadata = {
+  metadataBase: new URL('https://aigenlabs.vn'),
   title: "AIgenlabs — Vibe Coding Academy | Dạy lập trình AI cho học sinh",
   description:
-    "Khóa học Vibe Coding cho học sinh từ 15 tuổi. Tạo App thật chỉ bằng lời nói với Cursor, Claude Code. Không cần biết code truyền thống.",
-  keywords: "vibe coding, học lập trình, AI coding, aigenlabs, cursor, claude code, học sinh",
+    "Khóa học Vibe Coding cho học sinh từ 15 tuổi. Tạo App thật chỉ bằng lời nói với Cursor, Claude Code , antigravity. Không cần biết code truyền thống.",
+  keywords: "vibe coding, học lập trình, AI coding, aigenlabs, cursor, claude code, antigravity, học sinh",
   openGraph: {
     title: "AIgenlabs — Vibe Coding Academy",
     description: "Tạo App thật chỉ bằng lời nói — Không cần biết code",
+    url: 'https://aigenlabs.vn',
+    siteName: 'AIgenlabs',
+    locale: 'vi_VN',
     type: "website",
   },
 };
