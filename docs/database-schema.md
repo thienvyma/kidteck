@@ -138,6 +138,23 @@ CREATE TABLE payments (
 );
 ```
 
+### blogs
+```sql
+CREATE TABLE blogs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug TEXT UNIQUE NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  content TEXT NOT NULL,
+  cover_image_url TEXT,
+  author_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  is_published BOOLEAN DEFAULT FALSE,
+  published_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
 ## Row Level Security (RLS)
 
 ### Helper Function (SECURITY DEFINER — bypasses RLS to avoid infinite recursion)
@@ -185,4 +202,9 @@ CREATE POLICY "Admin read all progress" ON progress FOR SELECT USING (public.is_
 ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users read own payments" ON payments FOR SELECT USING (auth.uid() = student_id);
 CREATE POLICY "Admin manage payments" ON payments FOR ALL USING (public.is_admin());
+
+-- Blogs: public read published, admin manage all
+ALTER TABLE blogs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read published blogs" ON blogs FOR SELECT TO authenticated, anon USING (is_published = true);
+CREATE POLICY "Admin manage blogs" ON blogs FOR ALL USING (public.is_admin());
 ```
