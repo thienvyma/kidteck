@@ -27,11 +27,22 @@ export default async function Home() {
         url: 'https://aigenlabs.vn',
         logo: 'https://aigenlabs.vn/icon.svg',
         description: content.hero.description,
+        sameAs: [
+          // Thêm các link mxh của anh vào mảng này (nếu có)
+          'https://www.facebook.com/aigenlabs'
+        ],
+        contactPoint: {
+          '@type': 'ContactPoint',
+          telephone: '+84-900-000-000', // Sửa lại số Hotline thực
+          contactType: 'customer service',
+          email: 'hello@aigenlabs.vn',  // Sửa lại Email thực
+          availableLanguage: ['Vietnamese']
+        }
       },
       ...(levels || []).map(level => ({
         '@type': 'Course',
         name: level.name,
-        description: level.description || 'Khóa học lập trình AI Vibe Coding',
+        description: level.description || 'Học AI qua dự án thật và tư duy hệ thống',
         provider: {
           '@type': 'EducationalOrganization',
           name: 'AIgenlabs',
@@ -199,10 +210,10 @@ export default async function Home() {
                     </div>
 
                     <div className={styles['roadmap__card-age']}>Level {index + 1}</div>
-                    
+
                     <h3 className={styles['roadmap__card-name']}>{level.name}</h3>
                     <p className={styles['roadmap__card-goal']}>{level.description || 'Chưa có mô tả'}</p>
-                    
+
                     <div className={styles['roadmap__card-meta']}>
                       <span className={`badge badge--${badgeVariant}`}>
                         {level.subject_count || level.subjects.length} MÔN
@@ -338,9 +349,8 @@ export default async function Home() {
                 return (
                   <div
                     key={level.id}
-                    className={`${styles.pricing__card} ${
-                      isFeatured ? styles['pricing__card--featured'] : ''
-                    }`}
+                    className={`${styles.pricing__card} ${isFeatured ? styles['pricing__card--featured'] : ''
+                      }`}
                   >
                     {isFeatured && (
                       <div className={styles['pricing__card-popular']}>Được chọn nhiều</div>
@@ -364,7 +374,7 @@ export default async function Home() {
                         {level.duration_weeks || '?'} TUẦN
                       </span>
                     </div>
-                    
+
                     <div className={styles['pricing__card-divider']}></div>
 
                     <div className={styles['pricing__card-features']}>
@@ -373,7 +383,7 @@ export default async function Home() {
                         <div key={subject.id} className={styles['pricing__card-feature']}>
                           <div className={styles['pricing__card-feature-icon']}>
                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                               <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                           </div>
                           <span>{subject.description || subject.name}</span>
