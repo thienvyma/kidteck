@@ -1,6 +1,6 @@
 .brandLogo {
-  --logo-mark-size: 5.5rem;
-  --logo-subtitle-size: 0.9rem;
+  --logo-mark-size: 4rem;
+  --logo-subtitle-size: 0.85rem;
   display: inline-flex;
   align-items: center;
   gap: 0.85rem;
@@ -8,13 +8,16 @@
 }
 
 .brandLogo--sm {
-  --logo-mark-size: 4.5rem;
-  --logo-subtitle-size: 0.8rem;
+  --logo-mark-size: 3rem;
+  --logo-subtitle-size: 0.75rem;
 }
 
 .brandLogo--lg {
-  --logo-mark-size: 7.5rem;
+  --logo-mark-size: 6rem;
   --logo-subtitle-size: 1rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
 }
 
 .brandLogo--compact {
@@ -25,6 +28,16 @@
   width: auto;
   height: var(--logo-mark-size);
   object-fit: contain;
+}
+
+.brandLogo--sm .brandLogo__img {
+  transform: scale(1.6);
+  transform-origin: left center;
+}
+
+.brandLogo:not(.brandLogo--sm):not(.brandLogo--lg) .brandLogo__img {
+  transform: scale(1.4);
+  transform-origin: left center;
 }
 
 .brandLogo__text {
