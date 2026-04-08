@@ -54,7 +54,7 @@ export default async function Home() {
         '@type': 'EducationalOrganization',
         name: 'AIgenlabs',
         url: 'https://aigenlabs.vn',
-        logo: 'https://aigenlabs.vn/icon.svg',
+        logo: 'https://aigenlabs.vn/AIGen_blacklogo.png',
         description: content.hero.description,
         sameAs: [
           // Thêm các link mxh của anh vào mảng này (nếu có)

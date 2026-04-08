@@ -40,7 +40,7 @@ export default function Navbar({ header }) {
     <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ''}`} id="navbar">
       <div className={styles.navbar__inner}>
         <Link href="/" className={styles.navbar__logo}>
-          <BrandLogo size="sm" compact />
+          <BrandLogo size="lg" compact />
         </Link>
 
         <div

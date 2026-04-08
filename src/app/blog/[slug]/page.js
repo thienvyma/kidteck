@@ -121,7 +121,7 @@ export default async function BlogPostPage({ params }) {
       name: 'AIgenlabs',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://aigenlabs.vn/icon.svg'
+        url: 'https://aigenlabs.vn/AIGen_blacklogo.png'
       }
     }
   }

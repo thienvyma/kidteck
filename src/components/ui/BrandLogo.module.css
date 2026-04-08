@@ -1,9 +1,6 @@
 .brandLogo {
-  --logo-mark-size: 2.75rem;
-  --logo-word-size: 1.15rem;
-  --logo-subtitle-size: 0.7rem;
-  --logo-word-color: var(--color-dark);
-  --logo-accent-color: #6c5ce7;
+  --logo-mark-size: 5.5rem;
+  --logo-subtitle-size: 0.9rem;
   display: inline-flex;
   align-items: center;
   gap: 0.85rem;
@@ -11,69 +8,23 @@
 }
 
 .brandLogo--sm {
-  --logo-mark-size: 2.35rem;
-  --logo-word-size: 1rem;
-  --logo-subtitle-size: 0.64rem;
+  --logo-mark-size: 4.5rem;
+  --logo-subtitle-size: 0.8rem;
 }
 
 .brandLogo--lg {
-  --logo-mark-size: 3.2rem;
-  --logo-word-size: 1.45rem;
-  --logo-subtitle-size: 0.76rem;
-}
-
-.brandLogo--dark {
-  --logo-word-color: rgba(255, 255, 255, 0.96);
-  --logo-accent-color: #7bf0ff;
+  --logo-mark-size: 7.5rem;
+  --logo-subtitle-size: 1rem;
 }
 
 .brandLogo--compact {
   gap: 0.65rem;
 }
 
-.brandLogo__mark {
-  position: relative;
-  width: var(--logo-mark-size);
+.brandLogo__img {
+  width: auto;
   height: var(--logo-mark-size);
-  border-radius: 1rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  background:
-    radial-gradient(circle at 28% 24%, rgba(123, 240, 255, 0.88), transparent 28%),
-    linear-gradient(145deg, #08122d 0%, #122252 38%, #3d54db 72%, #7bf0ff 100%);
-  box-shadow:
-    0 14px 32px rgba(11, 21, 54, 0.26),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
-  overflow: hidden;
-}
-
-.brandLogo__mark::before {
-  content: "";
-  position: absolute;
-  inset: 0.18rem;
-  border-radius: 0.88rem;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  opacity: 0.9;
-}
-
-.brandLogo__mark::after {
-  content: "";
-  position: absolute;
-  inset: auto 18% 10%;
-  height: 0.32rem;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(123, 240, 255, 0.95), transparent 72%);
-  filter: blur(6px);
-}
-
-.brandLogo__svg {
-  width: 74%;
-  height: 74%;
-  position: relative;
-  z-index: 1;
-  filter: drop-shadow(0 6px 12px rgba(6, 12, 32, 0.22));
+  object-fit: contain;
 }
 
 .brandLogo__text {
@@ -81,24 +32,6 @@
   flex-direction: column;
   gap: 0.08rem;
   min-width: 0;
-}
-
-.brandLogo__wordmark {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.06rem;
-  font-size: var(--logo-word-size);
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  line-height: 1;
-}
-
-.brandLogo__word {
-  color: var(--logo-word-color);
-}
-
-.brandLogo__accent {
-  color: var(--logo-accent-color);
 }
 
 .brandLogo__subtitle {
