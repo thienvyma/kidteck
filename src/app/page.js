@@ -81,13 +81,6 @@ function getContactActionMeta(href) {
 export default async function Home() {
 
   const { content, levels } = await getLandingPageData()
-  const heroProofSource =
-    Array.isArray(content.hero?.trustItems) && content.hero.trustItems.length > 0
-      ? content.hero.trustItems
-      : Array.isArray(content.cta?.benefits)
-        ? content.cta.benefits
-        : []
-  const heroProofItems = heroProofSource.filter(Boolean).slice(0, 3)
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -164,19 +157,6 @@ export default async function Home() {
                 {content.hero.secondaryCtaLabel}
               </a>
             </div>
-
-            {heroProofItems.length > 0 ? (
-              <div className={styles.hero__proofStrip}>
-                {heroProofItems.map((item, index) => (
-                  <div key={item} className={styles.hero__proofCard}>
-                    <span className={styles.hero__proofIndex}>
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
-                    <span className={styles.hero__proofText}>{item}</span>
-                  </div>
-                ))}
-              </div>
-            ) : null}
 
             <div className={styles.hero__trust}>
               {content.hero.trustItems.map((item) => (
