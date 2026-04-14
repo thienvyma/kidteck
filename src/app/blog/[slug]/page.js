@@ -70,12 +70,12 @@ export async function generateMetadata({ params }) {
   const blog = await getBlog(slug)
 
   if (!blog) {
-    return { title: 'KhÃ´ng tÃ¬m tháº¥y bÃ i viáº¿t | AIgenlabs' }
+    return { title: 'Không tìm thấy bài viết | AIgenlabs' }
   }
 
   return {
     title: `${blog.title} | AIgenlabs`,
-    description: blog.description || 'GÃ³c nhÃ¬n cÃ´ng nghá»‡ trÃªn AIgenlabs.',
+    description: blog.description || 'Góc nhìn công nghệ trên AIgenlabs.',
     openGraph: {
       title: blog.title,
       description: blog.description,
@@ -134,13 +134,13 @@ export default async function BlogPostPage({ params }) {
       {
         '@type': 'ListItem',
         position: 1,
-        name: 'Trang chá»§',
+        name: 'Trang chủ',
         item: 'https://aigenlabs.vn/',
       },
       {
         '@type': 'ListItem',
         position: 2,
-        name: 'GÃ³c nhÃ¬n cÃ´ng nghá»‡',
+        name: 'Góc nhìn công nghệ',
         item: 'https://aigenlabs.vn/blog',
       },
       {
@@ -171,11 +171,11 @@ export default async function BlogPostPage({ params }) {
         <div className={`container ${landingStyles.sectionShell} ${landingStyles.sectionShellBright}`}>
           <div className={styles.headerArea}>
             <h1 className="section__title">
-              <span className="gradient-text">GÃ³c nhÃ¬n cÃ´ng nghá»‡</span>
+              <span className="gradient-text">Góc nhìn công nghệ</span>
             </h1>
             <p className="section__subtitle">
-              NÆ¡i Ä‘á»™i ngÅ© Ä‘Ã o táº¡o AIgenlabs chia sáº» kiáº¿n thá»©c chuyÃªn sÃ¢u vá» cÃ´ng nghá»‡,
-              trÃ­ tuá»‡ nhÃ¢n táº¡o vÃ  tÆ° duy product alignment cho giá»›i tráº».
+              Nơi đội ngũ đào tạo AIgenlabs chia sẻ kiến thức chuyên sâu về công nghệ,
+              trí tuệ nhân tạo và tư duy product alignment cho giới trẻ.
             </p>
           </div>
 
@@ -186,7 +186,7 @@ export default async function BlogPostPage({ params }) {
                   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18" style={{ marginRight: '6px' }}>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
-                  Táº¥t cáº£ bÃ i viáº¿t
+                  Tất cả bài viết
                 </Link>
               </div>
 
@@ -194,8 +194,8 @@ export default async function BlogPostPage({ params }) {
                 <header className={styles.articleHeader}>
                   <h1 className={styles.articleTitle}>{blog.title}</h1>
                   <div className={styles.articleMeta}>
-                    <span>âœï¸ AIgenlabs Academy</span>
-                    <span>ðŸ“… {publishedDate}</span>
+                    <span>✍️ AIgenlabs Academy</span>
+                    <span>🗓 {publishedDate}</span>
                   </div>
                 </header>
 
@@ -203,7 +203,7 @@ export default async function BlogPostPage({ params }) {
                   <div className={styles.articleCoverWrapper}>
                     <Image
                       src={blog.cover_image_url}
-                      alt={`áº¢nh bÃ¬a bÃ i viáº¿t: ${blog.title}`}
+                      alt={`Ảnh bìa bài viết: ${blog.title}`}
                       className={styles.articleCover}
                       fill
                       sizes="(max-width: 768px) 100vw, 860px"
@@ -250,9 +250,9 @@ export default async function BlogPostPage({ params }) {
 
             <aside className={styles.sidebar}>
               <div className={`${styles.widget} card`}>
-                <h4 className={styles.widgetTitle}>TÃ¬m kiáº¿m</h4>
+                <h4 className={styles.widgetTitle}>Tìm kiếm</h4>
                 <div className={styles.searchBox}>
-                  <input type="text" placeholder="TÃ¬m kiáº¿m bÃ i viáº¿t..." className="input" disabled />
+                  <input type="text" placeholder="Tìm kiếm bài viết..." className="input" disabled />
                   <svg className={styles.searchIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
@@ -260,9 +260,9 @@ export default async function BlogPostPage({ params }) {
               </div>
 
               <div className={`${styles.widget} card`}>
-                <h4 className={styles.widgetTitle}>Chá»§ Ä‘á» ná»•i báº­t</h4>
+                <h4 className={styles.widgetTitle}>Chủ đề nổi bật</h4>
                 <div className={styles.tagCloud}>
-                  {allTags.length === 0 && <span className={styles.tag}>ChÆ°a cÃ³ chá»§ Ä‘á»</span>}
+                  {allTags.length === 0 && <span className={styles.tag}>Chưa có chủ đề</span>}
                   {allTags.map((tag) => (
                     <span key={tag} className={styles.tag}>{tag}</span>
                   ))}
@@ -270,9 +270,9 @@ export default async function BlogPostPage({ params }) {
               </div>
 
               <div className={`${styles.widget} card`}>
-                <h4 className={styles.widgetTitle}>ÄÃ¡ng chÃº Ã½</h4>
+                <h4 className={styles.widgetTitle}>Đáng chú ý</h4>
                 <div className={styles.popularList}>
-                  {recentBlogs.length === 0 && <p className={styles.emptyStateMinimal}>Äang cáº­p nháº­t...</p>}
+                  {recentBlogs.length === 0 && <p className={styles.emptyStateMinimal}>Đang cập nhật...</p>}
                   {recentBlogs.map((b, i) => (
                     <Link href={`/blog/${b.slug}`} key={b.id} className={styles.popularItem}>
                       <span className={styles.popularRank}>0{i + 1}</span>
@@ -286,12 +286,12 @@ export default async function BlogPostPage({ params }) {
               </div>
 
               <div className={`${landingStyles.sectionShell} ${landingStyles.sectionShellDeep} ${styles.widget} ${styles.newsletterWidget}`}>
-                <h4 className="section__title" style={{ color: 'white', marginBottom: '8px', fontSize: '1.25rem', textAlign: 'left' }}>Nháº­n tÆ° váº¥n</h4>
+                <h4 className="section__title" style={{ color: 'white', marginBottom: '8px', fontSize: '1.25rem', textAlign: 'left' }}>Nhận tư vấn</h4>
                 <p className="section__subtitle" style={{ color: 'rgba(255,255,255,0.8)', textAlign: 'left', marginBottom: '24px', fontSize: '0.9rem' }}>
-                  Trao Ä‘á»•i vá»›i Ä‘á»™i ngÅ© AIgenlabs vá» lá»™ trÃ¬nh phÃ¹ há»£p.
+                  Trao đổi với đội ngũ AIgenlabs về lộ trình phù hợp.
                 </p>
                 <Link href="/#cta" className="btn btn--accent" style={{ width: '100%' }}>
-                  LiÃªn há»‡ ngay
+                  Liên hệ ngay
                 </Link>
               </div>
             </aside>
