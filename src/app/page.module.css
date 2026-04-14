@@ -2184,7 +2184,7 @@
 /* --- Responsive --- */
 @media (max-width: 968px) {
   .hero {
-    padding-top: 5.5rem;
+    padding-top: 6rem;
   }
 
   .sectionShell {
@@ -2347,7 +2347,7 @@
 @media (max-width: 480px) {
   .hero {
     min-height: auto;
-    padding: 4.65rem 0 1.9rem;
+    padding: 5.35rem 0 1.9rem;
   }
 
   .sectionShell {
