@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import ReactMarkdown from 'react-markdown'
 import Navbar from '@/components/ui/Navbar'
-import { getLandingPageData } from '@/lib/landing-content'
+import { getLandingHeaderData } from '@/lib/landing-content'
 import { sanitizeHTML } from '@/lib/sanitize'
 import styles from '../blog.module.css'
 import landingStyles from '../../page.module.css'
@@ -91,9 +91,9 @@ export async function generateMetadata({ params }) {
 
 export default async function BlogPostPage({ params }) {
   const { slug } = await params
-  const [blog, landingData, recentBlogs, allTags] = await Promise.all([
+  const [blog, landingHeaderData, recentBlogs, allTags] = await Promise.all([
     getBlog(slug),
-    getLandingPageData(),
+    getLandingHeaderData(),
     getRecentBlogs(slug),
     getAllTags(),
   ])
@@ -160,7 +160,7 @@ export default async function BlogPostPage({ params }) {
 
   return (
     <>
-      <Navbar header={landingData.content.header} />
+      <Navbar header={landingHeaderData.header} />
 
       <script
         type="application/ld+json"
@@ -209,7 +209,6 @@ export default async function BlogPostPage({ params }) {
                       sizes="(max-width: 768px) 100vw, 860px"
                       priority
                       referrerPolicy="no-referrer"
-                      unoptimized
                     />
                   </div>
                 )}
@@ -235,7 +234,6 @@ export default async function BlogPostPage({ params }) {
                             referrerPolicy="no-referrer"
                             loading="lazy"
                             decoding="async"
-                            unoptimized
                             style={{ width: '100%', height: 'auto' }}
                           />
                         ),

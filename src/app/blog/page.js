@@ -2,7 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import Navbar from '@/components/ui/Navbar'
-import { getLandingPageData } from '@/lib/landing-content'
+import { getLandingHeaderData } from '@/lib/landing-content'
 import styles from './blog.module.css'
 
 export const revalidate = 60 // ISR caching auto-revalidate 
@@ -66,9 +66,9 @@ export default async function BlogArchivePage({ searchParams }) {
   const resolvedSearchParams = await searchParams;
   const currentPage = parseInt(resolvedSearchParams?.page) || 1;
 
-  const [{ data: blogs, totalPages }, landingData, allTags] = await Promise.all([
+  const [{ data: blogs, totalPages }, landingHeaderData, allTags] = await Promise.all([
     getBlogs(currentPage),
-    getLandingPageData(),
+    getLandingHeaderData(),
     getAllTags()
   ])
 
@@ -109,7 +109,7 @@ export default async function BlogArchivePage({ searchParams }) {
 
   return (
     <>
-      <Navbar header={landingData.content.header} />
+      <Navbar header={landingHeaderData.header} />
       
       <main className={`container section ${styles.blogArchivePage}`}>
         
@@ -147,7 +147,6 @@ export default async function BlogArchivePage({ searchParams }) {
                                     sizes="(max-width: 1024px) 100vw, 66vw"
                                     priority
                                     referrerPolicy="no-referrer"
-                                    unoptimized
                                   />
                               ) : (
                                   <div className={styles.placeholderBg}>&#128247;</div>
@@ -187,7 +186,6 @@ export default async function BlogArchivePage({ searchParams }) {
                                             fill
                                             sizes="(max-width: 768px) 100vw, 260px"
                                             referrerPolicy="no-referrer"
-                                            unoptimized
                                           />
                                       ) : (
                                           <div className={styles.placeholderBg}>&#128247;</div>

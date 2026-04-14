@@ -27,9 +27,11 @@ export default function Navbar({ header, anchorBase = '/', homeHref = '/' }) {
     const options = { passive: true }
 
     function handleScroll() {
-      setScrolled(window.scrollY > 50)
+      const nextScrolled = window.scrollY > 50
+      setScrolled((current) => (current === nextScrolled ? current : nextScrolled))
     }
 
+    handleScroll()
     window.addEventListener('scroll', handleScroll, options)
     return () => window.removeEventListener('scroll', handleScroll, options)
   }, [])

@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useDeferredValue, useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { cloneDefaultLandingContent } from '@/lib/landing-defaults'
 import {
   LANDING_EDITOR_SECTIONS,
@@ -98,6 +98,7 @@ export default function AdminLandingPage() {
   const [previewDevice, setPreviewDevice] = useState('desktop')
   const [previewRefreshKey, setPreviewRefreshKey] = useState(0)
   const [previewLoading, setPreviewLoading] = useState(true)
+  const deferredContent = useDeferredValue(content)
 
   const fetchContent = useCallback(async ({ silent = false } = {}) => {
     if (!silent) {
@@ -135,19 +136,23 @@ export default function AdminLandingPage() {
     fetchContent()
   }, [fetchContent])
 
-  const dirtySections = LANDING_SECTIONS.reduce((accumulator, section) => {
-    const contentKey = SECTION_CONTENT_KEYS[section.id]
-    if (!contentKey) {
-      accumulator[section.id] = false
-      return accumulator
-    }
+  const dirtySections = useMemo(
+    () =>
+      LANDING_SECTIONS.reduce((accumulator, section) => {
+        const contentKey = SECTION_CONTENT_KEYS[section.id]
+        if (!contentKey) {
+          accumulator[section.id] = false
+          return accumulator
+        }
 
-    accumulator[section.id] =
-      JSON.stringify(content?.[contentKey] ?? null) !==
-      JSON.stringify(savedContent?.[contentKey] ?? null)
+        accumulator[section.id] =
+          JSON.stringify(content?.[contentKey] ?? null) !==
+          JSON.stringify(savedContent?.[contentKey] ?? null)
 
-    return accumulator
-  }, {})
+        return accumulator
+      }, {}),
+    [content, savedContent]
+  )
 
   const hasUnsavedChanges = Object.values(dirtySections).some(Boolean)
   const lastSavedLabel = formatTimestamp(contentUpdatedAt)
@@ -296,12 +301,12 @@ export default function AdminLandingPage() {
       return undefined
     }
 
-    const frameId = window.requestAnimationFrame(() => {
-      postPreviewDraft(content, latestActiveSectionRef.current)
-    })
+    const timeoutId = window.setTimeout(() => {
+      postPreviewDraft(deferredContent, latestActiveSectionRef.current)
+    }, 120)
 
-    return () => window.cancelAnimationFrame(frameId)
-  }, [content, postPreviewDraft, previewLoading])
+    return () => window.clearTimeout(timeoutId)
+  }, [deferredContent, postPreviewDraft, previewLoading])
 
   function refreshPreview() {
     setPreviewLoading(true)
@@ -1002,4 +1007,5 @@ export default function AdminLandingPage() {
     </>
   )
 }
+
 

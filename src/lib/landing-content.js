@@ -478,6 +478,14 @@ export async function getLandingContent() {
   return document.content
 }
 
+export async function getLandingHeaderData() {
+  const content = await getLandingContent()
+
+  return {
+    header: content.header,
+  }
+}
+
 export async function saveLandingContent(content, options = {}) {
   const adminClient = createAdminClient()
   const normalized = normalizeLandingContent(content)

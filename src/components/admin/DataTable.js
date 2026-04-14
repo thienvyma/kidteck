@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useDeferredValue, useState, useMemo, useCallback } from 'react'
 import styles from '@/app/admin/admin.module.css'
 
 export default function DataTable({
@@ -16,16 +16,16 @@ export default function DataTable({
   const [sortDir, setSortDir] = useState('asc')
   const [page, setPage] = useState(0)
   const perPage = 10
+  const deferredSearch = useDeferredValue(search)
 
-  // Debounced search via useMemo on filtered data
   const filtered = useMemo(() => {
-    if (!search || !searchKey) return data
-    const term = search.toLowerCase()
+    if (!deferredSearch || !searchKey) return data
+    const term = deferredSearch.toLowerCase()
     return data.filter((row) => {
       const val = row[searchKey]
       return val && String(val).toLowerCase().includes(term)
     })
-  }, [data, search, searchKey])
+  }, [data, deferredSearch, searchKey])
 
   // Sort
   const sorted = useMemo(() => {
@@ -41,7 +41,10 @@ export default function DataTable({
 
   // Paginate
   const totalPages = Math.max(1, Math.ceil(sorted.length / perPage))
-  const paginated = sorted.slice(page * perPage, (page + 1) * perPage)
+  const paginated = useMemo(
+    () => sorted.slice(page * perPage, (page + 1) * perPage),
+    [page, sorted]
+  )
   const showFrom = sorted.length === 0 ? 0 : page * perPage + 1
   const showTo = Math.min((page + 1) * perPage, sorted.length)
 
