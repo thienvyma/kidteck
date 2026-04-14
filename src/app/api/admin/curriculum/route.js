@@ -1,5 +1,6 @@
 import { createServerClient } from '@/lib/supabase-server'
 import { createClient } from '@supabase/supabase-js'
+import { revalidatePath } from 'next/cache'
 import { NextResponse } from 'next/server'
 import {
   decryptSubjectContent,
@@ -79,6 +80,10 @@ async function syncSubjectCount(adminClient, levelId) {
   if (updateError) {
     throw updateError
   }
+}
+
+function revalidateCurriculumViews() {
+  revalidatePath('/')
 }
 
 export async function GET(request) {
@@ -164,6 +169,7 @@ export async function POST(request) {
         return NextResponse.json({ error: error.message }, { status: 400 })
       }
 
+      revalidateCurriculumViews()
       return NextResponse.json({ success: true, level: data })
     }
 
@@ -201,6 +207,7 @@ export async function POST(request) {
       }
 
       await syncSubjectCount(adminClient, levelId)
+      revalidateCurriculumViews()
 
       return NextResponse.json({ success: true, subject: data })
     }
@@ -247,6 +254,7 @@ export async function PATCH(request) {
         return NextResponse.json({ error: error.message }, { status: 400 })
       }
 
+      revalidateCurriculumViews()
       return NextResponse.json({ success: true })
     }
 
@@ -268,6 +276,7 @@ export async function PATCH(request) {
         return NextResponse.json({ error: error.message }, { status: 400 })
       }
 
+      revalidateCurriculumViews()
       return NextResponse.json({ success: true })
     }
 
@@ -340,6 +349,7 @@ export async function DELETE(request) {
         return NextResponse.json({ error: deleteLevelError.message }, { status: 400 })
       }
 
+      revalidateCurriculumViews()
       return NextResponse.json({ success: true })
     }
 
@@ -368,6 +378,7 @@ export async function DELETE(request) {
     }
 
     await syncSubjectCount(adminClient, subject.level_id)
+    revalidateCurriculumViews()
 
     return NextResponse.json({ success: true })
   } catch (error) {
