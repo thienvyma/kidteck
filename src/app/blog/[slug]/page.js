@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import ReactMarkdown from 'react-markdown'
 import Navbar from '@/components/ui/Navbar'
 import { getLandingPageData } from '@/lib/landing-content'
+import { sanitizeHTML } from '@/lib/sanitize'
 import styles from '../blog.module.css'
 import landingStyles from '../../page.module.css'
 
@@ -152,6 +153,12 @@ export default async function BlogPostPage({ params }) {
     ]
   }
 
+  const articleHtml = /<[a-z][\s\S]*>/i.test(blog.content)
+    ? sanitizeHTML(blog.content).replace(/<img(?!.*?referrerpolicy)[^>]*>/gi, (match) =>
+        match.replace('<img', '<img referrerpolicy="no-referrer" loading="lazy" decoding="async"')
+      )
+    : null
+
   return (
     <>
       <Navbar header={landingData.content.header} />
@@ -207,16 +214,22 @@ export default async function BlogPostPage({ params }) {
               )}
 
               <article className={styles.articleProse}>
-                {/<[a-z][\s\S]*>/i.test(blog.content) ? (
+                {articleHtml ? (
                   <div dangerouslySetInnerHTML={{ 
-                    __html: blog.content.replace(/<img(?!.*?referrerpolicy)[^>]*>/gi, (match) => 
-                      match.replace('<img', '<img referrerpolicy="no-referrer" loading="lazy" decoding="async"')
-                    )
+                    __html: articleHtml
                   }} />
                 ) : (
                   <ReactMarkdown
                      components={{
-                        img: ({node, ...props}) => <img {...props} referrerPolicy="no-referrer" loading="lazy" decoding="async" />
+                        img: ({ node, alt, ...props }) => (
+                          <img
+                            {...props}
+                            alt={alt || ''}
+                            referrerPolicy="no-referrer"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        )
                      }}
                   >
                      {blog.content}

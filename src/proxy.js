@@ -2,14 +2,14 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 
 /**
- * Proxy — Route Protection + Session Refresh
+ * Proxy â€” Route Protection + Session Refresh
  * Logic:
  *   1. Refresh Supabase auth session (via cookies)
- *   2. Chưa login + /admin/* hoặc /student/* → redirect /login
- *   3. Đã login → Query profiles.role:
- *      - Student → /admin/* → redirect /student
- *      - Admin → /student/* → redirect /admin
- *      - Auth pages (/login, /register) → redirect theo role
+ *   2. ChÆ°a login + /admin/* hoáº·c /student/* â†’ redirect /login
+ *   3. ÄÃ£ login â†’ Query profiles.role on every protected/auth request
+ *      - Student â†’ /admin/* â†’ redirect /student
+ *      - Admin â†’ /student/* â†’ redirect /admin
+ *      - Auth pages (/login, /register) â†’ redirect theo role
  */
 export async function proxy(request) {
   let supabaseResponse = NextResponse.next({
@@ -39,7 +39,6 @@ export async function proxy(request) {
     }
   )
 
-  // Refresh session — quan trọng: phải gọi trước khi check auth
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -56,28 +55,13 @@ export async function proxy(request) {
     return supabaseResponse
   }
 
-  // 1. Tối ưu: Đọc Cookie trước để tiết kiệm Database request
-  const cookieName = `x-role-${user.id}`
-  let role = request.cookies.get(cookieName)?.value
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle()
 
-  // 2. Nếu chưa có Cookie, tiến hành Query DB và lưu ngay vào Cookie
-  if (!role) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-      
-    role = profile?.role || 'student'
-
-    // Cache kết quả vào Cookie để skip Database cho các đợt duyệt trang tiếp theo
-    supabaseResponse.cookies.set(cookieName, role, {
-      path: '/',
-      maxAge: 60 * 60 * 24 * 7, // 1 tuần
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-    })
-  }
+  const role = profile?.role === 'admin' ? 'admin' : 'student'
 
   if (pathname === '/login' || pathname === '/register') {
     const url = request.nextUrl.clone()

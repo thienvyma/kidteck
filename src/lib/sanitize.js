@@ -1,15 +1,12 @@
-import DOMPurify from 'dompurify'
+import DOMPurify from 'isomorphic-dompurify'
 
 /**
- * Sanitize HTML content — remove scripts, event handlers, dangerous tags.
+ * Sanitize HTML content â€” remove scripts, event handlers, dangerous tags.
  * Safe to use with React's dangerouslySetInnerHTML.
- *
- * Whitelist approach: only allows known-safe tags and attributes.
  */
 export function sanitizeHTML(dirty) {
   if (!dirty) return ''
-  // SSR fallback — DOMPurify requires window/document
-  if (typeof window === 'undefined') return dirty
+
   return DOMPurify.sanitize(dirty, {
     ALLOWED_TAGS: [
       'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
@@ -24,6 +21,7 @@ export function sanitizeHTML(dirty) {
     ALLOWED_ATTR: [
       'href', 'src', 'alt', 'title', 'class',
       'target', 'rel', 'width', 'height',
+      'loading', 'decoding', 'referrerpolicy',
     ],
     ALLOW_DATA_ATTR: false,
   })

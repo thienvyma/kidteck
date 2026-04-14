@@ -156,6 +156,24 @@ CREATE TABLE blogs (
 );
 ```
 
+### landing_leads
+```sql
+CREATE TABLE landing_leads (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  learner_name TEXT,
+  phone TEXT NOT NULL,
+  email TEXT,
+  stage TEXT NOT NULL,
+  message TEXT,
+  notes TEXT,
+  status TEXT CHECK (status IN ('new', 'contacted', 'qualified', 'enrolled', 'archived')) DEFAULT 'new',
+  source TEXT NOT NULL DEFAULT 'landing_cta',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
 ## Row Level Security (RLS)
 
 ### Helper Function (SECURITY DEFINER — bypasses RLS to avoid infinite recursion)
@@ -208,4 +226,10 @@ CREATE POLICY "Admin manage payments" ON payments FOR ALL USING (public.is_admin
 ALTER TABLE blogs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Public read published blogs" ON blogs FOR SELECT TO authenticated, anon USING (is_published = true);
 CREATE POLICY "Admin manage blogs" ON blogs FOR ALL USING (public.is_admin());
+
+-- Landing leads: admin-only table, public submissions go through server routes using service role
+ALTER TABLE landing_leads ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Admin manage landing leads" ON landing_leads FOR ALL TO authenticated
+USING (public.is_admin())
+WITH CHECK (public.is_admin());
 ```
