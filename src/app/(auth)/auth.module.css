@@ -19,6 +19,22 @@
   overflow: hidden;
 }
 
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--color-gray-500);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+  font-weight: 500;
+  margin-bottom: var(--space-md);
+  transition: color var(--transition-fast);
+}
+
+.backButton:hover {
+  color: var(--color-primary);
+}
+
 .logoContainer {
   text-align: center;
   margin-bottom: var(--space-xl);

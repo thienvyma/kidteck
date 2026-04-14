@@ -16,7 +16,7 @@
   --logo-mark-size: 6rem;
   --logo-subtitle-size: 1rem;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.25rem;
 }
 
