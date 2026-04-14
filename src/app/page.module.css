@@ -4,13 +4,13 @@
 
 /* --- Hero --- */
 .hero {
-  min-height: 100vh;
-  min-height: var(--app-viewport-height, 100vh);
+  min-height: 85vh;
+  min-height: var(--app-viewport-height, 85vh);
   display: flex;
   align-items: center;
   position: relative;
   overflow: hidden;
-  padding: 6rem 0 3rem;
+  padding: 7rem 0 2rem;
   background:
     radial-gradient(circle at 12% 18%, rgba(255, 107, 107, 0.16), transparent 28%),
     radial-gradient(circle at 84% 14%, rgba(108, 92, 231, 0.26), transparent 34%),
@@ -85,7 +85,7 @@
 
 .hero__inner {
   display: grid;
-  grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
   gap: var(--space-3xl);
   align-items: center;
   position: relative;
@@ -94,7 +94,7 @@
 
 .hero__content {
   animation: fadeInUp 0.8s ease;
-  max-width: 41rem;
+  max-width: 46rem;
 }
 
 .hero__eyebrow {
@@ -124,7 +124,7 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  max-width: 15ch;
+  max-width: 25ch;
   filter: drop-shadow(0 8px 16px rgba(67, 56, 202, 0.08));
 }
 
@@ -134,7 +134,7 @@
   font-weight: 500;
   margin-bottom: 1.85rem;
   line-height: 1.85;
-  max-width: 38rem;
+  max-width: 44rem;
 }
 
 .hero__actions {
@@ -174,7 +174,7 @@
   min-height: 39rem;
   transform-style: preserve-3d;
   transform: scale(0.7);
-  transform-origin: center;
+  transform-origin: right center;
 }
 
 .hero__visualGlow {
@@ -408,6 +408,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.14),
     inset 0 -40px 80px rgba(0, 0, 0, 0.16);
   transform: rotateX(10deg) rotateY(-11deg) translateZ(12px);
+  opacity: 0.55;
 }
 
 .futureSceneStars {
@@ -548,6 +549,7 @@
 }
 
 .futureSceneMiniPanel {
+  display: none !important;
   min-width: 11rem;
   padding: 0.9rem 1rem;
   border-radius: 1rem;
@@ -587,7 +589,7 @@
 }
 
 .futureSceneChip {
-  display: inline-flex;
+  display: none !important;
   align-items: center;
   padding: 0.5rem 0.85rem;
   border-radius: 999px;
