@@ -6,7 +6,6 @@ import BrandLogo from './BrandLogo'
 import styles from './Navbar.module.css'
 
 const DEFAULT_HEADER = {
-  painLabel: 'Góc nhìn',
   roadmapLabel: 'Lộ trình',
   pricingLabel: 'Gói học',
   faqLabel: 'FAQ',
@@ -46,9 +45,6 @@ export default function Navbar({ header }) {
         <div
           className={`${styles.navbar__links} ${isOpen ? styles['navbar__links--open'] : ''}`}
         >
-          <Link href="/#pain" className={styles.navbar__link} onClick={handleLinkClick}>
-            {labels.painLabel}
-          </Link>
           <Link href="/#roadmap" className={styles.navbar__link} onClick={handleLinkClick}>
             {labels.roadmapLabel}
           </Link>

@@ -43,9 +43,51 @@ function formatExternalUrl(url) {
   return clean
 }
 
+function getContactActionMeta(href) {
+  if (href.startsWith('tel:')) {
+    return {
+      label: 'Gọi ngay',
+      detail: href.replace('tel:', ''),
+    }
+  }
+
+  if (href.startsWith('mailto:')) {
+    return {
+      label: 'Gửi email',
+      detail: href.replace('mailto:', ''),
+    }
+  }
+
+  if (href.includes('facebook.com')) {
+    return {
+      label: 'Mở fanpage',
+      detail: 'Nhắn trực tiếp qua fanpage',
+    }
+  }
+
+  if (href.includes('zalo.me')) {
+    return {
+      label: 'Nhắn Zalo',
+      detail: 'Liên hệ nhanh trên điện thoại',
+    }
+  }
+
+  return {
+    label: 'Liên hệ',
+    detail: 'Bấm để mở kênh hỗ trợ',
+  }
+}
+
 export default async function Home() {
 
   const { content, levels } = await getLandingPageData()
+  const heroProofSource =
+    Array.isArray(content.hero?.trustItems) && content.hero.trustItems.length > 0
+      ? content.hero.trustItems
+      : Array.isArray(content.cta?.benefits)
+        ? content.cta.benefits
+        : []
+  const heroProofItems = heroProofSource.filter(Boolean).slice(0, 3)
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -123,6 +165,19 @@ export default async function Home() {
               </a>
             </div>
 
+            {heroProofItems.length > 0 ? (
+              <div className={styles.hero__proofStrip}>
+                {heroProofItems.map((item, index) => (
+                  <div key={item} className={styles.hero__proofCard}>
+                    <span className={styles.hero__proofIndex}>
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <span className={styles.hero__proofText}>{item}</span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
             <div className={styles.hero__trust}>
               {content.hero.trustItems.map((item) => (
                 <div key={item} className={styles['hero__trust-item']}>
@@ -135,29 +190,6 @@ export default async function Home() {
           <div className={styles.hero__visual}>
             <div className={styles.hero__visualStage}>
               <FutureRobotScene />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className={`section ${styles.pain}`} id="pain">
-        <div className="container">
-          <div className={`${styles.sectionShell} ${styles.sectionShellBright}`}>
-            <h2 className="section__title">{content.pain.title}</h2>
-            <p className="section__subtitle">{content.pain.subtitle}</p>
-
-            <div className={styles.pain__grid}>
-              {content.pain.items.map((item, index) => (
-                <div key={item.title} className={styles.pain__card}>
-                  <div className={styles['pain__card-number']}>
-                    {String(index + 1).padStart(2, '0')}
-                  </div>
-                  <div className={styles['pain__card-icon']}>{item.icon}</div>
-                  <h3 className={styles['pain__card-title']}>{item.title}</h3>
-                  <p className={styles['pain__card-desc']}>{item.description}</p>
-                  <p className={styles['pain__card-quote']}>{item.quote}</p>
-                </div>
-              ))}
             </div>
           </div>
         </div>
@@ -404,7 +436,7 @@ export default async function Home() {
                 }
 
                 let title = item.label;
-                let text = "Bấm để liên hệ";
+                let text = '';
                 if(title.includes(':')) {
                   const parts = title.split(':');
                   title = parts[0].trim();
@@ -413,6 +445,10 @@ export default async function Home() {
                   text = href.replace('tel:', '');
                 } else if (href.startsWith('mailto:')) {
                   text = href.replace('mailto:', '');
+                }
+                const actionMeta = getContactActionMeta(href)
+                if (!text) {
+                  text = actionMeta.detail
                 }
 
                 return (
@@ -423,11 +459,25 @@ export default async function Home() {
                     rel={isExternal ? 'noopener noreferrer' : undefined}
                     className={styles.contactDirect__card}
                   >
-                    <div className={styles.contactDirect__icon}>
-                      {Icon}
+                    <div className={styles.contactDirect__cardMain}>
+                      <div className={styles.contactDirect__icon}>
+                        {Icon}
+                      </div>
+                      <div className={styles.contactDirect__body}>
+                        <div className={styles.contactDirect__label}>{title}</div>
+                        <div className={styles.contactDirect__detail}>
+                          {text || actionMeta.detail}
+                        </div>
+                      </div>
                     </div>
-                    <div className={styles.contactDirect__label}>{title}</div>
-                    <div className={styles.contactDirect__detail}>{text}</div>
+                    <div className={styles.contactDirect__action}>
+                      <span className={styles.contactDirect__actionText}>
+                        {actionMeta.label}
+                      </span>
+                      <span className={styles.contactDirect__actionArrow} aria-hidden="true">
+                        →
+                      </span>
+                    </div>
                   </a>
                 )
               })}

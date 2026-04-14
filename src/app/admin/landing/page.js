@@ -8,7 +8,6 @@ import styles from '../admin.module.css'
 const LANDING_SECTIONS = [
   { id: 'header', label: 'Header', badge: 'Menu' },
   { id: 'hero', label: 'Hero', badge: 'Banner' },
-  { id: 'pain', label: 'Pain Point', badge: 'Insight' },
   { id: 'solution', label: 'Positioning', badge: 'Story' },
   { id: 'catalog', label: 'Roadmap & Pricing', badge: 'Sync' },
   { id: 'results', label: 'Results', badge: 'Outcome' },
@@ -312,14 +311,6 @@ export default function AdminLandingPage() {
           <div className={styles.accountSection}>
             <div className={styles.contentEditorGrid}>
               <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Nhãn Góc nhìn</span>
-                <input
-                  className={styles.formInput}
-                  value={content.header.painLabel}
-                  onChange={(event) => updateSection('header', 'painLabel', event.target.value)}
-                />
-              </label>
-              <label className={styles.contentEditorCard}>
                 <span className={styles.formLabel}>Nhãn Lộ trình</span>
                 <input
                   className={styles.formInput}
@@ -436,92 +427,6 @@ export default function AdminLandingPage() {
               />
               <span className={styles.contentEditorHint}>Mỗi dòng là một item.</span>
             </label>
-          </div>
-        </section>
-
-        <section
-          id="landing-section-pain"
-          className={`${styles.sectionCard} ${styles.landingEditorSection}`}
-        >
-          <div className={styles.landingEditorSectionHead}>
-            <div>
-              <div className={styles.sectionCardHeader}>Pain / Insight</div>
-              <p className={styles.landingEditorSectionLead}>
-                Nhóm pain point nền tảng mà landing đang giải quyết.
-              </p>
-            </div>
-            <span className={styles.landingEditorSectionBadge}>Insight</span>
-          </div>
-          <div className={styles.accountSection}>
-            <div className={styles.contentEditorGrid}>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Tiêu đề section</span>
-                <input
-                  className={styles.formInput}
-                  value={content.pain.title}
-                  onChange={(event) => updateSection('pain', 'title', event.target.value)}
-                />
-              </label>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Subtitle</span>
-                <input
-                  className={styles.formInput}
-                  value={content.pain.subtitle}
-                  onChange={(event) => updateSection('pain', 'subtitle', event.target.value)}
-                />
-              </label>
-            </div>
-
-            <div className={styles.contentEditorStack}>
-              {content.pain.items.map((item, index) => (
-                <div key={index} className={styles.contentEditorCard}>
-                  <div className={styles.contentEditorHeader}>Card {index + 1}</div>
-                  <div className={styles.contentEditorGrid}>
-                    <label>
-                      <span className={styles.formLabel}>Icon</span>
-                      <input
-                        className={styles.formInput}
-                        value={item.icon}
-                        onChange={(event) =>
-                          updateObjectItem('pain', index, 'icon', event.target.value)
-                        }
-                      />
-                    </label>
-                    <label>
-                      <span className={styles.formLabel}>Tiêu đề</span>
-                      <input
-                        className={styles.formInput}
-                        value={item.title}
-                        onChange={(event) =>
-                          updateObjectItem('pain', index, 'title', event.target.value)
-                        }
-                      />
-                    </label>
-                  </div>
-                  <label>
-                    <span className={styles.formLabel}>Mô tả</span>
-                    <textarea
-                      className={styles.formTextarea}
-                      rows={3}
-                      value={item.description}
-                      onChange={(event) =>
-                        updateObjectItem('pain', index, 'description', event.target.value)
-                      }
-                    />
-                  </label>
-                  <label>
-                    <span className={styles.formLabel}>Quote / nhấn mạnh</span>
-                    <input
-                      className={styles.formInput}
-                      value={item.quote}
-                      onChange={(event) =>
-                        updateObjectItem('pain', index, 'quote', event.target.value)
-                      }
-                    />
-                  </label>
-                </div>
-              ))}
-            </div>
           </div>
         </section>
 
