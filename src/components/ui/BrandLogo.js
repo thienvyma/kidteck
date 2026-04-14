@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import styles from './BrandLogo.module.css'
 
 function joinClasses(...values) {
@@ -22,10 +23,13 @@ export default function BrandLogo({
       )}
       aria-label="AIgenlabs"
     >
-      <img 
-        src={theme === 'dark' ? "/AIGen_whitelogo.png" : "/AIGen_blacklogo.png"} 
-        alt="AIgenlabs Logo" 
-        className={styles.brandLogo__img} 
+      <Image
+        src={theme === 'dark' ? '/AIGen_whitelogo.png' : '/AIGen_blacklogo.png'}
+        alt="AIgenlabs Logo"
+        className={styles.brandLogo__img}
+        width={320}
+        height={96}
+        priority
       />
       
       {(!compact && subtitle) && (

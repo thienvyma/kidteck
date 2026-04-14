@@ -174,6 +174,16 @@ CREATE TABLE landing_leads (
 );
 ```
 
+### landing_content
+```sql
+CREATE TABLE landing_content (
+  id TEXT PRIMARY KEY DEFAULT 'default' CHECK (id = 'default'),
+  content JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
 ## Row Level Security (RLS)
 
 ### Helper Function (SECURITY DEFINER — bypasses RLS to avoid infinite recursion)
@@ -230,6 +240,12 @@ CREATE POLICY "Admin manage blogs" ON blogs FOR ALL USING (public.is_admin());
 -- Landing leads: admin-only table, public submissions go through server routes using service role
 ALTER TABLE landing_leads ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Admin manage landing leads" ON landing_leads FOR ALL TO authenticated
+USING (public.is_admin())
+WITH CHECK (public.is_admin());
+
+-- Landing content: admin-only singleton document, public site reads through server helpers
+ALTER TABLE landing_content ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Admin manage landing content" ON landing_content FOR ALL TO authenticated
 USING (public.is_admin())
 WITH CHECK (public.is_admin());
 ```

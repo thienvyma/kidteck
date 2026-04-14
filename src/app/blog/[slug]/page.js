@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import ReactMarkdown from 'react-markdown'
 import Navbar from '@/components/ui/Navbar'
@@ -15,7 +16,7 @@ async function getBlog(slug) {
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   )
-  
+
   const { data, error } = await supabase
     .from('blogs')
     .select('*')
@@ -34,7 +35,7 @@ async function getRecentBlogs(excludeSlug) {
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   )
-  
+
   const { data, error } = await supabase
     .from('blogs')
     .select('id, slug, title, published_at')
@@ -54,11 +55,11 @@ async function getAllTags() {
   )
   const { data } = await supabase.from('blogs').select('tags').eq('is_published', true)
   if (!data) return []
-  
+
   const tagSet = new Set()
-  data.forEach(blog => {
+  data.forEach((blog) => {
     if (blog.tags && Array.isArray(blog.tags)) {
-      blog.tags.forEach(tag => tagSet.add(tag))
+      blog.tags.forEach((tag) => tagSet.add(tag))
     }
   })
   return Array.from(tagSet).sort()
@@ -67,14 +68,14 @@ async function getAllTags() {
 export async function generateMetadata({ params }) {
   const { slug } = await params
   const blog = await getBlog(slug)
-  
+
   if (!blog) {
-    return { title: 'Không tìm thấy bài viết | AIgenlabs' }
+    return { title: 'KhÃ´ng tÃ¬m tháº¥y bÃ i viáº¿t | AIgenlabs' }
   }
-  
+
   return {
     title: `${blog.title} | AIgenlabs`,
-    description: blog.description || 'Góc nhìn công nghệ trên AIgenlabs.',
+    description: blog.description || 'GÃ³c nhÃ¬n cÃ´ng nghá»‡ trÃªn AIgenlabs.',
     openGraph: {
       title: blog.title,
       description: blog.description,
@@ -84,7 +85,7 @@ export async function generateMetadata({ params }) {
     },
     alternates: {
       canonical: `/blog/${slug}`,
-    }
+    },
   }
 }
 
@@ -94,7 +95,7 @@ export default async function BlogPostPage({ params }) {
     getBlog(slug),
     getLandingPageData(),
     getRecentBlogs(slug),
-    getAllTags()
+    getAllTags(),
   ])
 
   if (!blog) {
@@ -105,10 +106,9 @@ export default async function BlogPostPage({ params }) {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
-    day: 'numeric'
+    day: 'numeric',
   })
 
-  // SEO JSON-LD cho bài viết (Article Schema)
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
@@ -122,12 +122,11 @@ export default async function BlogPostPage({ params }) {
       name: 'AIgenlabs',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://aigenlabs.vn/AIGen_blacklogo.png'
-      }
-    }
+        url: 'https://aigenlabs.vn/AIGen_blacklogo.png',
+      },
+    },
   }
 
-  // SEO JSON-LD cho Breadcrumbs
   const breadcrumbLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -135,22 +134,22 @@ export default async function BlogPostPage({ params }) {
       {
         '@type': 'ListItem',
         position: 1,
-        name: 'Trang chủ',
-        item: 'https://aigenlabs.vn/'
+        name: 'Trang chá»§',
+        item: 'https://aigenlabs.vn/',
       },
       {
         '@type': 'ListItem',
         position: 2,
-        name: 'Góc nhìn công nghệ',
-        item: 'https://aigenlabs.vn/blog'
+        name: 'GÃ³c nhÃ¬n cÃ´ng nghá»‡',
+        item: 'https://aigenlabs.vn/blog',
       },
       {
         '@type': 'ListItem',
         position: 3,
         name: blog.title,
-        item: `https://aigenlabs.vn/blog/${slug}`
-      }
-    ]
+        item: `https://aigenlabs.vn/blog/${slug}`,
+      },
+    ],
   }
 
   const articleHtml = /<[a-z][\s\S]*>/i.test(blog.content)
@@ -162,136 +161,141 @@ export default async function BlogPostPage({ params }) {
   return (
     <>
       <Navbar header={landingData.content.header} />
-      
+
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify([jsonLd, breadcrumbLd]) }}
       />
-      
+
       <div className={styles.singleBlogWrapper}>
         <div className={`container ${landingStyles.sectionShell} ${landingStyles.sectionShellBright}`}>
-          
           <div className={styles.headerArea}>
-              <h1 className="section__title">
-                <span className="gradient-text">Góc nhìn công nghệ</span>
-              </h1>
-              <p className="section__subtitle">
-              Nơi đội ngũ đào tạo AIgenlabs chia sẻ kiến thức chuyên sâu về công nghệ, 
-              trí tuệ nhân tạo và tư duy product alignment cho giới trẻ.
-              </p>
+            <h1 className="section__title">
+              <span className="gradient-text">GÃ³c nhÃ¬n cÃ´ng nghá»‡</span>
+            </h1>
+            <p className="section__subtitle">
+              NÆ¡i Ä‘á»™i ngÅ© Ä‘Ã o táº¡o AIgenlabs chia sáº» kiáº¿n thá»©c chuyÃªn sÃ¢u vá» cÃ´ng nghá»‡,
+              trÃ­ tuá»‡ nhÃ¢n táº¡o vÃ  tÆ° duy product alignment cho giá»›i tráº».
+            </p>
           </div>
 
           <div className={styles.magazineLayout}>
             <div className={styles.mainContent}>
-              
               <div style={{ marginBottom: '1.5rem' }}>
                 <Link href="/blog" className={`btn btn--secondary btn--sm ${styles.backBtnWrapper}`}>
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18" style={{marginRight: '6px'}}>
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18" style={{ marginRight: '6px' }}>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
-                  Tất cả bài viết
+                  Táº¥t cáº£ bÃ i viáº¿t
                 </Link>
               </div>
 
               <main className={styles.articleContainer}>
+                <header className={styles.articleHeader}>
+                  <h1 className={styles.articleTitle}>{blog.title}</h1>
+                  <div className={styles.articleMeta}>
+                    <span>âœï¸ AIgenlabs Academy</span>
+                    <span>ðŸ“… {publishedDate}</span>
+                  </div>
+                </header>
 
-              
-              <header className={styles.articleHeader}>
-                <h1 className={styles.articleTitle}>{blog.title}</h1>
-                <div className={styles.articleMeta}>
-                  <span>✍️ AIgenlabs Academy</span>
-                  <span>📅 {publishedDate}</span>
-                </div>
-              </header>
+                {blog.cover_image_url && (
+                  <div className={styles.articleCoverWrapper}>
+                    <Image
+                      src={blog.cover_image_url}
+                      alt={`áº¢nh bÃ¬a bÃ i viáº¿t: ${blog.title}`}
+                      className={styles.articleCover}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 860px"
+                      priority
+                      referrerPolicy="no-referrer"
+                      unoptimized
+                    />
+                  </div>
+                )}
 
-              {blog.cover_image_url && (
-                <img 
-                  src={blog.cover_image_url} 
-                  alt={`Ảnh bìa bài viết: ${blog.title}`} 
-                  className={styles.articleCover} 
-                  referrerPolicy="no-referrer"
-                />
-              )}
-
-              <article className={styles.articleProse}>
-                {articleHtml ? (
-                  <div dangerouslySetInnerHTML={{ 
-                    __html: articleHtml
-                  }} />
-                ) : (
-                  <ReactMarkdown
-                     components={{
-                        img: ({ node, alt, ...props }) => (
-                          <img
+                <article className={styles.articleProse}>
+                  {articleHtml ? (
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: articleHtml,
+                      }}
+                    />
+                  ) : (
+                    <ReactMarkdown
+                      components={{
+                        img: ({ node, alt, src = '', ...props }) => (
+                          <Image
                             {...props}
+                            src={src}
                             alt={alt || ''}
+                            width={1600}
+                            height={900}
+                            sizes="100vw"
                             referrerPolicy="no-referrer"
                             loading="lazy"
                             decoding="async"
+                            unoptimized
+                            style={{ width: '100%', height: 'auto' }}
                           />
-                        )
-                     }}
-                  >
-                     {blog.content}
-                  </ReactMarkdown>
-                )}
-              </article>
-            </main>
-          </div>
+                        ),
+                      }}
+                    >
+                      {blog.content}
+                    </ReactMarkdown>
+                  )}
+                </article>
+              </main>
+            </div>
 
-          {/* Cột Phải: Sticky Sidebar */}
-          <aside className={styles.sidebar}>
-              
-              {/* Search Bar (Mock) */}
+            <aside className={styles.sidebar}>
               <div className={`${styles.widget} card`}>
-                  <h4 className={styles.widgetTitle}>Tìm kiếm</h4>
-                  <div className={styles.searchBox}>
-                      <input type="text" placeholder="Tìm kiếm bài viết..." className="input" disabled />
-                      <svg className={styles.searchIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                  </div>
+                <h4 className={styles.widgetTitle}>TÃ¬m kiáº¿m</h4>
+                <div className={styles.searchBox}>
+                  <input type="text" placeholder="TÃ¬m kiáº¿m bÃ i viáº¿t..." className="input" disabled />
+                  <svg className={styles.searchIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
               </div>
 
-              {/* Categories */}
               <div className={`${styles.widget} card`}>
-                  <h4 className={styles.widgetTitle}>Chủ đề nổi bật</h4>
-                  <div className={styles.tagCloud}>
-                      {allTags.length === 0 && <span className={styles.tag}>Chưa có chủ đề</span>}
-                      {allTags.map(tag => (
-                          <span key={tag} className={styles.tag}>{tag}</span>
-                      ))}
-                  </div>
+                <h4 className={styles.widgetTitle}>Chá»§ Ä‘á» ná»•i báº­t</h4>
+                <div className={styles.tagCloud}>
+                  {allTags.length === 0 && <span className={styles.tag}>ChÆ°a cÃ³ chá»§ Ä‘á»</span>}
+                  {allTags.map((tag) => (
+                    <span key={tag} className={styles.tag}>{tag}</span>
+                  ))}
+                </div>
               </div>
 
-              {/* Featured / Popular Posts (Fetched properly) */}
               <div className={`${styles.widget} card`}>
-                  <h4 className={styles.widgetTitle}>Đáng chú ý</h4>
-                  <div className={styles.popularList}>
-                      {recentBlogs.length === 0 && <p className={styles.emptyStateMinimal}>Đang cập nhật...</p>}
-                      {recentBlogs.map((b, i) => (
-                          <Link href={`/blog/${b.slug}`} key={b.id} className={styles.popularItem}>
-                              <span className={styles.popularRank}>0{i+1}</span>
-                              <div className={styles.popularContent}>
-                                  <h5 className={styles.popularTitle}>{b.title}</h5>
-                                  <span className={styles.metaDataText}>{new Date(b.published_at).toLocaleDateString('vi-VN')}</span>
-                              </div>
-                          </Link>
-                      ))}
-                  </div>
+                <h4 className={styles.widgetTitle}>ÄÃ¡ng chÃº Ã½</h4>
+                <div className={styles.popularList}>
+                  {recentBlogs.length === 0 && <p className={styles.emptyStateMinimal}>Äang cáº­p nháº­t...</p>}
+                  {recentBlogs.map((b, i) => (
+                    <Link href={`/blog/${b.slug}`} key={b.id} className={styles.popularItem}>
+                      <span className={styles.popularRank}>0{i + 1}</span>
+                      <div className={styles.popularContent}>
+                        <h5 className={styles.popularTitle}>{b.title}</h5>
+                        <span className={styles.metaDataText}>{new Date(b.published_at).toLocaleDateString('vi-VN')}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               </div>
 
-              {/* Newsletter Box - Style như Landing Page */}
               <div className={`${landingStyles.sectionShell} ${landingStyles.sectionShellDeep} ${styles.widget} ${styles.newsletterWidget}`}>
-                  <h4 className="section__title" style={{color: 'white', marginBottom: '8px', fontSize: '1.25rem', textAlign: 'left'}}>Nhận tư vấn</h4>
-                  <p className="section__subtitle" style={{color: 'rgba(255,255,255,0.8)', textAlign: 'left', marginBottom: '24px', fontSize: '0.9rem'}}>
-                      Trao đổi với đội ngũ AIgenlabs về lộ trình phù hợp.
-                  </p>
-                  <Link href="/#cta" className="btn btn--accent" style={{width: '100%'}}>
-                      Liên hệ ngay
-                  </Link>
+                <h4 className="section__title" style={{ color: 'white', marginBottom: '8px', fontSize: '1.25rem', textAlign: 'left' }}>Nháº­n tÆ° váº¥n</h4>
+                <p className="section__subtitle" style={{ color: 'rgba(255,255,255,0.8)', textAlign: 'left', marginBottom: '24px', fontSize: '0.9rem' }}>
+                  Trao Ä‘á»•i vá»›i Ä‘á»™i ngÅ© AIgenlabs vá» lá»™ trÃ¬nh phÃ¹ há»£p.
+                </p>
+                <Link href="/#cta" className="btn btn--accent" style={{ width: '100%' }}>
+                  LiÃªn há»‡ ngay
+                </Link>
               </div>
-
-          </aside>
-        </div>
+            </aside>
+          </div>
         </div>
       </div>
     </>

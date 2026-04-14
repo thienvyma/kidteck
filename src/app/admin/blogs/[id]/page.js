@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
 import dynamic from 'next/dynamic'
 import 'react-quill-new/dist/quill.snow.css'
@@ -267,7 +268,17 @@ export default function BlogEditorPage() {
               </span>
               {form.cover_image_url && (
                 <div style={{ marginTop: '12px', border: '1px solid var(--color-border)', borderRadius: '8px', overflow: 'hidden' }}>
-                    <img src={form.cover_image_url} alt="Cover Preview" referrerPolicy="no-referrer" style={{ width: '100%', height: '160px', objectFit: 'cover' }} />
+                  <div style={{ position: 'relative', width: '100%', height: '160px' }}>
+                    <Image
+                      src={form.cover_image_url}
+                      alt="Cover Preview"
+                      fill
+                      sizes="800px"
+                      referrerPolicy="no-referrer"
+                      unoptimized
+                      style={{ objectFit: 'cover' }}
+                    />
+                  </div>
                 </div>
               )}
             </label>

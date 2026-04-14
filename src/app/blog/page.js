@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import Navbar from '@/components/ui/Navbar'
 import { getLandingPageData } from '@/lib/landing-content'
@@ -138,7 +139,16 @@ export default async function BlogArchivePage({ searchParams }) {
                       <Link href={`/blog/${hero.slug}`} className={`${styles.heroCard} card`}>
                           <div className={styles.heroImageWrapper}>
                               {hero.cover_image_url ? (
-                                  <img src={hero.cover_image_url} alt={hero.title} className={styles.heroImage} loading="eager" referrerPolicy="no-referrer" />
+                                  <Image
+                                    src={hero.cover_image_url}
+                                    alt={hero.title}
+                                    className={styles.heroImage}
+                                    fill
+                                    sizes="(max-width: 1024px) 100vw, 66vw"
+                                    priority
+                                    referrerPolicy="no-referrer"
+                                    unoptimized
+                                  />
                               ) : (
                                   <div className={styles.placeholderBg}>&#128247;</div>
                               )}
@@ -170,7 +180,15 @@ export default async function BlogArchivePage({ searchParams }) {
                               <Link href={`/blog/${blog.slug}`} key={blog.id} className={`${styles.horizontalCard} card`}>
                                   <div className={styles.hImageWrapper}>
                                       {blog.cover_image_url ? (
-                                          <img src={blog.cover_image_url} alt={blog.title} className={styles.hImage} loading="lazy" referrerPolicy="no-referrer" />
+                                          <Image
+                                            src={blog.cover_image_url}
+                                            alt={blog.title}
+                                            className={styles.hImage}
+                                            fill
+                                            sizes="(max-width: 768px) 100vw, 260px"
+                                            referrerPolicy="no-referrer"
+                                            unoptimized
+                                          />
                                       ) : (
                                           <div className={styles.placeholderBg}>&#128247;</div>
                                       )}

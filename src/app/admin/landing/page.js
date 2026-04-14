@@ -37,6 +37,7 @@ function textareaToArray(value) {
 
 export default function AdminLandingPage() {
   const [content, setContent] = useState(() => cloneDefaultLandingContent())
+  const [contentUpdatedAt, setContentUpdatedAt] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [feedback, setFeedback] = useState(null)
@@ -56,6 +57,7 @@ export default function AdminLandingPage() {
       }
 
       setContent(result.content || cloneDefaultLandingContent())
+      setContentUpdatedAt(result.updatedAt || '')
       return true
     } catch (error) {
       console.error('fetch landing content error:', error)
@@ -159,7 +161,7 @@ export default function AdminLandingPage() {
       const response = await fetch('/api/admin/landing-content', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content, expectedUpdatedAt: contentUpdatedAt }),
       })
       const result = await response.json()
 

@@ -6,6 +6,14 @@ import { cloneDefaultLandingContent } from '@/lib/landing-defaults'
 const LANDING_BUCKET = 'site-content'
 const LANDING_DIR = 'landing'
 const LANDING_FILE_PATTERN = /^content(?:-\d+)?\.json$/
+const LANDING_CONTENT_TABLE = 'landing_content'
+const LANDING_CONTENT_ROW_ID = 'default'
+const LANDING_CONTENT_SELECT = 'id, content, created_at, updated_at'
+const LANDING_CONTENT_CONFLICT_CODE = 'LANDING_CONTENT_CONFLICT'
+const LANDING_CONTENT_CONFLICT_MESSAGE =
+  'Landing content has changed on the server. Reload before saving.'
+
+let landingContentSeedPromise = null
 
 function getVersionOrder(file) {
   const match = file?.name?.match(/^content-(\d+)\.json$/)
@@ -35,6 +43,10 @@ function readString(value, fallback) {
   }
 
   return value.trim()
+}
+
+function readOptionalString(value) {
+  return readString(value, '')
 }
 
 function readStringArray(values, fallback) {
@@ -209,6 +221,31 @@ export function normalizeLandingContent(input) {
   }
 }
 
+function mapLandingContentRecord(row) {
+  return {
+    content: normalizeLandingContent(row?.content || {}),
+    createdAt: readOptionalString(row?.created_at),
+    updatedAt: readOptionalString(row?.updated_at),
+  }
+}
+
+function createLandingContentConflictError() {
+  const error = new Error(LANDING_CONTENT_CONFLICT_MESSAGE)
+  error.code = LANDING_CONTENT_CONFLICT_CODE
+  return error
+}
+
+function isMissingLandingContentTable(error) {
+  const message = `${error?.message || ''} ${error?.details || ''}`.toLowerCase()
+
+  return (
+    error?.code === '42P01' ||
+    error?.code === 'PGRST205' ||
+    (message.includes('landing_content') &&
+      (message.includes('does not exist') || message.includes('schema cache')))
+  )
+}
+
 async function ensureBucket(adminClient) {
   const { data: buckets, error: listError } = await adminClient.storage.listBuckets()
   if (listError) {
@@ -275,8 +312,65 @@ async function pruneLandingVersions(adminClient) {
   await adminClient.storage.from(LANDING_BUCKET).remove(removable)
 }
 
-export async function getLandingContent() {
-  const adminClient = createAdminClient()
+async function fetchDatabaseLandingContent(adminClient) {
+  const { data, error } = await adminClient
+    .from(LANDING_CONTENT_TABLE)
+    .select(LANDING_CONTENT_SELECT)
+    .eq('id', LANDING_CONTENT_ROW_ID)
+    .maybeSingle()
+
+  if (error) {
+    throw error
+  }
+
+  return data ? mapLandingContentRecord(data) : null
+}
+
+async function insertDatabaseLandingContent(adminClient, content) {
+  const now = new Date().toISOString()
+  const { data, error } = await adminClient
+    .from(LANDING_CONTENT_TABLE)
+    .insert({
+      id: LANDING_CONTENT_ROW_ID,
+      content,
+      created_at: now,
+      updated_at: now,
+    })
+    .select(LANDING_CONTENT_SELECT)
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return mapLandingContentRecord(data)
+}
+
+async function updateDatabaseLandingContent(adminClient, content, expectedUpdatedAt) {
+  let query = adminClient
+    .from(LANDING_CONTENT_TABLE)
+    .update({
+      content,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', LANDING_CONTENT_ROW_ID)
+
+  if (expectedUpdatedAt) {
+    query = query.eq('updated_at', expectedUpdatedAt)
+  }
+
+  const { data, error } = await query
+    .select(LANDING_CONTENT_SELECT)
+    .maybeSingle()
+
+  if (error) {
+    throw error
+  }
+
+  return data ? mapLandingContentRecord(data) : null
+}
+
+async function getLegacyLandingContent(adminClient) {
   const fallback = cloneDefaultLandingContent()
 
   try {
@@ -297,21 +391,18 @@ export async function getLandingContent() {
     const text = await data.text()
     return normalizeLandingContent(JSON.parse(text))
   } catch (error) {
-    console.warn('getLandingContent fallback:', error?.message || error)
+    console.warn('getLegacyLandingContent fallback:', error?.message || error)
     return fallback
   }
 }
 
-export async function saveLandingContent(content) {
-  const adminClient = createAdminClient()
-  const normalized = normalizeLandingContent(content)
-
+async function saveLegacyLandingContent(adminClient, content) {
   await ensureBucket(adminClient)
 
   const filePath = `${LANDING_DIR}/content-${Date.now()}.json`
   const { error } = await adminClient.storage
     .from(LANDING_BUCKET)
-    .upload(filePath, new Blob([JSON.stringify(normalized, null, 2)]), {
+    .upload(filePath, Buffer.from(JSON.stringify(content, null, 2), 'utf8'), {
       contentType: 'application/json',
       cacheControl: '0',
     })
@@ -322,7 +413,108 @@ export async function saveLandingContent(content) {
 
   await pruneLandingVersions(adminClient)
 
-  return normalized
+  return {
+    content,
+    createdAt: '',
+    updatedAt: '',
+  }
+}
+
+async function ensureLandingContentSeeded(adminClient) {
+  if (landingContentSeedPromise) {
+    return landingContentSeedPromise
+  }
+
+  landingContentSeedPromise = (async () => {
+    const existing = await fetchDatabaseLandingContent(adminClient)
+    if (existing) {
+      return existing
+    }
+
+    const legacyContent = await getLegacyLandingContent(adminClient)
+
+    try {
+      return await insertDatabaseLandingContent(adminClient, legacyContent)
+    } catch (error) {
+      if (error?.code === '23505') {
+        return fetchDatabaseLandingContent(adminClient)
+      }
+
+      throw error
+    }
+  })().catch((error) => {
+    landingContentSeedPromise = null
+    throw error
+  })
+
+  return landingContentSeedPromise
+}
+
+export async function getLandingContentDocument() {
+  const adminClient = createAdminClient()
+  const fallback = cloneDefaultLandingContent()
+
+  try {
+    const current = await fetchDatabaseLandingContent(adminClient)
+    if (current) {
+      return current
+    }
+
+    const seeded = await ensureLandingContentSeeded(adminClient)
+    return seeded || { content: fallback, createdAt: '', updatedAt: '' }
+  } catch (error) {
+    if (isMissingLandingContentTable(error)) {
+      return {
+        content: await getLegacyLandingContent(adminClient),
+        createdAt: '',
+        updatedAt: '',
+      }
+    }
+
+    console.warn('getLandingContentDocument fallback:', error?.message || error)
+    return { content: fallback, createdAt: '', updatedAt: '' }
+  }
+}
+
+export async function getLandingContent() {
+  const document = await getLandingContentDocument()
+  return document.content
+}
+
+export async function saveLandingContent(content, options = {}) {
+  const adminClient = createAdminClient()
+  const normalized = normalizeLandingContent(content)
+  const expectedUpdatedAt = readOptionalString(options.expectedUpdatedAt)
+
+  try {
+    const current = await ensureLandingContentSeeded(adminClient)
+
+    if (!current) {
+      return insertDatabaseLandingContent(adminClient, normalized)
+    }
+
+    if (expectedUpdatedAt) {
+      const saved = await updateDatabaseLandingContent(
+        adminClient,
+        normalized,
+        expectedUpdatedAt
+      )
+
+      if (!saved) {
+        throw createLandingContentConflictError()
+      }
+
+      return saved
+    }
+
+    return updateDatabaseLandingContent(adminClient, normalized)
+  } catch (error) {
+    if (!isMissingLandingContentTable(error)) {
+      throw error
+    }
+  }
+
+  return saveLegacyLandingContent(adminClient, normalized)
 }
 
 export async function getLandingLevels() {

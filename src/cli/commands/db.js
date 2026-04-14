@@ -99,7 +99,17 @@ dbCommand
       supabase_url: supabaseUrl ? 'configured' : 'not configured',
       supabase_key: supabaseKey ? 'configured' : 'not configured',
       connection: supabaseUrl ? 'ready (needs verification)' : 'not available',
-      tables: ['profiles', 'levels', 'subjects', 'enrollments', 'progress', 'payments']
+      tables: [
+        'profiles',
+        'levels',
+        'subjects',
+        'enrollments',
+        'progress',
+        'payments',
+        'blogs',
+        'landing_leads',
+        'landing_content',
+      ]
     };
     
     formatOutput(status, options);

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase-server'
-import { getLandingContent, saveLandingContent } from '@/lib/landing-content'
+import { getLandingContentDocument, saveLandingContent } from '@/lib/landing-content'
 
 async function verifyAdmin() {
   const supabase = await createServerClient()
@@ -32,8 +32,8 @@ export async function GET() {
       return NextResponse.json({ error: auth.error }, { status: auth.status })
     }
 
-    const content = await getLandingContent()
-    return NextResponse.json({ content })
+    const { content, updatedAt } = await getLandingContentDocument()
+    return NextResponse.json({ content, updatedAt })
   } catch (error) {
     console.error('landing-content GET error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -48,13 +48,20 @@ export async function PUT(request) {
     }
 
     const body = await request.json()
-    const content = await saveLandingContent(body.content || {})
-    return NextResponse.json({ success: true, content })
+    const saved = await saveLandingContent(body.content || {}, {
+      expectedUpdatedAt: body.expectedUpdatedAt,
+    })
+    return NextResponse.json({
+      success: true,
+      content: saved.content,
+      updatedAt: saved.updatedAt,
+    })
   } catch (error) {
     console.error('landing-content PUT error:', error)
+    const status = error?.code === 'LANDING_CONTENT_CONFLICT' ? 409 : 500
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
-      { status: 500 }
+      { status }
     )
   }
 }

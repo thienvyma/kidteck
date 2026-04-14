@@ -28,16 +28,19 @@
   width: auto;
   height: var(--logo-mark-size);
   object-fit: contain;
+  flex-shrink: 0;
+  max-width: none;
 }
 
 .brandLogo--sm .brandLogo__img {
-  transform: scale(1.6);
-  transform-origin: left center;
+  /* Mình đã đổi tâm phóng to về chính giữa (center) và đẩy ảnh xuống một chút (translateY) */
+  transform: scale(1.6) translateY(3px) translateX(0px);
+  transform-origin: center center;
 }
 
 .brandLogo:not(.brandLogo--sm):not(.brandLogo--lg) .brandLogo__img {
-  transform: scale(1.4);
-  transform-origin: left center;
+  transform: scale(1.4) translateY(3px) translateX(0px);
+  transform-origin: center center;
 }
 
 .brandLogo__text {
