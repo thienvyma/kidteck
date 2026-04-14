@@ -115,13 +115,13 @@
 }
 
 .hero__title {
-  font-size: clamp(2.4rem, 4.2vw, 3.6rem);
+  font-size: clamp(1.8rem, 3.2vw, 2.8rem);
   font-weight: 900;
   line-height: 1.05;
   letter-spacing: -0.04em;
   margin-bottom: 1.15rem;
   color: var(--color-dark);
-  max-width: 12ch;
+  max-width: 15ch;
 }
 
 .hero__description {
