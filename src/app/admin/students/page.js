@@ -1,8 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase'
+import { useDeferredValue, useEffect, useState, useCallback } from 'react'
 import DataTable from '@/components/admin/DataTable'
 import CreateStudentModal from '@/components/admin/CreateStudentModal'
 import StudentDetailModal from '@/components/admin/StudentDetailModal'
@@ -10,71 +8,64 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import styles from '../admin.module.css'
 
 export default function StudentsPage() {
-  const [supabase] = useState(() => createClient())
-  const router = useRouter()
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [feedback, setFeedback] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
-  
   const [filter, setFilter] = useState('all')
   const [activeStudentId, setActiveStudentId] = useState(null)
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(0)
+  const [sortKey, setSortKey] = useState('created_at')
+  const [sortDir, setSortDir] = useState('desc')
+  const [pagination, setPagination] = useState({
+    page: 0,
+    perPage: 10,
+    totalItems: 0,
+    totalPages: 1,
+  })
+  const deferredSearch = useDeferredValue(search)
 
   const fetchStudents = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          full_name,
-          phone,
-          created_at,
-          enrollments(status, enrolled_at, levels(name))
-        `)
-        .eq('role', 'student')
-        .order('created_at', { ascending: false })
+      const params = new URLSearchParams()
+      params.set('status', filter)
+      params.set('q', deferredSearch)
+      params.set('page', String(page))
+      params.set('perPage', '10')
+      params.set('sortKey', sortKey)
+      params.set('sortDir', sortDir)
 
-      if (error) {
-        console.error('Error fetching students:', error)
-        setFeedback({
-          type: 'error',
-          text: error.message || 'Không thể tải danh sách học viên',
-        })
-        return
+      const response = await fetch(`/api/admin/students?${params.toString()}`, {
+        cache: 'no-store',
+      })
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Khong the tai danh sach hoc vien')
       }
 
-      setStudents(
-        (data || []).map((student) => {
-          const orderedEnrollments = [...(student.enrollments || [])].sort(
-            (a, b) => new Date(b.enrolled_at || 0) - new Date(a.enrolled_at || 0)
-          )
-          const currentEnrollment =
-            orderedEnrollments.find((item) => item.status === 'active') ||
-            orderedEnrollments[0] ||
-            null
-
-          return {
-            id: student.id,
-            full_name: student.full_name || '—',
-            phone: student.phone || '—',
-            level: currentEnrollment?.levels?.name || 'Chưa kích hoạt',
-            status: currentEnrollment?.status || 'inactive',
-            created_at: new Date(student.created_at).toLocaleDateString('vi-VN'),
-          }
-        })
+      setStudents(result.students || [])
+      setPagination(
+        result.pagination || {
+          page: 0,
+          perPage: 10,
+          totalItems: 0,
+          totalPages: 1,
+        }
       )
     } catch (err) {
       console.error('Students fetch error:', err)
       setFeedback({
         type: 'error',
-        text: 'Không thể tải danh sách học viên',
+        text: 'Khong the tai danh sach hoc vien',
       })
     } finally {
       setLoading(false)
     }
-  }, [supabase])
+  }, [deferredSearch, filter, page, sortDir, sortKey])
 
   useEffect(() => {
     fetchStudents()
@@ -82,13 +73,9 @@ export default function StudentsPage() {
 
   const handleStudentCreated = () => {
     setLoading(true)
+    setPage(0)
     fetchStudents()
   }
-
-  const filteredStudents = useMemo(() => {
-    if (filter === 'all') return students
-    return students.filter(student => student.status === filter)
-  }, [students, filter])
 
   async function handleDeleteStudent() {
     if (!deleteTarget?.id) {
@@ -105,12 +92,12 @@ export default function StudentsPage() {
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || 'Không thể xóa tài khoản học viên')
+        throw new Error(result.error || 'Khong the xoa tai khoan hoc vien')
       }
 
       setFeedback({
         type: 'success',
-        text: `Đã xóa học viên "${deleteTarget.full_name}" và đồng bộ dữ liệu liên quan`,
+        text: `Da xoa hoc vien "${deleteTarget.full_name}" va dong bo du lieu lien quan`,
       })
       setDeleteTarget(null)
       setLoading(true)
@@ -118,7 +105,7 @@ export default function StudentsPage() {
     } catch (error) {
       setFeedback({
         type: 'error',
-        text: error.message || 'Không thể xóa tài khoản học viên',
+        text: error.message || 'Khong the xoa tai khoan hoc vien',
       })
     } finally {
       setDeleting(false)
@@ -127,38 +114,38 @@ export default function StudentsPage() {
 
   const renderStatus = (status) => {
     const map = {
-      inactive: { label: 'Chưa kích hoạt', cls: styles['badge--inactive'] },
-      active: { label: 'Đang học', cls: styles['badge--active'] },
-      completed: { label: 'Hoàn thành', cls: styles['badge--completed'] },
-      paused: { label: 'Tạm dừng', cls: styles['badge--paused'] },
-      cancelled: { label: 'Đã hủy', cls: styles['badge--cancelled'] },
+      inactive: { label: 'Chua kich hoat', cls: styles['badge--inactive'] },
+      active: { label: 'Dang hoc', cls: styles['badge--active'] },
+      completed: { label: 'Hoan thanh', cls: styles['badge--completed'] },
+      paused: { label: 'Tam dung', cls: styles['badge--paused'] },
+      cancelled: { label: 'Da huy', cls: styles['badge--cancelled'] },
     }
 
     const state = map[status]
     if (!state) {
-      return <span>—</span>
+      return <span>-</span>
     }
 
     return <span className={`${styles.badge} ${state.cls}`}>{state.label}</span>
   }
 
   const columns = [
-    { key: 'full_name', label: 'Họ tên' },
-    { key: 'phone', label: 'Điện thoại' },
-    { key: 'level', label: 'Gói hiện tại' },
-    { key: 'status', label: 'Trạng thái', render: renderStatus },
-    { key: 'created_at', label: 'Ngày đăng ký' },
+    { key: 'full_name', label: 'Ho ten' },
+    { key: 'phone', label: 'Dien thoai' },
+    { key: 'level', label: 'Goi hien tai' },
+    { key: 'status', label: 'Trang thai', render: renderStatus },
+    { key: 'created_at', label: 'Ngay dang ky' },
   ]
 
   return (
     <>
       <div className={styles.pageHeader}>
-        <h2 className={styles.pageTitle}>Quản lý Học sinh</h2>
+        <h2 className={styles.pageTitle}>Quan ly Hoc sinh</h2>
         <button
           className={`${styles.quickActionBtn} ${styles['quickActionBtn--primary']}`}
           onClick={() => setShowModal(true)}
         >
-          + Thêm học sinh mới
+          + Them hoc sinh moi
         </button>
       </div>
 
@@ -179,32 +166,48 @@ export default function StudentsPage() {
           <button
             key={item}
             className={`${styles.filterBtn} ${filter === item ? styles.filterBtnActive : ''}`}
-            onClick={() => setFilter(item)}
+            onClick={() => {
+              setFilter(item)
+              setPage(0)
+            }}
           >
             {item === 'all'
-              ? 'Tất cả'
+              ? 'Tat ca'
               : item === 'active'
-                ? 'Đang học'
+                ? 'Dang hoc'
                 : item === 'inactive'
-                  ? 'Chưa kích hoạt'
-                  : 'Hoàn thành'}
+                  ? 'Chua kich hoat'
+                  : 'Hoan thanh'}
           </button>
         ))}
       </div>
 
       <DataTable
         columns={columns}
-        data={filteredStudents}
+        data={students}
         searchKey="full_name"
+        searchValue={search}
+        onSearchChange={setSearch}
+        sortKey={sortKey}
+        sortDir={sortDir}
+        onSortChange={(nextSortKey, nextSortDir) => {
+          setSortKey(nextSortKey)
+          setSortDir(nextSortDir)
+        }}
+        page={pagination.page}
+        onPageChange={setPage}
+        totalPages={pagination.totalPages}
+        totalItems={pagination.totalItems}
+        perPage={pagination.perPage}
         loading={loading}
-        emptyMessage="Chưa có học sinh nào"
+        emptyMessage="Chua co hoc sinh nao"
         actions={[
           {
-            label: 'Hồ sơ',
+            label: 'Ho so',
             onClick: (row) => setActiveStudentId(row.id),
           },
           {
-            label: 'Xóa nhanh',
+            label: 'Xoa nhanh',
             onClick: (row) => setDeleteTarget(row),
             disabled: () => deleting,
           },
@@ -219,14 +222,14 @@ export default function StudentsPage() {
 
       <ConfirmDialog
         isOpen={Boolean(deleteTarget)}
-        title="Xóa học viên"
+        title="Xoa hoc vien"
         message={
           deleteTarget
-            ? `Bạn có chắc muốn xóa học viên "${deleteTarget.full_name}"? Tài khoản đăng nhập, profile và dữ liệu học tập sẽ bị xóa.`
+            ? `Ban co chac muon xoa hoc vien "${deleteTarget.full_name}"? Tai khoan dang nhap, profile va du lieu hoc tap se bi xoa.`
             : ''
         }
-        confirmText="Xóa học viên"
-        cancelText="Hủy"
+        confirmText="Xoa hoc vien"
+        cancelText="Huy"
         variant="danger"
         loading={deleting}
         onConfirm={handleDeleteStudent}

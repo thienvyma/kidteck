@@ -114,6 +114,7 @@ export function normalizeLandingContent(input) {
 
   return {
     header: {
+      contactLabel: readString(input?.header?.contactLabel, fallback.header.contactLabel),
       roadmapLabel: readString(input?.header?.roadmapLabel, fallback.header.roadmapLabel),
       faqLabel: readString(input?.header?.faqLabel, fallback.header.faqLabel),
       ctaLabel: readString(input?.header?.ctaLabel, fallback.header.ctaLabel),

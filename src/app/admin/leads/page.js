@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useDeferredValue, useEffect, useMemo, useState, useCallback } from 'react'
 import DataTable from '@/components/admin/DataTable'
 import styles from '../admin.module.css'
 
@@ -44,6 +44,17 @@ export default function LeadsPage() {
   const [selectedLeadId, setSelectedLeadId] = useState(null)
   const [notesDraft, setNotesDraft] = useState('')
   const [feedback, setFeedback] = useState(null)
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(0)
+  const [sortKey, setSortKey] = useState('createdLabel')
+  const [sortDir, setSortDir] = useState('desc')
+  const [pagination, setPagination] = useState({
+    page: 0,
+    perPage: 10,
+    totalItems: 0,
+    totalPages: 1,
+  })
+  const deferredSearch = useDeferredValue(search)
 
   const fetchLeads = useCallback(async () => {
     setLoading(true)
@@ -51,6 +62,11 @@ export default function LeadsPage() {
     try {
       const params = new URLSearchParams()
       params.set('status', filter)
+      params.set('q', deferredSearch)
+      params.set('page', String(page))
+      params.set('perPage', '10')
+      params.set('sortKey', sortKey)
+      params.set('sortDir', sortDir)
 
       const response = await fetch(`/api/admin/leads?${params.toString()}`, {
         cache: 'no-store',
@@ -82,6 +98,14 @@ export default function LeadsPage() {
         enrolled: 0,
         archived: 0,
       })
+      setPagination(
+        result.pagination || {
+          page: 0,
+          perPage: 10,
+          totalItems: 0,
+          totalPages: 1,
+        }
+      )
       setSelectedLeadId((current) => {
         if (rows.some((lead) => lead.id === current)) {
           return current
@@ -98,7 +122,7 @@ export default function LeadsPage() {
     } finally {
       setLoading(false)
     }
-  }, [filter])
+  }, [deferredSearch, filter, page, sortDir, sortKey])
 
   useEffect(() => {
     fetchLeads()
@@ -248,7 +272,10 @@ export default function LeadsPage() {
           <button
             key={item}
             className={`${styles.filterBtn} ${filter === item ? styles.filterBtnActive : ''}`}
-            onClick={() => setFilter(item)}
+            onClick={() => {
+              setFilter(item)
+              setPage(0)
+            }}
           >
             {item === 'all' ? 'Tất cả' : statusMap[item].label}
           </button>
@@ -259,6 +286,19 @@ export default function LeadsPage() {
         columns={columns}
         data={leads}
         searchKey="searchText"
+        searchValue={search}
+        onSearchChange={setSearch}
+        sortKey={sortKey}
+        sortDir={sortDir}
+        onSortChange={(nextSortKey, nextSortDir) => {
+          setSortKey(nextSortKey)
+          setSortDir(nextSortDir)
+        }}
+        page={pagination.page}
+        onPageChange={setPage}
+        totalPages={pagination.totalPages}
+        totalItems={pagination.totalItems}
+        perPage={pagination.perPage}
         loading={loading}
         emptyMessage="Chưa có lead nào từ landing"
         actions={actions}

@@ -6,6 +6,7 @@ import BrandLogo from './BrandLogo'
 import styles from './Navbar.module.css'
 
 const DEFAULT_HEADER = {
+  contactLabel: 'Lien he',
   roadmapLabel: 'Lộ trình',
   faqLabel: 'FAQ',
   ctaLabel: 'Nhận lộ trình',
@@ -56,6 +57,13 @@ export default function Navbar({ header, anchorBase = '/', homeHref = '/' }) {
             onClick={handleLinkClick}
           >
             {labels.roadmapLabel}
+          </Link>
+          <Link
+            href={getSectionHref(anchorBase, 'contact-direct')}
+            className={styles.navbar__link}
+            onClick={handleLinkClick}
+          >
+            {labels.contactLabel}
           </Link>
           <Link
             href={getSectionHref(anchorBase, 'faq')}

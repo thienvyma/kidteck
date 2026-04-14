@@ -1,5 +1,6 @@
 export const defaultLandingContent = {
   header: {
+    contactLabel: 'Lien he',
     roadmapLabel: 'Lộ trình',
     faqLabel: 'FAQ',
     ctaLabel: 'Nhận lộ trình',

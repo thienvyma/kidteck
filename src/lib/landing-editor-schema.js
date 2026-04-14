@@ -11,6 +11,7 @@ export const LANDING_EDITOR_SECTIONS = [
       {
         layout: 'grid',
         fields: [
+          { key: 'contactLabel', label: 'Nhan Lien he', type: 'text' },
           { key: 'roadmapLabel', label: 'Nhãn Lộ trình', type: 'text' },
           { key: 'faqLabel', label: 'Nhãn FAQ', type: 'text' },
         ],

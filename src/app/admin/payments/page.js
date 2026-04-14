@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback, Suspense } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useDeferredValue, useEffect, useState, useCallback, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import DataTable from '@/components/admin/DataTable'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import styles from '../admin.module.css'
@@ -37,6 +37,17 @@ function PaymentsContent() {
   const [feedback, setFeedback] = useState(null)
   const [confirmAction, setConfirmAction] = useState(null)
   const [actionLoading, setActionLoading] = useState(false)
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(0)
+  const [sortKey, setSortKey] = useState('createdLabel')
+  const [sortDir, setSortDir] = useState('desc')
+  const [pagination, setPagination] = useState({
+    page: 0,
+    perPage: 10,
+    totalItems: 0,
+    totalPages: 1,
+  })
+  const deferredSearch = useDeferredValue(search)
 
   const fetchPayments = useCallback(async () => {
     setLoading(true)
@@ -44,6 +55,11 @@ function PaymentsContent() {
     try {
       const params = new URLSearchParams()
       params.set('status', filter)
+      params.set('q', deferredSearch)
+      params.set('page', String(page))
+      params.set('perPage', '10')
+      params.set('sortKey', sortKey)
+      params.set('sortDir', sortDir)
       if (studentId) {
         params.set('studentId', studentId)
       }
@@ -67,6 +83,14 @@ function PaymentsContent() {
         }))
       )
       setSummary(result.summary || { totalPaid: 0, totalPending: 0, count: 0 })
+      setPagination(
+        result.pagination || {
+          page: 0,
+          perPage: 10,
+          totalItems: 0,
+          totalPages: 1,
+        }
+      )
     } catch (error) {
       console.error('fetchPayments error:', error)
       setFeedback({
@@ -76,7 +100,7 @@ function PaymentsContent() {
     } finally {
       setLoading(false)
     }
-  }, [filter, studentId])
+  }, [deferredSearch, filter, page, sortDir, sortKey, studentId])
 
   useEffect(() => {
     fetchPayments()
@@ -236,7 +260,10 @@ function PaymentsContent() {
           <button
             key={item}
             className={`${styles.filterBtn} ${filter === item ? styles.filterBtnActive : ''}`}
-            onClick={() => setFilter(item)}
+            onClick={() => {
+              setFilter(item)
+              setPage(0)
+            }}
           >
             {item === 'all'
               ? 'Tất cả'
@@ -253,6 +280,19 @@ function PaymentsContent() {
         columns={columns}
         data={payments}
         searchKey="student"
+        searchValue={search}
+        onSearchChange={setSearch}
+        sortKey={sortKey}
+        sortDir={sortDir}
+        onSortChange={(nextSortKey, nextSortDir) => {
+          setSortKey(nextSortKey)
+          setSortDir(nextSortDir)
+        }}
+        page={pagination.page}
+        onPageChange={setPage}
+        totalPages={pagination.totalPages}
+        totalItems={pagination.totalItems}
+        perPage={pagination.perPage}
         loading={loading}
         emptyMessage="Chưa có giao dịch nào"
         actions={actions}

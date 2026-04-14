@@ -35,6 +35,57 @@ function createAdminClient() {
   )
 }
 
+function readString(value) {
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+function readPage(value) {
+  const nextValue = Number.parseInt(value || '0', 10)
+  return Number.isInteger(nextValue) && nextValue >= 0 ? nextValue : 0
+}
+
+function readPerPage(value) {
+  const nextValue = Number.parseInt(value || '10', 10)
+  if (!Number.isInteger(nextValue) || nextValue <= 0) {
+    return 10
+  }
+
+  return Math.min(nextValue, 100)
+}
+
+function compareValues(a, b, direction) {
+  const left = typeof a === 'string' ? a.toLowerCase() : a ?? ''
+  const right = typeof b === 'string' ? b.toLowerCase() : b ?? ''
+
+  if (left < right) return direction === 'asc' ? -1 : 1
+  if (left > right) return direction === 'asc' ? 1 : -1
+  return 0
+}
+
+function sortPayments(rows, sortKey, sortDir) {
+  if (!sortKey) {
+    return rows
+  }
+
+  return [...rows].sort((a, b) => {
+    switch (sortKey) {
+      case 'student':
+      case 'level':
+      case 'enrollmentStatus':
+      case 'status':
+        return compareValues(a[sortKey], b[sortKey], sortDir)
+      case 'methodLabel':
+        return compareValues(a.method, b.method, sortDir)
+      case 'amountFormatted':
+        return compareValues(a.amount, b.amount, sortDir)
+      case 'createdLabel':
+        return compareValues(a.createdAt, b.createdAt, sortDir)
+      default:
+        return compareValues(a.createdAt, b.createdAt, 'desc')
+    }
+  })
+}
+
 async function syncEnrollmentActivation(adminClient, studentId, levelId) {
   const { data: existing, error: readError } = await adminClient
     .from('enrollments')
@@ -88,6 +139,11 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url)
     const statusFilter = searchParams.get('status')
     const studentId = searchParams.get('studentId')
+    const query = readString(searchParams.get('q')).toLowerCase()
+    const page = readPage(searchParams.get('page'))
+    const perPage = readPerPage(searchParams.get('perPage'))
+    const sortKey = readString(searchParams.get('sortKey'))
+    const sortDir = readString(searchParams.get('sortDir')) === 'desc' ? 'desc' : 'asc'
 
     const adminClient = createAdminClient()
     let paymentsQuery = adminClient
@@ -133,7 +189,7 @@ export async function GET(request) {
       (enrollments || []).map((row) => [`${row.student_id}:${row.level_id}`, row.status])
     )
 
-    const rows = (payments || []).map((payment) => ({
+    const baseRows = (payments || []).map((payment) => ({
       id: payment.id,
       studentId: payment.student_id,
       student: payment.profiles?.full_name || '—',
@@ -149,19 +205,39 @@ export async function GET(request) {
         enrollmentByKey.get(`${payment.student_id}:${payment.level_id}`) || 'inactive',
     }))
 
-    const totalPaid = rows
+    const totalPaid = baseRows
       .filter((row) => row.status === 'paid')
       .reduce((sum, row) => sum + row.amount, 0)
-    const totalPending = rows
+    const totalPending = baseRows
       .filter((row) => row.status === 'pending')
       .reduce((sum, row) => sum + row.amount, 0)
+    const searchFilteredRows = query
+      ? baseRows.filter((row) =>
+          [row.student, row.level, row.transactionId, row.method, row.status]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase()
+            .includes(query)
+        )
+      : baseRows
+    const rows = sortPayments(searchFilteredRows, sortKey, sortDir)
+    const totalItems = rows.length
+    const totalPages = Math.max(1, Math.ceil(totalItems / perPage))
+    const start = page * perPage
+    const paginatedRows = rows.slice(start, start + perPage)
 
     return NextResponse.json({
-      payments: rows,
+      payments: paginatedRows,
       summary: {
         totalPaid,
         totalPending,
-        count: rows.length,
+        count: baseRows.length,
+      },
+      pagination: {
+        page,
+        perPage,
+        totalItems,
+        totalPages,
       },
     })
   } catch (err) {

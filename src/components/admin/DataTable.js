@@ -9,61 +9,135 @@ export default function DataTable({
   searchKey,
   actions,
   loading = false,
-  emptyMessage = 'Chưa có dữ liệu',
+  emptyMessage = 'Chua co du lieu',
+  searchPlaceholder = 'Tim kiem...',
+  searchValue: controlledSearchValue,
+  onSearchChange,
+  sortKey: controlledSortKey,
+  sortDir: controlledSortDir,
+  onSortChange,
+  page: controlledPage,
+  onPageChange,
+  totalPages: controlledTotalPages,
+  totalItems,
+  perPage = 10,
 }) {
   const [search, setSearch] = useState('')
   const [sortKey, setSortKey] = useState(null)
   const [sortDir, setSortDir] = useState('asc')
   const [page, setPage] = useState(0)
-  const perPage = 10
-  const deferredSearch = useDeferredValue(search)
+  const isRemoteMode =
+    typeof onSearchChange === 'function' ||
+    typeof onSortChange === 'function' ||
+    typeof onPageChange === 'function' ||
+    typeof totalItems === 'number'
+  const activeSearch = controlledSearchValue ?? search
+  const activeSortKey = controlledSortKey ?? sortKey
+  const activeSortDir = controlledSortDir ?? sortDir
+  const activePage = controlledPage ?? page
+  const deferredClientSearch = useDeferredValue(activeSearch)
 
   const filtered = useMemo(() => {
-    if (!deferredSearch || !searchKey) return data
-    const term = deferredSearch.toLowerCase()
+    if (isRemoteMode) return data
+    if (!deferredClientSearch || !searchKey) return data
+
+    const term = deferredClientSearch.toLowerCase()
     return data.filter((row) => {
       const val = row[searchKey]
       return val && String(val).toLowerCase().includes(term)
     })
-  }, [data, deferredSearch, searchKey])
+  }, [data, deferredClientSearch, isRemoteMode, searchKey])
 
-  // Sort
   const sorted = useMemo(() => {
-    if (!sortKey) return filtered
+    if (isRemoteMode) return filtered
+    if (!activeSortKey) return filtered
+
     return [...filtered].sort((a, b) => {
-      const aVal = a[sortKey] ?? ''
-      const bVal = b[sortKey] ?? ''
-      if (aVal < bVal) return sortDir === 'asc' ? -1 : 1
-      if (aVal > bVal) return sortDir === 'asc' ? 1 : -1
+      const aVal = a[activeSortKey] ?? ''
+      const bVal = b[activeSortKey] ?? ''
+      if (aVal < bVal) return activeSortDir === 'asc' ? -1 : 1
+      if (aVal > bVal) return activeSortDir === 'asc' ? 1 : -1
       return 0
     })
-  }, [filtered, sortKey, sortDir])
+  }, [activeSortDir, activeSortKey, filtered, isRemoteMode])
 
-  // Paginate
-  const totalPages = Math.max(1, Math.ceil(sorted.length / perPage))
+  const totalPages = isRemoteMode
+    ? Math.max(1, controlledTotalPages || 1)
+    : Math.max(1, Math.ceil(sorted.length / perPage))
   const paginated = useMemo(
-    () => sorted.slice(page * perPage, (page + 1) * perPage),
-    [page, sorted]
+    () =>
+      isRemoteMode
+        ? sorted
+        : sorted.slice(activePage * perPage, (activePage + 1) * perPage),
+    [activePage, isRemoteMode, perPage, sorted]
   )
-  const showFrom = sorted.length === 0 ? 0 : page * perPage + 1
-  const showTo = Math.min((page + 1) * perPage, sorted.length)
+  const totalRows = isRemoteMode ? totalItems || 0 : sorted.length
+  const showFrom = totalRows === 0 ? 0 : activePage * perPage + 1
+  const showTo = Math.min((activePage + 1) * perPage, totalRows)
 
-  const handleSort = useCallback((key) => {
-    if (sortKey === key) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
-    } else {
-      setSortKey(key)
-      setSortDir('asc')
+  const handleSort = useCallback(
+    (key) => {
+      if (isRemoteMode) {
+        const nextSortDir =
+          activeSortKey === key ? (activeSortDir === 'asc' ? 'desc' : 'asc') : 'asc'
+        onSortChange?.(key, nextSortDir)
+        onPageChange?.(0)
+        return
+      }
+
+      if (activeSortKey === key) {
+        setSortDir((current) => (current === 'asc' ? 'desc' : 'asc'))
+      } else {
+        setSortKey(key)
+        setSortDir('asc')
+      }
+      setPage(0)
+    },
+    [activeSortDir, activeSortKey, isRemoteMode, onPageChange, onSortChange]
+  )
+
+  const handleSearch = useCallback(
+    (event) => {
+      const nextValue = event.target.value
+
+      if (isRemoteMode) {
+        onSearchChange?.(nextValue)
+        onPageChange?.(0)
+        return
+      }
+
+      setSearch(nextValue)
+      setPage(0)
+    },
+    [isRemoteMode, onPageChange, onSearchChange]
+  )
+
+  const goToPreviousPage = useCallback(() => {
+    if (activePage <= 0) {
+      return
     }
-    setPage(0)
-  }, [sortKey])
 
-  const handleSearch = useCallback((e) => {
-    setSearch(e.target.value)
-    setPage(0)
-  }, [])
+    if (isRemoteMode) {
+      onPageChange?.(activePage - 1)
+      return
+    }
 
-  // Loading skeleton
+    setPage((current) => current - 1)
+  }, [activePage, isRemoteMode, onPageChange])
+
+  const goToNextPage = useCallback(() => {
+    if (activePage >= totalPages - 1) {
+      return
+    }
+
+    if (isRemoteMode) {
+      onPageChange?.(activePage + 1)
+      return
+    }
+
+    setPage((current) => current + 1)
+  }, [activePage, isRemoteMode, onPageChange, totalPages])
+
   if (loading) {
     return (
       <div className={styles.dataTableWrap}>
@@ -98,17 +172,26 @@ export default function DataTable({
 
   return (
     <div className={styles.dataTableWrap}>
-      {/* Toolbar */}
       {searchKey && (
         <div className={styles.dataTableToolbar}>
           <div className={styles.searchBox}>
-            <svg style={{width:'18px',height:'18px',color:'var(--color-gray-500)'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            <svg
+              style={{ width: '18px', height: '18px', color: 'var(--color-gray-500)' }}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
             </svg>
             <input
               type="text"
-              placeholder="Tìm kiếm..."
-              value={search}
+              placeholder={searchPlaceholder}
+              value={activeSearch}
               onChange={handleSearch}
               className={styles.searchInput}
             />
@@ -116,7 +199,6 @@ export default function DataTable({
         </div>
       )}
 
-      {/* Table */}
       <div className={styles.dataTableScroll}>
         <table className={styles.dataTable}>
           <thead>
@@ -128,22 +210,37 @@ export default function DataTable({
                   className={styles.sortableHeader}
                 >
                   <span>{col.label}</span>
-                  {sortKey === col.key && (
+                  {activeSortKey === col.key && (
                     <span className={styles.sortArrow}>
-                      {sortDir === 'asc' ? '↑' : '↓'}
+                      {activeSortDir === 'asc' ? '^' : 'v'}
                     </span>
                   )}
                 </th>
               ))}
-              {actions && <th>Thao tác</th>}
+              {actions && <th>Thao tac</th>}
             </tr>
           </thead>
           <tbody>
             {paginated.length === 0 ? (
               <tr>
                 <td colSpan={columns.length + (actions ? 1 : 0)} className={styles.emptyState}>
-                  <svg style={{width:'40px',height:'40px',color:'var(--color-gray-500)',marginBottom:'8px'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                  <svg
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      color: 'var(--color-gray-500)',
+                      marginBottom: '8px',
+                    }}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="1.5"
+                      d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                    />
                   </svg>
                   {emptyMessage}
                 </td>
@@ -198,29 +295,28 @@ export default function DataTable({
         </table>
       </div>
 
-      {/* Pagination */}
-      {sorted.length > 0 && (
+      {totalRows > 0 && (
         <div className={styles.pagination}>
           <span className={styles.paginationInfo}>
-            Hiển thị {showFrom}–{showTo} / {sorted.length}
+            Hien thi {showFrom}-{showTo} / {totalRows}
           </span>
           <div className={styles.paginationBtns}>
             <button
-              disabled={page === 0}
-              onClick={() => setPage((p) => p - 1)}
+              disabled={activePage === 0}
+              onClick={goToPreviousPage}
               className={styles.pageBtn}
             >
-              ← Trước
+              {'<- Truoc'}
             </button>
             <span className={styles.pageIndicator}>
-              {page + 1} / {totalPages}
+              {activePage + 1} / {totalPages}
             </span>
             <button
-              disabled={page >= totalPages - 1}
-              onClick={() => setPage((p) => p + 1)}
+              disabled={activePage >= totalPages - 1}
+              onClick={goToNextPage}
               className={styles.pageBtn}
             >
-              Sau →
+              {'Sau ->'}
             </button>
           </div>
         </div>
