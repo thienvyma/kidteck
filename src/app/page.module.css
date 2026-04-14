@@ -162,6 +162,11 @@
 .hero__visual {
   animation: fadeInUp 0.8s ease 0.3s both;
   perspective: 1800px;
+  transform: scale(0.7);
+  transform-origin: center center;
+  display: flex;
+  justify-content: center;
+  margin: 0 auto;
 }
 
 .hero__visualStage {
