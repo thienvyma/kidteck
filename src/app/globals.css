@@ -167,6 +167,7 @@ ul, ol {
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
+  white-space: pre-line;
 }
 
 .gradient-text {
