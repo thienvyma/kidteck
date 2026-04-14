@@ -321,16 +321,6 @@ export default function AdminLandingPage() {
                 />
               </label>
               <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Nhãn Gói học</span>
-                <input
-                  className={styles.formInput}
-                  value={content.header.pricingLabel}
-                  onChange={(event) =>
-                    updateSection('header', 'pricingLabel', event.target.value)
-                  }
-                />
-              </label>
-              <label className={styles.contentEditorCard}>
                 <span className={styles.formLabel}>Nhãn FAQ</span>
                 <input
                   className={styles.formInput}
@@ -551,7 +541,7 @@ export default function AdminLandingPage() {
         >
           <div className={styles.landingEditorSectionHead}>
             <div>
-              <div className={styles.sectionCardHeader}>Roadmap & Pricing</div>
+              <div className={styles.sectionCardHeader}>Roadmap</div>
               <p className={styles.landingEditorSectionLead}>
                 Khối này chỉ đọc để đảm bảo landing luôn khớp với dữ liệu khóa học thật.
               </p>
@@ -559,20 +549,12 @@ export default function AdminLandingPage() {
             <span className={styles.landingEditorSectionBadge}>Sync</span>
           </div>
           <div className={styles.accountSection}>
-            <div className={styles.contentEditorGrid}>
-              <div className={styles.contentEditorCard}>
-                <div className={styles.contentEditorHeader}>Roadmap</div>
-                <p className={styles.accountNote}>
-                  Level, mô tả, thời lượng và danh sách môn đang lấy trực tiếp từ phần Khóa học.
-                </p>
-              </div>
-              <div className={styles.contentEditorCard}>
-                <div className={styles.contentEditorHeader}>Pricing</div>
-                <p className={styles.accountNote}>
-                  Tên gói, học phí và thứ tự hiển thị trên landing cũng bám theo dữ liệu đang
-                  quản lý trong admin.
-                </p>
-              </div>
+            <div className={styles.contentEditorCard}>
+              <div className={styles.contentEditorHeader}>Roadmap</div>
+              <p className={styles.accountNote}>
+                Level, mô tả, học phí, thời lượng và danh sách môn đang lấy trực tiếp từ phần
+                Khóa học trong admin.
+              </p>
             </div>
           </div>
         </section>

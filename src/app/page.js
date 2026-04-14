@@ -8,9 +8,7 @@ import FutureRobotScene from '@/components/landing/FutureRobotScene'
 import { getLandingPageData } from '@/lib/landing-content'
 
 const roadmapVariants = ['l1', 'l2', 'l3']
-const pricingButtonVariants = ['secondary', 'primary', 'accent']
 const pricingBadgeVariants = ['success', 'primary', 'accent']
-const pricingStages = ['Khởi đầu', 'Tăng tốc', 'Đi sâu']
 
 export const revalidate = 60
 
@@ -462,87 +460,6 @@ export default async function Home() {
                 )
               })}
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section className={`section ${styles.pricingSection}`} id="pricing">
-        <div className="container">
-          <div className={`${styles.sectionShell} ${styles.sectionShellDeep}`}>
-            <h2 className="section__title">
-              Các gói học <span className="gradient-text">hiện có</span>
-            </h2>
-            <p className="section__subtitle">
-              Tên gói, mức học phí và cấu trúc môn học luôn bám theo chương trình đang vận hành để
-              bạn nhìn đúng level mình đang cân nhắc.
-            </p>
-
-            <div className={styles.pricing__grid}>
-              {levels.map((level, index) => {
-                const buttonVariant = pricingButtonVariants[index % pricingButtonVariants.length]
-                const isFeatured = index === 1
-
-                return (
-                  <div
-                    key={level.id}
-                    className={`${styles.pricing__card} ${isFeatured ? styles['pricing__card--featured'] : ''
-                      }`}
-                  >
-                    {isFeatured && (
-                      <div className={styles['pricing__card-popular']}>Được chọn nhiều</div>
-                    )}
-                    <div className={styles['pricing__card-level']}>Level {index + 1}</div>
-                    <div className={styles['pricing__card-age']}>
-                      {pricingStages[index] || 'Lộ trình nâng cao'}
-                    </div>
-                    <div className={styles['pricing__card-name']}>{level.name}</div>
-                    <div className={`${styles['pricing__card-price']} gradient-text`}>
-                      <span className={styles['price-number']}>
-                        {new Intl.NumberFormat('vi-VN').format(level.price || 0)}
-                      </span>
-                      <span className={styles['price-currency']}>đ</span>
-                    </div>
-                    <div className={styles['pricing__card-period-wrap']}>
-                      <span className={styles['pricing-badge']}>{level.duration_weeks} TUẦN</span>
-                      <span className={styles['pricing-badge']}>
-                        {level.subjects?.length || 1} MÔN
-                      </span>
-                    </div>
-
-                    <div className={styles['pricing__card-divider']}></div>
-
-                    <div className={styles['pricing__card-features']}>
-                      <div className={styles['pricing__features-title']}>Bạn sẽ nhận được:</div>
-                      {(level.description || 'Chưa có mô tả')
-                        .split('\n')
-                        .filter((line) => line.trim())
-                        .map((line, idx) => (
-                          <div key={idx} className={styles['pricing__card-feature']}>
-                            <div className={styles['pricing__card-feature-icon']}>
-                              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
-                            </div>
-                            <span>{line.trim()}</span>
-                          </div>
-                      ))}
-                    </div>
-                    <a
-                      href="#cta"
-                      className={`btn btn--${buttonVariant}`}
-                      style={{ width: '100%' }}
-                    >
-                      Nhận tư vấn {level.name}
-                    </a>
-                  </div>
-                )
-              })}
-            </div>
-
-            <p className={styles.pricing__note}>
-              * Đội ngũ AIgenlabs sẽ xác nhận lại level phù hợp dựa trên độ tuổi, trải nghiệm hiện tại
-              và mục tiêu học viên trước khi đăng ký.
-            </p>
           </div>
         </div>
       </section>

@@ -7,7 +7,6 @@ import styles from './Navbar.module.css'
 
 const DEFAULT_HEADER = {
   roadmapLabel: 'Lộ trình',
-  pricingLabel: 'Gói học',
   faqLabel: 'FAQ',
   ctaLabel: 'Nhận lộ trình',
 }
@@ -47,9 +46,6 @@ export default function Navbar({ header }) {
         >
           <Link href="/#roadmap" className={styles.navbar__link} onClick={handleLinkClick}>
             {labels.roadmapLabel}
-          </Link>
-          <Link href="/#pricing" className={styles.navbar__link} onClick={handleLinkClick}>
-            {labels.pricingLabel}
           </Link>
           <Link href="/#faq" className={styles.navbar__link} onClick={handleLinkClick}>
             {labels.faqLabel}
