@@ -91,6 +91,11 @@ export const defaultLandingContent = {
         description:
           'AI được dùng như đòn bẩy để tăng tốc nghiên cứu, tạo prototype và cải tiến sản phẩm, không phải để phó mặc toàn bộ phần suy nghĩ.',
       },
+      {
+        icon: '',
+        title: '',
+        description: '',
+      },
     ],
   },
   results: {

@@ -208,13 +208,21 @@ export default async function Home() {
             </div>
 
             <div className={styles.solution__pillars}>
-              {content.solution.pillars.map((item) => (
-                <div key={item.title} className={styles.solution__pillar}>
-                  <div className={styles['solution__pillar-icon']}>{item.icon}</div>
-                  <div className={styles['solution__pillar-title']}>{item.title}</div>
-                  <div className={styles['solution__pillar-desc']}>{item.description}</div>
-                </div>
-              ))}
+              {content.solution.pillars
+                .filter(
+                  (item) =>
+                    item?.title?.trim() || item?.description?.trim() || item?.icon?.trim()
+                )
+                .map((item, index) => (
+                  <div
+                    key={`${item.title || 'pillar'}-${index}`}
+                    className={styles.solution__pillar}
+                  >
+                    <div className={styles['solution__pillar-icon']}>{item.icon}</div>
+                    <div className={styles['solution__pillar-title']}>{item.title}</div>
+                    <div className={styles['solution__pillar-desc']}>{item.description}</div>
+                  </div>
+                ))}
             </div>
           </div>
         </div>

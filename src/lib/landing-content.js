@@ -95,6 +95,23 @@ function normalizeObjectArray(values, fallback) {
     : fallback
 }
 
+function normalizePillarArray(values, fallback) {
+  const normalized = normalizeObjectArray(values, fallback)
+
+  if (normalized.length >= fallback.length) {
+    return normalized
+  }
+
+  return [
+    ...normalized,
+    ...fallback.slice(normalized.length).map((item) => ({
+      icon: item.icon || '',
+      title: item.title || '',
+      description: item.description || '',
+    })),
+  ]
+}
+
 function normalizeLinkArray(values, fallback) {
   if (!Array.isArray(values)) {
     return fallback
@@ -142,7 +159,7 @@ export function normalizeLandingContent(input) {
       beforeItems: readStringArray(input?.solution?.beforeItems, fallback.solution.beforeItems),
       afterTitle: readString(input?.solution?.afterTitle, fallback.solution.afterTitle),
       afterItems: readStringArray(input?.solution?.afterItems, fallback.solution.afterItems),
-      pillars: normalizeObjectArray(input?.solution?.pillars, fallback.solution.pillars),
+      pillars: normalizePillarArray(input?.solution?.pillars, fallback.solution.pillars),
     },
     results: {
       title: readString(input?.results?.title, fallback.results.title),
