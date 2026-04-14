@@ -16,6 +16,7 @@
 | S13 | `docs/phases/phase-13-security-hardening/` | Security Hardening (3 fixes) | 5 |
 | S14 | `docs/phases/phase-14-admin-crud/` | Admin CRUD Completion | 4 |
 | S15 | `docs/phases/phase-15-ux-polish/` | UX Polish | 4 |
+| S16 | `docs/phases/phase-16-admin-landing-cms/` | Admin Landing CMS + Preview | 1 |
 
 ## Reference Docs
 

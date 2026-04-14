@@ -11,7 +11,11 @@ const DEFAULT_HEADER = {
   ctaLabel: 'Nhận lộ trình',
 }
 
-export default function Navbar({ header }) {
+function getSectionHref(anchorBase, sectionId) {
+  return `${anchorBase}#${sectionId}`
+}
+
+export default function Navbar({ header, anchorBase = '/', homeHref = '/' }) {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const labels = {
@@ -37,17 +41,25 @@ export default function Navbar({ header }) {
   return (
     <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ''}`} id="navbar">
       <div className={styles.navbar__inner}>
-        <Link href="/" className={styles.navbar__logo}>
+        <Link href={homeHref} className={styles.navbar__logo}>
           <BrandLogo size="sm" compact />
         </Link>
 
         <div
           className={`${styles.navbar__links} ${isOpen ? styles['navbar__links--open'] : ''}`}
         >
-          <Link href="/#roadmap" className={styles.navbar__link} onClick={handleLinkClick}>
+          <Link
+            href={getSectionHref(anchorBase, 'roadmap')}
+            className={styles.navbar__link}
+            onClick={handleLinkClick}
+          >
             {labels.roadmapLabel}
           </Link>
-          <Link href="/#faq" className={styles.navbar__link} onClick={handleLinkClick}>
+          <Link
+            href={getSectionHref(anchorBase, 'faq')}
+            className={styles.navbar__link}
+            onClick={handleLinkClick}
+          >
             {labels.faqLabel}
           </Link>
           <Link href="/blog" className={styles.navbar__link} onClick={handleLinkClick}>
@@ -61,7 +73,7 @@ export default function Navbar({ header }) {
             Đăng nhập
           </Link>
           <Link
-            href="/#cta"
+            href={getSectionHref(anchorBase, 'cta')}
             className={`btn btn--primary btn--sm ${styles.navbar__cta}`}
             onClick={handleLinkClick}
           >

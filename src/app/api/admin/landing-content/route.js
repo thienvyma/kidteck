@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache'
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase-server'
 import { getLandingContentDocument, saveLandingContent } from '@/lib/landing-content'
@@ -51,6 +52,7 @@ export async function PUT(request) {
     const saved = await saveLandingContent(body.content || {}, {
       expectedUpdatedAt: body.expectedUpdatedAt,
     })
+    revalidatePath('/')
     return NextResponse.json({
       success: true,
       content: saved.content,

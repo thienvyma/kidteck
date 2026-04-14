@@ -23,7 +23,7 @@ const menuItems = [
     ),
   },
   {
-    name: 'Học sinh',
+    name: 'Hoc sinh',
     href: '/admin/students',
     icon: (
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -37,7 +37,7 @@ const menuItems = [
     ),
   },
   {
-    name: 'Khóa học',
+    name: 'Khoa hoc',
     href: '/admin/courses',
     icon: (
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -65,7 +65,7 @@ const menuItems = [
     ),
   },
   {
-    name: 'Thanh toán',
+    name: 'Thanh toan',
     href: '/admin/payments',
     icon: (
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,11 +79,16 @@ const menuItems = [
     ),
   },
   {
-    name: 'Tin Tức',
+    name: 'Tin tuc',
     href: '/admin/blogs',
     icon: (
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2.5 2.5 0 00-2.5-2.5H15" />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2.5 2.5 0 00-2.5-2.5H15"
+        />
       </svg>
     ),
   },
@@ -103,7 +108,13 @@ const menuItems = [
   },
 ]
 
-export default function Sidebar({ isOpen, onClose, adminName: initialAdminName }) {
+export default function Sidebar({
+  isOpen,
+  onClose,
+  adminName: initialAdminName,
+  collapsed = false,
+  onToggleCollapse,
+}) {
   const pathname = usePathname()
   const router = useRouter()
   const [supabase] = useState(() => createClient())
@@ -145,9 +156,44 @@ export default function Sidebar({ isOpen, onClose, adminName: initialAdminName }
   }
 
   return (
-    <aside className={`${styles.sidebar} ${isOpen ? styles.mobileOpen : ''}`}>
+    <aside
+      className={`${styles.sidebar} ${isOpen ? styles.mobileOpen : ''} ${
+        collapsed ? styles.sidebarCollapsed : ''
+      }`}
+    >
+      <button
+        type="button"
+        className={styles.sidebarRailToggle}
+        onClick={onToggleCollapse}
+        aria-label={collapsed ? 'Expand admin sidebar' : 'Collapse admin sidebar'}
+        title={collapsed ? 'Mo rong menu' : 'Thu gon menu'}
+      >
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {collapsed ? (
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M13 5l7 7-7 7M4 5l7 7-7 7"
+            />
+          ) : (
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M11 19l-7-7 7-7M20 19l-7-7 7-7"
+            />
+          )}
+        </svg>
+      </button>
+
       <div className={styles.sidebarHeader}>
-        <BrandLogo size="sm" theme="dark" compact />
+        <BrandLogo
+          size="sm"
+          theme="dark"
+          compact
+          className={collapsed ? styles.sidebarBrandCompact : ''}
+        />
       </div>
 
       <nav className={styles.sidebarNav}>
@@ -167,7 +213,7 @@ export default function Sidebar({ isOpen, onClose, adminName: initialAdminName }
               }}
             >
               {item.icon}
-              {item.name}
+              <span className={styles.sidebarItemLabel}>{item.name}</span>
             </Link>
           )
         })}
@@ -176,10 +222,10 @@ export default function Sidebar({ isOpen, onClose, adminName: initialAdminName }
       <div className={styles.sidebarFooter}>
         <div className={styles.adminProfile}>
           <div className={styles.adminAvatar}>{displayAdminName.charAt(0).toUpperCase()}</div>
-          <div>
+          <div className={styles.adminProfileMeta}>
             <div style={{ fontWeight: 600 }}>{displayAdminName}</div>
             <div style={{ fontSize: '0.75rem', color: 'var(--color-gray-500)' }}>
-              Quản trị viên
+              Quan tri vien
             </div>
           </div>
         </div>
@@ -197,7 +243,7 @@ export default function Sidebar({ isOpen, onClose, adminName: initialAdminName }
               d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
             />
           </svg>
-          Đăng xuất
+          <span className={styles.logoutBtnLabel}>Dang xuat</span>
         </button>
       </div>
     </aside>

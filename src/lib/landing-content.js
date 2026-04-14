@@ -96,20 +96,7 @@ function normalizeObjectArray(values, fallback) {
 }
 
 function normalizePillarArray(values, fallback) {
-  const normalized = normalizeObjectArray(values, fallback)
-
-  if (normalized.length >= fallback.length) {
-    return normalized
-  }
-
-  return [
-    ...normalized,
-    ...fallback.slice(normalized.length).map((item) => ({
-      icon: item.icon || '',
-      title: item.title || '',
-      description: item.description || '',
-    })),
-  ]
+  return normalizeObjectArray(values, fallback)
 }
 
 function normalizeLinkArray(values, fallback) {
@@ -127,9 +114,7 @@ export function normalizeLandingContent(input) {
 
   return {
     header: {
-      painLabel: readString(input?.header?.painLabel, fallback.header.painLabel),
       roadmapLabel: readString(input?.header?.roadmapLabel, fallback.header.roadmapLabel),
-      pricingLabel: readString(input?.header?.pricingLabel, fallback.header.pricingLabel),
       faqLabel: readString(input?.header?.faqLabel, fallback.header.faqLabel),
       ctaLabel: readString(input?.header?.ctaLabel, fallback.header.ctaLabel),
     },
@@ -146,11 +131,6 @@ export function normalizeLandingContent(input) {
         fallback.hero.secondaryCtaLabel
       ),
       trustItems: readStringArray(input?.hero?.trustItems, fallback.hero.trustItems),
-    },
-    pain: {
-      title: readString(input?.pain?.title, fallback.pain.title),
-      subtitle: readString(input?.pain?.subtitle, fallback.pain.subtitle),
-      items: normalizeObjectArray(input?.pain?.items, fallback.pain.items),
     },
     solution: {
       title: readString(input?.solution?.title, fallback.solution.title),

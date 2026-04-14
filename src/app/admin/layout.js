@@ -9,6 +9,13 @@ import styles from './admin.module.css'
 export default function AdminLayout({ children }) {
   const [supabase] = useState(() => createClient())
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false
+    }
+
+    return window.localStorage.getItem('admin-sidebar-collapsed') === 'true'
+  })
   const [adminName, setAdminName] = useState('Admin')
 
   useEffect(() => {
@@ -41,6 +48,18 @@ export default function AdminLayout({ children }) {
     setSidebarOpen(!sidebarOpen)
   }
 
+  const toggleSidebarCollapsed = () => {
+    setSidebarCollapsed((current) => {
+      const next = !current
+
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('admin-sidebar-collapsed', String(next))
+      }
+
+      return next
+    })
+  }
+
   const closeSidebar = () => {
     if (sidebarOpen) {
       setSidebarOpen(false)
@@ -50,14 +69,24 @@ export default function AdminLayout({ children }) {
 
   return (
     <div className={styles.adminLayout}>
-      <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} adminName={adminName} />
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={closeSidebar}
+        adminName={adminName}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={toggleSidebarCollapsed}
+      />
 
       <div
         className={`${styles.sidebarOverlay} ${sidebarOpen ? styles.active : ''}`}
         onClick={closeSidebar}
       />
 
-      <div className={styles.mainWrapper}>
+      <div
+        className={`${styles.mainWrapper} ${
+          sidebarCollapsed ? styles.mainWrapperCollapsed : ''
+        }`}
+      >
         <header className={styles.topbar}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <button

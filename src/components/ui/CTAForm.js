@@ -17,6 +17,7 @@ export default function CTAForm({
   title = 'Nhận đề xuất lộ trình',
   note = 'Thông tin chỉ dùng để liên hệ tư vấn và sắp xếp buổi trao đổi phù hợp.',
   submitLabel = 'Đặt lịch tư vấn',
+  previewMode = false,
 }) {
   const [form, setForm] = useState(INITIAL_FORM)
   const [submittedLead, setSubmittedLead] = useState(null)
@@ -34,6 +35,12 @@ export default function CTAForm({
   async function handleSubmit(event) {
     event.preventDefault()
     setError('')
+
+    if (previewMode) {
+      setError('Preview mode: form không gửi dữ liệu thật.')
+      return
+    }
+
     setSubmitting(true)
 
     try {

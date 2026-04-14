@@ -2,6 +2,28 @@
    Landing Page Styles — Redesigned for Parents
    ========================================== */
 
+.landingPreviewSelectableSection {
+  position: relative;
+  cursor: pointer;
+}
+
+.landingPreviewSelectableSection::after {
+  content: "";
+  position: absolute;
+  inset: 0.75rem;
+  border-radius: 1.75rem;
+  border: 2px solid rgba(108, 92, 231, 0);
+  box-shadow: 0 0 0 0 rgba(108, 92, 231, 0);
+  pointer-events: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.landingPreviewSelectableSection:hover::after,
+.landingPreviewSelectableSectionActive::after {
+  border-color: rgba(108, 92, 231, 0.38);
+  box-shadow: 0 0 0 6px rgba(108, 92, 231, 0.08);
+}
+
 /* --- Hero --- */
 .hero {
   min-height: 85vh;

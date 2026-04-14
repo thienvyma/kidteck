@@ -1,26 +1,29 @@
-'use client'
+﻿'use client'
 
-import Link from 'next/link'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { cloneDefaultLandingContent } from '@/lib/landing-defaults'
+import {
+  LANDING_EDITOR_SECTIONS,
+  LANDING_EDITOR_SECTION_MAP,
+} from '@/lib/landing-editor-schema'
+import FieldRenderer from '@/components/admin/landing/FieldRenderer'
+import LandingSectionCard from '@/components/admin/landing/LandingSectionCard'
+import RepeaterField from '@/components/admin/landing/RepeaterField'
 import styles from '../admin.module.css'
 
-const LANDING_SECTIONS = [
-  { id: 'header', label: 'Header', badge: 'Menu' },
-  { id: 'hero', label: 'Hero', badge: 'Banner' },
-  { id: 'solution', label: 'Positioning', badge: 'Story' },
-  { id: 'catalog', label: 'Roadmap & Pricing', badge: 'Sync' },
-  { id: 'results', label: 'Results', badge: 'Outcome' },
-  { id: 'method', label: 'Method', badge: 'Studio' },
-  { id: 'commitment', label: 'Commitment', badge: 'Trust' },
-  { id: 'faq', label: 'FAQ', badge: 'Answer' },
-  { id: 'cta', label: 'CTA', badge: 'Lead' },
-  { id: 'contact', label: 'Contact', badge: 'Direct' },
-  { id: 'footer', label: 'Footer', badge: 'Brand' },
-]
+const LANDING_SECTIONS = LANDING_EDITOR_SECTIONS
+const SECTION_CONTENT_KEYS = Object.fromEntries(
+  LANDING_SECTIONS.map((section) => [section.id, section.contentKey ?? null])
+)
+const PREVIEW_UPDATE_MESSAGE_TYPE = 'landing-preview:update'
+const PREVIEW_SECTION_SELECT_MESSAGE_TYPE = 'landing-preview:section-select'
 
 function cloneContent(value) {
   return JSON.parse(JSON.stringify(value))
+}
+
+function createSectionState(initialValue = false) {
+  return Object.fromEntries(LANDING_SECTIONS.map(({ id }) => [id, initialValue]))
 }
 
 function arrayToTextarea(values = []) {
@@ -34,13 +37,67 @@ function textareaToArray(value) {
     .filter(Boolean)
 }
 
+function formatTimestamp(value) {
+  if (!value) {
+    return ''
+  }
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return ''
+  }
+
+  return date.toLocaleString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+}
+
+function getPreviewTarget(sectionId) {
+  return LANDING_EDITOR_SECTION_MAP[sectionId]?.previewTarget || 'hero'
+}
+
+function createEmptyCard() {
+  return {
+    icon: '',
+    title: '',
+    description: '',
+  }
+}
+
+function createEmptyFaqItem() {
+  return {
+    question: '',
+    answer: '',
+  }
+}
+
+function createEmptyLinkItem() {
+  return {
+    label: '',
+    href: '',
+  }
+}
+
 export default function AdminLandingPage() {
+  const previewFrameRef = useRef(null)
+  const skipNextPreviewSyncRef = useRef(false)
+  const latestContentRef = useRef(cloneDefaultLandingContent())
+  const latestActiveSectionRef = useRef('header')
   const [content, setContent] = useState(() => cloneDefaultLandingContent())
+  const [savedContent, setSavedContent] = useState(() => cloneDefaultLandingContent())
   const [contentUpdatedAt, setContentUpdatedAt] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [feedback, setFeedback] = useState(null)
   const [activeSection, setActiveSection] = useState('header')
+  const [collapsedSections, setCollapsedSections] = useState(() => createSectionState(false))
+  const [previewDevice, setPreviewDevice] = useState('desktop')
+  const [previewRefreshKey, setPreviewRefreshKey] = useState(0)
+  const [previewLoading, setPreviewLoading] = useState(true)
 
   const fetchContent = useCallback(async ({ silent = false } = {}) => {
     if (!silent) {
@@ -52,17 +109,19 @@ export default function AdminLandingPage() {
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || 'Không thể tải nội dung landing')
+        throw new Error(result.error || 'Khong the tai noi dung landing')
       }
 
-      setContent(result.content || cloneDefaultLandingContent())
+      const nextContent = result.content || cloneDefaultLandingContent()
+      setContent(nextContent)
+      setSavedContent(nextContent)
       setContentUpdatedAt(result.updatedAt || '')
       return true
     } catch (error) {
       console.error('fetch landing content error:', error)
       setFeedback({
         type: 'error',
-        text: error.message || 'Không thể tải nội dung landing',
+        text: error.message || 'Khong the tai noi dung landing',
       })
       return false
     } finally {
@@ -75,6 +134,187 @@ export default function AdminLandingPage() {
   useEffect(() => {
     fetchContent()
   }, [fetchContent])
+
+  const dirtySections = LANDING_SECTIONS.reduce((accumulator, section) => {
+    const contentKey = SECTION_CONTENT_KEYS[section.id]
+    if (!contentKey) {
+      accumulator[section.id] = false
+      return accumulator
+    }
+
+    accumulator[section.id] =
+      JSON.stringify(content?.[contentKey] ?? null) !==
+      JSON.stringify(savedContent?.[contentKey] ?? null)
+
+    return accumulator
+  }, {})
+
+  const hasUnsavedChanges = Object.values(dirtySections).some(Boolean)
+  const lastSavedLabel = formatTimestamp(contentUpdatedAt)
+  const editorStatusLabel = saving ? 'Dang luu' : hasUnsavedChanges ? 'Chua luu' : 'Da dong bo'
+  const editorStatusTone = saving ? 'pending' : hasUnsavedChanges ? 'warning' : 'success'
+  const activeSectionIndex = LANDING_SECTIONS.findIndex((section) => section.id === activeSection)
+  const activeSectionMeta = LANDING_SECTIONS[activeSectionIndex] || LANDING_SECTIONS[0]
+  const previousSection = activeSectionIndex > 0 ? LANDING_SECTIONS[activeSectionIndex - 1] : null
+  const nextSection =
+    activeSectionIndex >= 0 && activeSectionIndex < LANDING_SECTIONS.length - 1
+      ? LANDING_SECTIONS[activeSectionIndex + 1]
+      : null
+  const previewTarget = getPreviewTarget(activeSection)
+  const liveOpenHref = previewTarget === 'footer' ? '/' : `/#${previewTarget}`
+  const previewBaseHref = `/landing-preview${previewRefreshKey ? `?preview=${previewRefreshKey}` : ''}`
+  const previewOpenHref =
+    previewTarget === 'footer' ? previewBaseHref : `${previewBaseHref}#${previewTarget}`
+  const previewFrameSrc = previewBaseHref
+
+  useEffect(() => {
+    latestContentRef.current = content
+  }, [content])
+
+  useEffect(() => {
+    latestActiveSectionRef.current = activeSection
+  }, [activeSection])
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) {
+      return undefined
+    }
+
+    function handleBeforeUnload(event) {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [hasUnsavedChanges])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined
+    }
+
+    function handlePreviewSelection(event) {
+      if (event.origin !== window.location.origin) {
+        return
+      }
+
+      if (event.data?.type !== PREVIEW_SECTION_SELECT_MESSAGE_TYPE) {
+        return
+      }
+
+      const sectionId = event.data?.sectionId
+      if (!sectionId || !LANDING_EDITOR_SECTION_MAP[sectionId]) {
+        return
+      }
+
+      skipNextPreviewSyncRef.current = true
+      setActiveSection(sectionId)
+      setCollapsedSections((current) => ({
+        ...current,
+        [sectionId]: false,
+      }))
+    }
+
+    window.addEventListener('message', handlePreviewSelection)
+    return () => window.removeEventListener('message', handlePreviewSelection)
+  }, [])
+
+  const syncPreviewSection = useCallback((sectionId, behavior = 'smooth') => {
+    const frame = previewFrameRef.current
+    const frameWindow = frame?.contentWindow
+    const frameDocument = frame?.contentDocument
+
+    if (!frameWindow || !frameDocument) {
+      return false
+    }
+
+    const previewTarget = getPreviewTarget(sectionId)
+
+    if (previewTarget === 'footer') {
+      const footerElement = frameDocument.querySelector('footer')
+      if (footerElement) {
+        footerElement.scrollIntoView({ behavior, block: 'start' })
+        return true
+      }
+
+      const scrollRoot = frameDocument.scrollingElement || frameDocument.documentElement
+      frameWindow.scrollTo({ top: scrollRoot.scrollHeight, behavior })
+      return true
+    }
+
+    const targetElement = frameDocument.getElementById(previewTarget)
+
+    if (targetElement) {
+      targetElement.scrollIntoView({ behavior, block: 'start' })
+      return true
+    }
+
+    frameWindow.location.hash = previewTarget
+    return true
+  }, [])
+
+  const postPreviewDraft = useCallback((draftContent, sectionId) => {
+    const frameWindow = previewFrameRef.current?.contentWindow
+
+    if (!frameWindow || typeof window === 'undefined') {
+      return false
+    }
+
+    frameWindow.postMessage(
+      {
+        type: PREVIEW_UPDATE_MESSAGE_TYPE,
+        content: draftContent,
+        activeSection: sectionId,
+      },
+      window.location.origin
+    )
+
+    return true
+  }, [])
+
+  useEffect(() => {
+    if (previewLoading) {
+      return undefined
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      const skipScroll = skipNextPreviewSyncRef.current
+      skipNextPreviewSyncRef.current = false
+      postPreviewDraft(latestContentRef.current, activeSection)
+
+      if (!skipScroll) {
+        syncPreviewSection(activeSection, 'smooth')
+      }
+    })
+
+    return () => window.cancelAnimationFrame(frameId)
+  }, [activeSection, postPreviewDraft, previewLoading, syncPreviewSection])
+
+  useEffect(() => {
+    if (previewLoading) {
+      return undefined
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      postPreviewDraft(content, latestActiveSectionRef.current)
+    })
+
+    return () => window.cancelAnimationFrame(frameId)
+  }, [content, postPreviewDraft, previewLoading])
+
+  function refreshPreview() {
+    setPreviewLoading(true)
+    setPreviewRefreshKey((current) => current + 1)
+  }
+
+  function handlePreviewLoad() {
+    setPreviewLoading(false)
+    window.requestAnimationFrame(() => {
+      postPreviewDraft(content, activeSection)
+      syncPreviewSection(activeSection, 'auto')
+    })
+  }
 
   function updateSection(section, field, value) {
     setContent((current) => ({
@@ -90,14 +330,6 @@ export default function AdminLandingPage() {
     updateSection(section, field, textareaToArray(value))
   }
 
-  function updateObjectItem(section, index, field, value) {
-    setContent((current) => {
-      const next = cloneContent(current)
-      next[section].items[index][field] = value
-      return next
-    })
-  }
-
   function updateArrayObjectItem(section, arrayField, index, field, value) {
     setContent((current) => {
       const next = cloneContent(current)
@@ -106,49 +338,80 @@ export default function AdminLandingPage() {
     })
   }
 
-  function updateSolutionPillar(index, field, value) {
+  function addArrayObjectItem(section, arrayField, createItem, maxItems) {
     setContent((current) => {
-      const next = cloneContent(current)
-      next.solution.pillars[index][field] = value
-      return next
-    })
-  }
+      const currentItems = current[section][arrayField] || []
 
-  function updateFooterLink(index, field, value) {
-    setContent((current) => {
-      const next = cloneContent(current)
-      next.footer.contactLinks[index][field] = value
-      return next
-    })
-  }
-
-  function addFooterLink() {
-    setContent((current) => ({
-      ...current,
-      footer: {
-        ...current.footer,
-        contactLinks: [...current.footer.contactLinks, { label: '', href: '' }],
-      },
-    }))
-  }
-
-  function removeFooterLink(index) {
-    setContent((current) => {
-      if (current.footer.contactLinks.length <= 1) {
+      if (typeof maxItems === 'number' && currentItems.length >= maxItems) {
         return current
       }
 
       const next = cloneContent(current)
-      next.footer.contactLinks.splice(index, 1)
+      next[section][arrayField] = [...currentItems, createItem()]
       return next
     })
   }
 
-  function jumpToSection(sectionId) {
+  function removeArrayObjectItem(section, arrayField, index, minItems = 1) {
+    setContent((current) => {
+      const currentItems = current[section][arrayField] || []
+      if (currentItems.length <= minItems) {
+        return current
+      }
+
+      const next = cloneContent(current)
+      next[section][arrayField].splice(index, 1)
+      return next
+    })
+  }
+
+  function moveArrayObjectItem(section, arrayField, index, direction) {
+    setContent((current) => {
+      const currentItems = current[section][arrayField] || []
+      const targetIndex = index + direction
+
+      if (targetIndex < 0 || targetIndex >= currentItems.length) {
+        return current
+      }
+
+      const next = cloneContent(current)
+      const [movedItem] = next[section][arrayField].splice(index, 1)
+      next[section][arrayField].splice(targetIndex, 0, movedItem)
+      return next
+    })
+  }
+
+  function focusSection(sectionId) {
     setActiveSection(sectionId)
-    document
-      .getElementById(`landing-section-${sectionId}`)
-      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    setCollapsedSections((current) => ({
+      ...current,
+      [sectionId]: false,
+    }))
+  }
+
+  function toggleSection(sectionId) {
+    setCollapsedSections((current) => ({
+      ...current,
+      [sectionId]: !current[sectionId],
+    }))
+  }
+
+  async function handleReloadFromServer() {
+    if (
+      hasUnsavedChanges &&
+      !window.confirm('Ban dang co thay doi chua luu. Tai lai tu server se bo phan dang chinh. Tiep tuc?')
+    ) {
+      return
+    }
+
+    const refreshed = await fetchContent()
+    if (refreshed) {
+      setFeedback({
+        type: 'success',
+        text: 'Da tai lai landing content tu server.',
+      })
+      refreshPreview()
+    }
   }
 
   async function handleSubmit(event) {
@@ -165,25 +428,320 @@ export default function AdminLandingPage() {
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || 'Không thể lưu landing content')
+        throw new Error(result.error || 'Khong the luu landing content')
       }
 
       const refreshed = await fetchContent({ silent: true })
       if (!refreshed) {
-        throw new Error('KhÃ´ng thá»ƒ Ä‘á»c láº¡i ná»™i dung landing sau khi lÆ°u')
+        throw new Error('Khong the doc lai noi dung landing sau khi luu')
       }
       setFeedback({
         type: 'success',
-        text: 'Đã lưu nội dung landing. Roadmap và pricing vẫn tự đồng bộ từ phần Khóa học.',
+        text: 'Da luu noi dung landing. Khoi roadmap van tu dong bo tu phan Khoa hoc.',
       })
+      refreshPreview()
     } catch (error) {
       setFeedback({
         type: 'error',
-        text: error.message || 'Không thể lưu landing content',
+        text: error.message || 'Khong the luu landing content',
       })
     } finally {
       setSaving(false)
     }
+  }
+
+  function getSchemaFieldValue(section, field) {
+    const sectionContent = content?.[section.contentKey] || {}
+    const rawValue = sectionContent?.[field.key]
+
+    if (field.type === 'textarea-list') {
+      return arrayToTextarea(Array.isArray(rawValue) ? rawValue : [])
+    }
+
+    return rawValue ?? ''
+  }
+
+  function handleSchemaFieldChange(section, field, value) {
+    if (!section.contentKey) {
+      return
+    }
+
+    if (field.type === 'textarea-list') {
+      updateArrayField(section.contentKey, field.key, value)
+      return
+    }
+
+    updateSection(section.contentKey, field.key, value)
+  }
+
+  function createEditorBlockItem(block) {
+    if (block.createItem === 'faq') {
+      return createEmptyFaqItem()
+    }
+
+    if (block.createItem === 'link') {
+      return createEmptyLinkItem()
+    }
+
+    return createEmptyCard()
+  }
+
+  function renderItemShapeFields(section, block, item, index) {
+    if (!section.contentKey) {
+      return null
+    }
+
+    if (block.itemShape === 'question-answer') {
+      return (
+        <>
+          <label>
+            <span className={styles.formLabel}>Cau hoi</span>
+            <input
+              className={styles.formInput}
+              value={item.question}
+              onChange={(event) =>
+                updateArrayObjectItem(
+                  section.contentKey,
+                  block.arrayField,
+                  index,
+                  'question',
+                  event.target.value
+                )
+              }
+            />
+          </label>
+          <label>
+            <span className={styles.formLabel}>Tra loi</span>
+            <textarea
+              className={styles.formTextarea}
+              rows={4}
+              value={item.answer}
+              onChange={(event) =>
+                updateArrayObjectItem(
+                  section.contentKey,
+                  block.arrayField,
+                  index,
+                  'answer',
+                  event.target.value
+                )
+              }
+            />
+          </label>
+        </>
+      )
+    }
+
+    if (block.itemShape === 'label-href') {
+      return (
+        <div className={styles.contentEditorGrid}>
+          <FieldRenderer
+            field={{ key: `${section.id}-${block.arrayField}-label-${index}`, label: 'Nhan', type: 'text' }}
+            value={item.label}
+            onChange={(value) =>
+              updateArrayObjectItem(section.contentKey, block.arrayField, index, 'label', value)
+            }
+          />
+          <FieldRenderer
+            field={{
+              key: `${section.id}-${block.arrayField}-href-${index}`,
+              label: 'URL / href',
+              type: 'text',
+            }}
+            value={item.href}
+            onChange={(value) =>
+              updateArrayObjectItem(section.contentKey, block.arrayField, index, 'href', value)
+            }
+          />
+        </div>
+      )
+    }
+
+    return (
+      <>
+        <div className={styles.contentEditorGrid}>
+          <label>
+            <span className={styles.formLabel}>Icon</span>
+            <input
+              className={styles.formInput}
+              value={item.icon}
+              onChange={(event) =>
+                updateArrayObjectItem(section.contentKey, block.arrayField, index, 'icon', event.target.value)
+              }
+            />
+          </label>
+          <label>
+            <span className={styles.formLabel}>Tieu de</span>
+            <input
+              className={styles.formInput}
+              value={item.title}
+              onChange={(event) =>
+                updateArrayObjectItem(section.contentKey, block.arrayField, index, 'title', event.target.value)
+              }
+            />
+          </label>
+        </div>
+        <label>
+          <span className={styles.formLabel}>Mo ta</span>
+          <textarea
+            className={styles.formTextarea}
+            rows={3}
+            value={item.description}
+            onChange={(event) =>
+              updateArrayObjectItem(
+                section.contentKey,
+                block.arrayField,
+                index,
+                'description',
+                event.target.value
+              )
+            }
+          />
+        </label>
+      </>
+    )
+  }
+
+  function renderEditorBlock(section, block, blockIndex) {
+    if (block.type === 'note') {
+      return (
+        <div key={`${section.id}-block-${blockIndex}`} className={styles.contentEditorCard}>
+          {block.title && <div className={styles.contentEditorHeader}>{block.title}</div>}
+          <p className={styles.accountNote}>{block.text}</p>
+        </div>
+      )
+    }
+
+    if (block.type === 'comparison') {
+      return (
+        <div key={`${section.id}-block-${blockIndex}`} className={styles.contentEditorGrid}>
+          {block.columns.map((column) => (
+            <label
+              key={`${section.id}-${column.titleKey}`}
+              className={styles.contentEditorCard}
+            >
+              <span className={styles.formLabel}>{column.label}</span>
+              <input
+                className={styles.formInput}
+                value={content[section.contentKey]?.[column.titleKey] || ''}
+                onChange={(event) =>
+                  updateSection(section.contentKey, column.titleKey, event.target.value)
+                }
+              />
+              <textarea
+                className={styles.formTextarea}
+                rows={column.rows || 5}
+                value={arrayToTextarea(content[section.contentKey]?.[column.itemsKey] || [])}
+                onChange={(event) =>
+                  updateArrayField(section.contentKey, column.itemsKey, event.target.value)
+                }
+              />
+            </label>
+          ))}
+        </div>
+      )
+    }
+
+    if (block.type === 'fixed-items') {
+      const items = content[section.contentKey]?.[block.arrayField] || []
+
+      return (
+        <div key={`${section.id}-block-${blockIndex}`} className={styles.contentEditorStack}>
+          {items.map((item, index) => (
+            <div key={`${block.arrayField}-${index}`} className={styles.contentEditorCard}>
+              <div className={styles.contentEditorHeader}>
+                {block.itemTitlePrefix} {index + 1}
+              </div>
+              {renderItemShapeFields(section, block, item, index)}
+            </div>
+          ))}
+        </div>
+      )
+    }
+
+    if (block.type === 'repeater') {
+      const items = content[section.contentKey]?.[block.arrayField] || []
+
+      return (
+        <RepeaterField
+          key={`${section.id}-block-${blockIndex}`}
+          title={block.title}
+          note={block.note}
+          items={items}
+          minItems={block.minItems ?? 1}
+          maxItems={block.maxItems}
+          addLabel={block.addLabel}
+          getItemTitle={(_, index) => `${block.itemTitlePrefix} ${index + 1}`}
+          onAdd={() =>
+            addArrayObjectItem(
+              section.contentKey,
+              block.arrayField,
+              () => createEditorBlockItem(block),
+              block.maxItems
+            )
+          }
+          onRemove={(index) =>
+            removeArrayObjectItem(section.contentKey, block.arrayField, index, block.minItems ?? 1)
+          }
+          onMove={(index, direction) =>
+            moveArrayObjectItem(section.contentKey, block.arrayField, index, direction)
+          }
+          renderItem={({ item, index }) => renderItemShapeFields(section, block, item, index)}
+        />
+      )
+    }
+
+    return null
+  }
+
+  function renderSchemaSection(sectionId, extraContent = null) {
+    const section = LANDING_EDITOR_SECTION_MAP[sectionId]
+    const fieldGroups = Array.isArray(section?.fieldGroups) ? section.fieldGroups : []
+    const editorBlocks = Array.isArray(section?.editorBlocks) ? section.editorBlocks : []
+
+    if (!section || (fieldGroups.length === 0 && editorBlocks.length === 0 && !extraContent)) {
+      return null
+    }
+
+    return (
+      <LandingSectionCard
+        key={section.id}
+        sectionId={section.id}
+        title={section.title}
+        lead={section.lead}
+        badge={section.badge}
+        active={activeSection === section.id}
+        collapsed={collapsedSections[section.id]}
+        dirty={dirtySections[section.id]}
+        onToggle={() => toggleSection(section.id)}
+      >
+        {fieldGroups.map((group, groupIndex) => {
+          const groupFields = group.fields.map((field) => (
+            <FieldRenderer
+              key={`${section.id}-${field.key}`}
+              field={field}
+              value={getSchemaFieldValue(section, field)}
+              onChange={(value) => handleSchemaFieldChange(section, field, value)}
+            />
+          ))
+
+          if (group.layout === 'grid') {
+            return (
+              <div key={`${section.id}-group-${groupIndex}`} className={styles.contentEditorGrid}>
+                {groupFields}
+              </div>
+            )
+          }
+
+          return (
+            <div key={`${section.id}-group-${groupIndex}`} className={styles.contentEditorStack}>
+              {groupFields}
+            </div>
+          )
+        })}
+        {editorBlocks.map((block, blockIndex) => renderEditorBlock(section, block, blockIndex))}
+        {extraContent}
+      </LandingSectionCard>
+    )
   }
 
   if (loading) {
@@ -191,7 +749,7 @@ export default function AdminLandingPage() {
       <div className={styles.pageHeader}>
         <div>
           <h2 className={styles.pageTitle}>Landing Content</h2>
-          <p className={styles.curriculumLead}>Đang tải nội dung landing...</p>
+          <p className={styles.curriculumLead}>Dang tai noi dung landing...</p>
         </div>
       </div>
     )
@@ -200,31 +758,42 @@ export default function AdminLandingPage() {
   return (
     <>
       <div className={styles.pageHeader}>
-        <div>
-          <h2 className={styles.pageTitle}>Landing Content</h2>
+        <div className={styles.landingEditorTitleBlock}>
+          <div className={styles.landingEditorTitleRow}>
+            <h2 className={styles.pageTitle}>Landing Content</h2>
+            <span
+              className={`${styles.landingEditorStatusPill} ${
+                styles[`landingEditorStatusPill--${editorStatusTone}`]
+              }`}
+            >
+              {editorStatusLabel}
+            </span>
+          </div>
           <p className={styles.curriculumLead}>
-            Chỉnh landing theo đúng từng khối đang hiển thị ngoài site. Header và Footer giờ
-            cũng chỉnh riêng được, còn roadmap và pricing vẫn đồng bộ từ phần Khóa học để tránh
-            lệch dữ liệu.
+            Preview la be mat chinh. Bam truc tiep vao section trong landing de mo panel chinh
+            sua dung context, khong can cuon qua mot form dai nhu truoc.
           </p>
+          {lastSavedLabel && (
+            <div className={styles.landingEditorMetaStamp}>Luu gan nhat: {lastSavedLabel}</div>
+          )}
         </div>
 
         <div className={styles.quickActions}>
           <a
-            href="/"
+            href={liveOpenHref}
             target="_blank"
             rel="noreferrer"
             className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
           >
-            Mở landing thật
+            Mo landing that
           </a>
           <button
             type="button"
             className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
-            onClick={() => fetchContent()}
+            onClick={handleReloadFromServer}
             disabled={saving}
           >
-            Tải lại từ server
+            Tai lai tu server
           </button>
           <button
             type="submit"
@@ -232,7 +801,7 @@ export default function AdminLandingPage() {
             className={`${styles.quickActionBtn} ${styles['quickActionBtn--primary']}`}
             disabled={saving}
           >
-            {saving ? 'Đang lưu...' : 'Lưu landing content'}
+            {saving ? 'Dang luu...' : 'Luu landing content'}
           </button>
         </div>
       </div>
@@ -250,974 +819,187 @@ export default function AdminLandingPage() {
       )}
 
       <div className={styles.landingEditorLayout}>
-        <aside className={styles.landingEditorSidebar}>
-          <div className={styles.landingEditorMetaCard}>
-            <div className={styles.landingEditorMetaTitle}>Cách dùng nhanh</div>
-            <p className={styles.accountNote}>
-              Menu bên trái bám theo từng section của landing thật để bạn nhảy nhanh tới đúng
-              khối cần sửa thay vì phải cuộn một form dài.
-            </p>
-          </div>
+        <div className={styles.landingEditorWorkspace}>
+          <section className={styles.landingPreviewPane}>
+            <div className={styles.landingPreviewCard}>
+              <div className={styles.landingPreviewHead}>
+                <div className={styles.landingPreviewTitleBlock}>
+                  <div className={styles.landingPreviewTitle}>Preview landing</div>
+                  <p className={styles.accountNote}>
+                    Khung nay render bang cung component voi landing public. Bam truc tiep vao
+                    bat ky section nao de doi panel chinh sua sang dung context.
+                  </p>
+                </div>
+                <span
+                  className={`${styles.landingEditorStatusPill} ${
+                    styles['landingEditorStatusPill--pending']
+                  }`}
+                >
+                  {previewDevice === 'mobile' ? 'Mobile' : 'Desktop'}
+                </span>
+              </div>
 
-          <div className={styles.landingEditorMetaCard}>
-            <div className={styles.landingEditorMetaTitle}>Phần đồng bộ từ khóa học</div>
-            <p className={styles.accountNote}>
-              Tên gói, mô tả, giá, thời lượng và danh sách môn hiển thị ở roadmap/pricing luôn
-              lấy từ phần Khóa học trong admin.
-            </p>
-            <Link
-              href="/admin/courses"
-              className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
-            >
-              Mở quản lý khóa học
-            </Link>
-          </div>
+              <div className={styles.landingPreviewToolbar}>
+                <div className={styles.landingPreviewDeviceSwitch}>
+                  <button
+                    type="button"
+                    className={`${styles.landingPreviewDeviceButton} ${
+                      previewDevice === 'desktop' ? styles.landingPreviewDeviceButtonActive : ''
+                    }`}
+                    onClick={() => setPreviewDevice('desktop')}
+                    aria-pressed={previewDevice === 'desktop'}
+                  >
+                    Desktop
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.landingPreviewDeviceButton} ${
+                      previewDevice === 'mobile' ? styles.landingPreviewDeviceButtonActive : ''
+                    }`}
+                    onClick={() => setPreviewDevice('mobile')}
+                    aria-pressed={previewDevice === 'mobile'}
+                  >
+                    Mobile
+                  </button>
+                </div>
 
-          <nav className={styles.landingEditorNav}>
-            {LANDING_SECTIONS.map((section) => (
-              <button
-                key={section.id}
-                type="button"
-                className={`${styles.landingEditorNavItem} ${
-                  activeSection === section.id ? styles.landingEditorNavItemActive : ''
+                <button
+                  type="button"
+                  className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
+                  onClick={refreshPreview}
+                  disabled={saving}
+                >
+                  Tai lai preview
+                </button>
+                <a
+                  href={previewOpenHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
+                >
+                  Mo section nay
+                </a>
+              </div>
+
+              <div className={styles.landingPreviewMeta}>
+                <span>Dang chon: {activeSectionMeta.label}</span>
+                <span>
+                  {hasUnsavedChanges
+                    ? 'Preview dang phan anh ban draft chua luu. Panel ben phai chi hien thi dung khoi ban dang chon.'
+                    : 'Preview dang bam theo ban da luu gan nhat va san sang doi context theo click.'}
+                </span>
+              </div>
+
+              <div
+                className={`${styles.landingPreviewViewport} ${
+                  previewDevice === 'mobile'
+                    ? styles.landingPreviewViewportMobile
+                    : styles.landingPreviewViewportDesktop
                 }`}
-                onClick={() => jumpToSection(section.id)}
               >
-                <span>{section.label}</span>
-                <span className={styles.landingEditorNavBadge}>{section.badge}</span>
-              </button>
-            ))}
-          </nav>
-        </aside>
-
-        <form
-          id="landing-editor-form"
-          className={styles.contentEditor}
-          onSubmit={handleSubmit}
-        >
-        <section
-          id="landing-section-header"
-          className={`${styles.sectionCard} ${styles.landingEditorSection}`}
-        >
-          <div className={styles.landingEditorSectionHead}>
-            <div>
-              <div className={styles.sectionCardHeader}>Header</div>
-              <p className={styles.landingEditorSectionLead}>
-                Chỉnh nhãn điều hướng và CTA ở phần đầu landing.
-              </p>
-            </div>
-            <span className={styles.landingEditorSectionBadge}>Menu</span>
-          </div>
-          <div className={styles.accountSection}>
-            <div className={styles.contentEditorGrid}>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Nhãn Lộ trình</span>
-                <input
-                  className={styles.formInput}
-                  value={content.header.roadmapLabel}
-                  onChange={(event) =>
-                    updateSection('header', 'roadmapLabel', event.target.value)
-                  }
-                />
-              </label>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Nhãn FAQ</span>
-                <input
-                  className={styles.formInput}
-                  value={content.header.faqLabel}
-                  onChange={(event) => updateSection('header', 'faqLabel', event.target.value)}
-                />
-              </label>
-            </div>
-
-            <label className={styles.contentEditorCard}>
-              <span className={styles.formLabel}>CTA trên header</span>
-              <input
-                className={styles.formInput}
-                value={content.header.ctaLabel}
-                onChange={(event) => updateSection('header', 'ctaLabel', event.target.value)}
-              />
-            </label>
-          </div>
-        </section>
-
-        <section
-          id="landing-section-hero"
-          className={`${styles.sectionCard} ${styles.landingEditorSection}`}
-        >
-          <div className={styles.landingEditorSectionHead}>
-            <div>
-              <div className={styles.sectionCardHeader}>Hero</div>
-              <p className={styles.landingEditorSectionLead}>
-                Thông điệp đầu trang, CTA và trust points.
-              </p>
-            </div>
-            <span className={styles.landingEditorSectionBadge}>Banner</span>
-          </div>
-          <div className={styles.accountSection}>
-            <div className={styles.contentEditorGrid}>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Eyebrow</span>
-                <input
-                  className={styles.formInput}
-                  value={content.hero.eyebrow}
-                  onChange={(event) => updateSection('hero', 'eyebrow', event.target.value)}
-                />
-              </label>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Tiêu đề</span>
-                <input
-                  className={styles.formInput}
-                  value={content.hero.title}
-                  onChange={(event) => updateSection('hero', 'title', event.target.value)}
-                />
-              </label>
-            </div>
-
-            <label className={styles.contentEditorCard}>
-              <span className={styles.formLabel}>Mô tả</span>
-              <textarea
-                className={styles.formTextarea}
-                rows={4}
-                value={content.hero.description}
-                onChange={(event) => updateSection('hero', 'description', event.target.value)}
-              />
-            </label>
-
-            <div className={styles.contentEditorGrid}>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>CTA chính</span>
-                <input
-                  className={styles.formInput}
-                  value={content.hero.primaryCtaLabel}
-                  onChange={(event) =>
-                    updateSection('hero', 'primaryCtaLabel', event.target.value)
-                  }
-                />
-              </label>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>CTA phụ</span>
-                <input
-                  className={styles.formInput}
-                  value={content.hero.secondaryCtaLabel}
-                  onChange={(event) =>
-                    updateSection('hero', 'secondaryCtaLabel', event.target.value)
-                  }
-                />
-              </label>
-            </div>
-
-            <label className={styles.contentEditorCard}>
-              <span className={styles.formLabel}>Trust items</span>
-              <textarea
-                className={styles.formTextarea}
-                rows={4}
-                value={arrayToTextarea(content.hero.trustItems)}
-                onChange={(event) => updateArrayField('hero', 'trustItems', event.target.value)}
-              />
-              <span className={styles.contentEditorHint}>Mỗi dòng là một item.</span>
-            </label>
-          </div>
-        </section>
-
-        <section
-          id="landing-section-solution"
-          className={`${styles.sectionCard} ${styles.landingEditorSection}`}
-        >
-          <div className={styles.landingEditorSectionHead}>
-            <div>
-              <div className={styles.sectionCardHeader}>Positioning / Solution</div>
-              <p className={styles.landingEditorSectionLead}>
-                Thông điệp định vị, so sánh trước/sau và các trụ tư duy.
-              </p>
-            </div>
-            <span className={styles.landingEditorSectionBadge}>Story</span>
-          </div>
-          <div className={styles.accountSection}>
-            <div className={styles.contentEditorGrid}>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Tiêu đề section</span>
-                <input
-                  className={styles.formInput}
-                  value={content.solution.title}
-                  onChange={(event) => updateSection('solution', 'title', event.target.value)}
-                />
-              </label>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Subtitle</span>
-                <input
-                  className={styles.formInput}
-                  value={content.solution.subtitle}
-                  onChange={(event) => updateSection('solution', 'subtitle', event.target.value)}
-                />
-              </label>
-            </div>
-
-            <div className={styles.contentEditorGrid}>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Cột trước</span>
-                <input
-                  className={styles.formInput}
-                  value={content.solution.beforeTitle}
-                  onChange={(event) =>
-                    updateSection('solution', 'beforeTitle', event.target.value)
-                  }
-                />
-                <textarea
-                  className={styles.formTextarea}
-                  rows={5}
-                  value={arrayToTextarea(content.solution.beforeItems)}
-                  onChange={(event) =>
-                    updateArrayField('solution', 'beforeItems', event.target.value)
-                  }
-                />
-              </label>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Cột sau</span>
-                <input
-                  className={styles.formInput}
-                  value={content.solution.afterTitle}
-                  onChange={(event) =>
-                    updateSection('solution', 'afterTitle', event.target.value)
-                  }
-                />
-                <textarea
-                  className={styles.formTextarea}
-                  rows={5}
-                  value={arrayToTextarea(content.solution.afterItems)}
-                  onChange={(event) =>
-                    updateArrayField('solution', 'afterItems', event.target.value)
-                  }
-                />
-              </label>
-            </div>
-
-            <div className={styles.contentEditorStack}>
-              {content.solution.pillars.map((item, index) => (
-                <div key={index} className={styles.contentEditorCard}>
-                  <div className={styles.contentEditorHeader}>Pillar {index + 1}</div>
-                  <div className={styles.contentEditorGrid}>
-                    <label>
-                      <span className={styles.formLabel}>Icon</span>
-                      <input
-                        className={styles.formInput}
-                        value={item.icon}
-                        onChange={(event) =>
-                          updateSolutionPillar(index, 'icon', event.target.value)
-                        }
-                      />
-                    </label>
-                    <label>
-                      <span className={styles.formLabel}>Tiêu đề</span>
-                      <input
-                        className={styles.formInput}
-                        value={item.title}
-                        onChange={(event) =>
-                          updateSolutionPillar(index, 'title', event.target.value)
-                        }
-                      />
-                    </label>
-                  </div>
-                  <label>
-                    <span className={styles.formLabel}>Mô tả</span>
-                    <textarea
-                      className={styles.formTextarea}
-                      rows={3}
-                      value={item.description}
-                      onChange={(event) =>
-                        updateSolutionPillar(index, 'description', event.target.value)
-                      }
+                <div
+                  className={`${styles.landingPreviewFrameShell} ${
+                    previewDevice === 'mobile'
+                      ? styles.landingPreviewFrameShellMobile
+                      : styles.landingPreviewFrameShellDesktop
+                  }`}
+                >
+                  {previewDevice === 'mobile' && (
+                    <div className={styles.landingPreviewPhoneTopbar} aria-hidden="true" />
+                  )}
+                  <div className={styles.landingPreviewFrameMask}>
+                    {previewLoading && (
+                      <div className={styles.landingPreviewLoading}>Dang tai landing preview...</div>
+                    )}
+                    <iframe
+                      ref={previewFrameRef}
+                      title="Landing preview"
+                      src={previewFrameSrc}
+                      className={`${styles.landingPreviewFrame} ${
+                        previewDevice === 'mobile'
+                          ? styles.landingPreviewFrameMobile
+                          : styles.landingPreviewFrameDesktop
+                      }`}
+                      onLoad={handlePreviewLoad}
                     />
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section
-          id="landing-section-catalog"
-          className={`${styles.sectionCard} ${styles.landingEditorSection}`}
-        >
-          <div className={styles.landingEditorSectionHead}>
-            <div>
-              <div className={styles.sectionCardHeader}>Roadmap</div>
-              <p className={styles.landingEditorSectionLead}>
-                Khối này chỉ đọc để đảm bảo landing luôn khớp với dữ liệu khóa học thật.
-              </p>
-            </div>
-            <span className={styles.landingEditorSectionBadge}>Sync</span>
-          </div>
-          <div className={styles.accountSection}>
-            <div className={styles.contentEditorCard}>
-              <div className={styles.contentEditorHeader}>Roadmap</div>
-              <p className={styles.accountNote}>
-                Level, mô tả, học phí, thời lượng và danh sách môn đang lấy trực tiếp từ phần
-                Khóa học trong admin.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section
-          id="landing-section-method"
-          className={`${styles.sectionCard} ${styles.landingEditorSection}`}
-        >
-          <div className={styles.landingEditorSectionHead}>
-            <div>
-              <div className={styles.sectionCardHeader}>Method</div>
-              <p className={styles.landingEditorSectionLead}>
-                Cách học, nhịp mentor và trải nghiệm kiểu studio nhỏ.
-              </p>
-            </div>
-            <span className={styles.landingEditorSectionBadge}>Studio</span>
-          </div>
-          <div className={styles.accountSection}>
-            <div className={styles.contentEditorGrid}>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Tiêu đề section</span>
-                <input
-                  className={styles.formInput}
-                  value={content.method.title}
-                  onChange={(event) => updateSection('method', 'title', event.target.value)}
-                />
-              </label>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Subtitle</span>
-                <input
-                  className={styles.formInput}
-                  value={content.method.subtitle}
-                  onChange={(event) => updateSection('method', 'subtitle', event.target.value)}
-                />
-              </label>
-            </div>
-
-            <div className={styles.contentEditorStack}>
-              {content.method.items.map((item, index) => (
-                <div key={index} className={styles.contentEditorCard}>
-                  <div className={styles.contentEditorHeader}>Method item {index + 1}</div>
-                  <div className={styles.contentEditorGrid}>
-                    <label>
-                      <span className={styles.formLabel}>Icon</span>
-                      <input
-                        className={styles.formInput}
-                        value={item.icon}
-                        onChange={(event) =>
-                          updateObjectItem('method', index, 'icon', event.target.value)
-                        }
-                      />
-                    </label>
-                    <label>
-                      <span className={styles.formLabel}>Tiêu đề</span>
-                      <input
-                        className={styles.formInput}
-                        value={item.title}
-                        onChange={(event) =>
-                          updateObjectItem('method', index, 'title', event.target.value)
-                        }
-                      />
-                    </label>
-                  </div>
-                  <label>
-                    <span className={styles.formLabel}>Mô tả</span>
-                    <textarea
-                      className={styles.formTextarea}
-                      rows={3}
-                      value={item.description}
-                      onChange={(event) =>
-                        updateObjectItem('method', index, 'description', event.target.value)
-                      }
-                    />
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section
-          id="landing-section-results"
-          className={`${styles.sectionCard} ${styles.landingEditorSection}`}
-        >
-          <div className={styles.landingEditorSectionHead}>
-            <div>
-              <div className={styles.sectionCardHeader}>Results</div>
-              <p className={styles.landingEditorSectionLead}>
-                Khối before/after và các output mà học viên có thể tạo ra.
-              </p>
-            </div>
-            <span className={styles.landingEditorSectionBadge}>Outcome</span>
-          </div>
-          <div className={styles.accountSection}>
-            <div className={styles.contentEditorGrid}>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Tiêu đề section</span>
-                <input
-                  className={styles.formInput}
-                  value={content.results.title}
-                  onChange={(event) => updateSection('results', 'title', event.target.value)}
-                />
-              </label>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Subtitle</span>
-                <input
-                  className={styles.formInput}
-                  value={content.results.subtitle}
-                  onChange={(event) => updateSection('results', 'subtitle', event.target.value)}
-                />
-              </label>
-            </div>
-
-            <div className={styles.contentEditorGrid}>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Cột trước</span>
-                <input
-                  className={styles.formInput}
-                  value={content.results.beforeTitle}
-                  onChange={(event) =>
-                    updateSection('results', 'beforeTitle', event.target.value)
-                  }
-                />
-                <textarea
-                  className={styles.formTextarea}
-                  rows={5}
-                  value={arrayToTextarea(content.results.beforeItems)}
-                  onChange={(event) =>
-                    updateArrayField('results', 'beforeItems', event.target.value)
-                  }
-                />
-              </label>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Cột sau</span>
-                <input
-                  className={styles.formInput}
-                  value={content.results.afterTitle}
-                  onChange={(event) =>
-                    updateSection('results', 'afterTitle', event.target.value)
-                  }
-                />
-                <textarea
-                  className={styles.formTextarea}
-                  rows={5}
-                  value={arrayToTextarea(content.results.afterItems)}
-                  onChange={(event) =>
-                    updateArrayField('results', 'afterItems', event.target.value)
-                  }
-                />
-              </label>
-            </div>
-
-            <div className={styles.contentEditorStack}>
-              {content.results.showcaseItems.map((item, index) => (
-                <div key={index} className={styles.contentEditorCard}>
-                  <div className={styles.contentEditorHeader}>Showcase {index + 1}</div>
-                  <div className={styles.contentEditorGrid}>
-                    <label>
-                      <span className={styles.formLabel}>Icon</span>
-                      <input
-                        className={styles.formInput}
-                        value={item.icon}
-                        onChange={(event) =>
-                          updateArrayObjectItem(
-                            'results',
-                            'showcaseItems',
-                            index,
-                            'icon',
-                            event.target.value
-                          )
-                        }
-                      />
-                    </label>
-                    <label>
-                      <span className={styles.formLabel}>Tiêu đề</span>
-                      <input
-                        className={styles.formInput}
-                        value={item.title}
-                        onChange={(event) =>
-                          updateArrayObjectItem(
-                            'results',
-                            'showcaseItems',
-                            index,
-                            'title',
-                            event.target.value
-                          )
-                        }
-                      />
-                    </label>
-                  </div>
-                  <label>
-                    <span className={styles.formLabel}>Mô tả</span>
-                    <textarea
-                      className={styles.formTextarea}
-                      rows={3}
-                      value={item.description}
-                      onChange={(event) =>
-                        updateArrayObjectItem(
-                          'results',
-                          'showcaseItems',
-                          index,
-                          'description',
-                          event.target.value
-                        )
-                      }
-                    />
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section
-          id="landing-section-commitment"
-          className={`${styles.sectionCard} ${styles.landingEditorSection}`}
-        >
-          <div className={styles.landingEditorSectionHead}>
-            <div>
-              <div className={styles.sectionCardHeader}>Commitment</div>
-              <p className={styles.landingEditorSectionLead}>
-                Các cam kết có thể kiểm chứng và phần bảo đảm trải nghiệm.
-              </p>
-            </div>
-            <span className={styles.landingEditorSectionBadge}>Trust</span>
-          </div>
-          <div className={styles.accountSection}>
-            <div className={styles.contentEditorGrid}>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Tiêu đề section</span>
-                <input
-                  className={styles.formInput}
-                  value={content.commitment.title}
-                  onChange={(event) =>
-                    updateSection('commitment', 'title', event.target.value)
-                  }
-                />
-              </label>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Subtitle</span>
-                <input
-                  className={styles.formInput}
-                  value={content.commitment.subtitle}
-                  onChange={(event) =>
-                    updateSection('commitment', 'subtitle', event.target.value)
-                  }
-                />
-              </label>
-            </div>
-
-            <div className={styles.contentEditorStack}>
-              {content.commitment.items.map((item, index) => (
-                <div key={index} className={styles.contentEditorCard}>
-                  <div className={styles.contentEditorHeader}>Commitment item {index + 1}</div>
-                  <div className={styles.contentEditorGrid}>
-                    <label>
-                      <span className={styles.formLabel}>Icon</span>
-                      <input
-                        className={styles.formInput}
-                        value={item.icon}
-                        onChange={(event) =>
-                          updateObjectItem('commitment', index, 'icon', event.target.value)
-                        }
-                      />
-                    </label>
-                    <label>
-                      <span className={styles.formLabel}>Tiêu đề</span>
-                      <input
-                        className={styles.formInput}
-                        value={item.title}
-                        onChange={(event) =>
-                          updateObjectItem('commitment', index, 'title', event.target.value)
-                        }
-                      />
-                    </label>
-                  </div>
-                  <label>
-                    <span className={styles.formLabel}>Mô tả</span>
-                    <textarea
-                      className={styles.formTextarea}
-                      rows={3}
-                      value={item.description}
-                      onChange={(event) =>
-                        updateObjectItem('commitment', index, 'description', event.target.value)
-                      }
-                    />
-                  </label>
-                </div>
-              ))}
-            </div>
-
-            <div className={styles.contentEditorGrid}>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Tiêu đề guarantee</span>
-                <input
-                  className={styles.formInput}
-                  value={content.commitment.guaranteeTitle}
-                  onChange={(event) =>
-                    updateSection('commitment', 'guaranteeTitle', event.target.value)
-                  }
-                />
-              </label>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Mô tả guarantee</span>
-                <textarea
-                  className={styles.formTextarea}
-                  rows={3}
-                  value={content.commitment.guaranteeText}
-                  onChange={(event) =>
-                    updateSection('commitment', 'guaranteeText', event.target.value)
-                  }
-                />
-              </label>
-            </div>
-          </div>
-        </section>
-
-        <section
-          id="landing-section-faq"
-          className={`${styles.sectionCard} ${styles.landingEditorSection}`}
-        >
-          <div className={styles.landingEditorSectionHead}>
-            <div>
-              <div className={styles.sectionCardHeader}>FAQ</div>
-              <p className={styles.landingEditorSectionLead}>
-                Các câu hỏi thường gặp ở cuối landing.
-              </p>
-            </div>
-            <span className={styles.landingEditorSectionBadge}>Answer</span>
-          </div>
-          <div className={styles.accountSection}>
-            <div className={styles.contentEditorGrid}>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Tiêu đề section</span>
-                <input
-                  className={styles.formInput}
-                  value={content.faq.title}
-                  onChange={(event) => updateSection('faq', 'title', event.target.value)}
-                />
-              </label>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Subtitle</span>
-                <input
-                  className={styles.formInput}
-                  value={content.faq.subtitle}
-                  onChange={(event) => updateSection('faq', 'subtitle', event.target.value)}
-                />
-              </label>
-            </div>
-
-            <div className={styles.contentEditorStack}>
-              {content.faq.items.map((item, index) => (
-                <div key={index} className={styles.contentEditorCard}>
-                  <div className={styles.contentEditorHeader}>FAQ {index + 1}</div>
-                  <label>
-                    <span className={styles.formLabel}>Câu hỏi</span>
-                    <input
-                      className={styles.formInput}
-                      value={item.question}
-                      onChange={(event) =>
-                        updateObjectItem('faq', index, 'question', event.target.value)
-                      }
-                    />
-                  </label>
-                  <label>
-                    <span className={styles.formLabel}>Trả lời</span>
-                    <textarea
-                      className={styles.formTextarea}
-                      rows={4}
-                      value={item.answer}
-                      onChange={(event) =>
-                        updateObjectItem('faq', index, 'answer', event.target.value)
-                      }
-                    />
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section
-          id="landing-section-cta"
-          className={`${styles.sectionCard} ${styles.landingEditorSection}`}
-        >
-          <div className={styles.landingEditorSectionHead}>
-            <div>
-              <div className={styles.sectionCardHeader}>CTA cuối trang</div>
-              <p className={styles.landingEditorSectionLead}>
-                Khối chốt cuối trang và form nhận tư vấn.
-              </p>
-            </div>
-            <span className={styles.landingEditorSectionBadge}>Lead</span>
-          </div>
-          <div className={styles.accountSection}>
-            <label className={styles.contentEditorCard}>
-              <span className={styles.formLabel}>Tiêu đề</span>
-              <input
-                className={styles.formInput}
-                value={content.cta.title}
-                onChange={(event) => updateSection('cta', 'title', event.target.value)}
-              />
-            </label>
-            <label className={styles.contentEditorCard}>
-              <span className={styles.formLabel}>Mô tả</span>
-              <textarea
-                className={styles.formTextarea}
-                rows={4}
-                value={content.cta.description}
-                onChange={(event) => updateSection('cta', 'description', event.target.value)}
-              />
-            </label>
-            <label className={styles.contentEditorCard}>
-              <span className={styles.formLabel}>Benefits</span>
-              <textarea
-                className={styles.formTextarea}
-                rows={4}
-                value={arrayToTextarea(content.cta.benefits)}
-                onChange={(event) => updateArrayField('cta', 'benefits', event.target.value)}
-              />
-              <span className={styles.contentEditorHint}>Mỗi dòng là một benefit.</span>
-            </label>
-            <div className={styles.contentEditorGrid}>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Tiêu đề form</span>
-                <input
-                  className={styles.formInput}
-                  value={content.cta.formTitle}
-                  onChange={(event) => updateSection('cta', 'formTitle', event.target.value)}
-                />
-              </label>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Nhãn nút submit</span>
-                <input
-                  className={styles.formInput}
-                  value={content.cta.submitLabel}
-                  onChange={(event) => updateSection('cta', 'submitLabel', event.target.value)}
-                />
-              </label>
-            </div>
-            <label className={styles.contentEditorCard}>
-              <span className={styles.formLabel}>Ghi chú form</span>
-              <textarea
-                className={styles.formTextarea}
-                rows={3}
-                value={content.cta.formNote}
-                onChange={(event) => updateSection('cta', 'formNote', event.target.value)}
-              />
-            </label>
-          </div>
-        </section>
-
-        <section
-          id="landing-section-contact"
-          className={`${styles.sectionCard} ${styles.landingEditorSection}`}
-        >
-          <div className={styles.landingEditorSectionHead}>
-            <div>
-              <div className={styles.sectionCardHeader}>Direct Contact</div>
-              <p className={styles.landingEditorSectionLead}>
-                Chỉnh sửa khối thông tin Liên hệ trực tiếp. Khối này sẽ tự động lấy các nút Liên hệ từ mục Footer.
-              </p>
-            </div>
-            <span className={styles.landingEditorSectionBadge}>Direct</span>
-          </div>
-          <div className={styles.accountSection}>
-            <div className={styles.contentEditorGrid}>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Tiêu đề chính</span>
-                <input
-                  className={styles.formInput}
-                  value={content.contactDirect?.title || ''}
-                  onChange={(event) => updateSection('contactDirect', 'title', event.target.value)}
-                />
-              </label>
-            </div>
-            <label className={styles.contentEditorCard}>
-              <span className={styles.formLabel}>Tiêu đề phụ (mô tả)</span>
-              <textarea
-                className={styles.formTextarea}
-                rows={3}
-                value={content.contactDirect?.subtitle || ''}
-                onChange={(event) => updateSection('contactDirect', 'subtitle', event.target.value)}
-              />
-            </label>
-          </div>
-        </section>
-
-        <section
-          id="landing-section-footer"
-          className={`${styles.sectionCard} ${styles.landingEditorSection}`}
-        >
-          <div className={styles.landingEditorSectionHead}>
-            <div>
-              <div className={styles.sectionCardHeader}>Footer</div>
-              <p className={styles.landingEditorSectionLead}>
-                Chỉnh phần brand, quick links, contact links và copyright ở cuối trang.
-              </p>
-            </div>
-            <span className={styles.landingEditorSectionBadge}>Brand</span>
-          </div>
-          <div className={styles.accountSection}>
-            <div className={styles.contentEditorGrid}>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Logo subtitle</span>
-                <input
-                  className={styles.formInput}
-                  value={content.footer.logoSubtitle}
-                  onChange={(event) =>
-                    updateSection('footer', 'logoSubtitle', event.target.value)
-                  }
-                />
-              </label>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Tiêu đề cột Lộ trình</span>
-                <input
-                  className={styles.formInput}
-                  value={content.footer.roadmapTitle}
-                  onChange={(event) =>
-                    updateSection('footer', 'roadmapTitle', event.target.value)
-                  }
-                />
-              </label>
-            </div>
-
-            <label className={styles.contentEditorCard}>
-              <span className={styles.formLabel}>Mô tả brand</span>
-              <textarea
-                className={styles.formTextarea}
-                rows={4}
-                value={content.footer.description}
-                onChange={(event) => updateSection('footer', 'description', event.target.value)}
-              />
-            </label>
-
-            <div className={styles.contentEditorGrid}>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Tiêu đề cột Thông tin</span>
-                <input
-                  className={styles.formInput}
-                  value={content.footer.quickLinksTitle}
-                  onChange={(event) =>
-                    updateSection('footer', 'quickLinksTitle', event.target.value)
-                  }
-                />
-              </label>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Tiêu đề cột Liên hệ</span>
-                <input
-                  className={styles.formInput}
-                  value={content.footer.contactTitle}
-                  onChange={(event) =>
-                    updateSection('footer', 'contactTitle', event.target.value)
-                  }
-                />
-              </label>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Nhãn link FAQ</span>
-                <input
-                  className={styles.formInput}
-                  value={content.footer.faqLabel}
-                  onChange={(event) => updateSection('footer', 'faqLabel', event.target.value)}
-                />
-              </label>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Nhãn link Commitment</span>
-                <input
-                  className={styles.formInput}
-                  value={content.footer.commitmentLabel}
-                  onChange={(event) =>
-                    updateSection('footer', 'commitmentLabel', event.target.value)
-                  }
-                />
-              </label>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Nhãn link CTA</span>
-                <input
-                  className={styles.formInput}
-                  value={content.footer.ctaLabel}
-                  onChange={(event) => updateSection('footer', 'ctaLabel', event.target.value)}
-                />
-              </label>
-              <label className={styles.contentEditorCard}>
-                <span className={styles.formLabel}>Copyright</span>
-                <input
-                  className={styles.formInput}
-                  value={content.footer.copyright}
-                  onChange={(event) =>
-                    updateSection('footer', 'copyright', event.target.value)
-                  }
-                />
-              </label>
-            </div>
-
-            <div className={styles.contentEditorStack}>
-              {content.footer.contactLinks.map((item, index) => (
-                <div key={index} className={styles.contentEditorCard}>
-                  <div className={styles.contentEditorHeader}>Contact link {index + 1}</div>
-                  <div className={styles.contentEditorGrid}>
-                    <label>
-                      <span className={styles.formLabel}>Nhãn</span>
-                      <input
-                        className={styles.formInput}
-                        value={item.label}
-                        onChange={(event) =>
-                          updateFooterLink(index, 'label', event.target.value)
-                        }
-                      />
-                    </label>
-                    <label>
-                      <span className={styles.formLabel}>URL / href</span>
-                      <input
-                        className={styles.formInput}
-                        value={item.href}
-                        onChange={(event) => updateFooterLink(index, 'href', event.target.value)}
-                      />
-                    </label>
-                  </div>
-                  <div className={styles.accountActions}>
-                    <button
-                      type="button"
-                      className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
-                      onClick={() => removeFooterLink(index)}
-                      disabled={content.footer.contactLinks.length <= 1}
-                    >
-                      Xóa link này
-                    </button>
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
+          </section>
 
-            <div className={styles.accountActions}>
-              <button
-                type="button"
-                className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
-                onClick={addFooterLink}
+          <aside className={styles.landingContextPane}>
+            <div className={styles.landingContextCard}>
+              <div className={styles.landingContextHead}>
+                <div className={styles.landingContextTitleBlock}>
+                  <div className={styles.landingEditorMetaTitle}>Panel chinh section</div>
+                  <div className={styles.landingContextTitleRow}>
+                    <span className={styles.sectionCardHeader}>{activeSectionMeta.title}</span>
+                    <span className={styles.landingEditorSectionBadge}>{activeSectionMeta.badge}</span>
+                  </div>
+                  <p className={styles.accountNote}>{activeSectionMeta.lead}</p>
+                </div>
+                <div className={styles.landingContextActions}>
+                  <button
+                    type="button"
+                    className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
+                    onClick={() => previousSection && focusSection(previousSection.id)}
+                    disabled={!previousSection}
+                  >
+                    Khoi truoc
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
+                    onClick={() => nextSection && focusSection(nextSection.id)}
+                    disabled={!nextSection}
+                  >
+                    Khoi sau
+                  </button>
+                </div>
+              </div>
+
+              <div className={styles.landingContextMeta}>
+                <span>
+                  {dirtySections[activeSection]
+                    ? 'Khoi nay dang co thay doi chua luu.'
+                    : 'Khoi nay dang khop voi ban da luu gan nhat.'}
+                </span>
+                <span>
+                  Bam truc tiep trong preview de doi section. Panel nay chi giu mot khoi de ban tap trung chinh sua.
+                </span>
+              </div>
+
+              <form
+                id="landing-editor-form"
+                className={styles.landingContextForm}
+                onSubmit={handleSubmit}
               >
-                Thêm contact link
-              </button>
-            </div>
-          </div>
-        </section>
+                {renderSchemaSection(activeSection)}
 
-        <div className={styles.quickActions}>
-          <button
-            type="button"
-            className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
-            onClick={() => fetchContent()}
-            disabled={saving}
-          >
-            Tải lại từ server
-          </button>
-          <button
-            type="submit"
-            className={`${styles.quickActionBtn} ${styles['quickActionBtn--primary']}`}
-            disabled={saving}
-          >
-            {saving ? 'Đang lưu...' : 'Lưu landing content'}
-          </button>
+                <div className={styles.quickActions}>
+                  <button
+                    type="button"
+                    className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
+                    onClick={handleReloadFromServer}
+                    disabled={saving}
+                  >
+                    Tai lai tu server
+                  </button>
+                  <button
+                    type="submit"
+                    className={`${styles.quickActionBtn} ${styles['quickActionBtn--primary']}`}
+                    disabled={saving}
+                  >
+                    {saving ? 'Dang luu...' : 'Luu landing content'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </aside>
         </div>
-        </form>
       </div>
     </>
   )
 }
+

@@ -1,8 +1,6 @@
 export const defaultLandingContent = {
   header: {
-    painLabel: 'Góc nhìn',
     roadmapLabel: 'Lộ trình',
-    pricingLabel: 'Gói học',
     faqLabel: 'FAQ',
     ctaLabel: 'Nhận lộ trình',
   },
@@ -17,41 +15,6 @@ export const defaultLandingContent = {
       'Lớp nhỏ 8-12 học viên',
       'Có lesson portal và tiến độ theo môn',
       'Có buổi học thử để kiểm tra độ phù hợp',
-    ],
-  },
-  pain: {
-    title: 'Những pain point cốt lõi mà AIgenlabs đang giải quyết',
-    subtitle:
-      'Trước khi nói đến build app hay làm project, nhiều học viên đang mắc kẹt ở 4 vấn đề nền tảng: nhịp tập trung, cách học, cách giải quyết vấn đề và cách hiểu về làn sóng AI.',
-    items: [
-      {
-        icon: '📱',
-        title: 'Quen với màn hình nhanh, khó giữ nhịp học sâu',
-        description:
-          'Nhiều bạn đã quen với nội dung ngắn và nhịp phản hồi rất nhanh, nên khi bước vào một việc cần tập trung lâu hơn, đào sâu hơn hoặc làm tới nơi tới chốn thì dễ mất đà.',
-        quote: 'Từ lướt nhanh sang làm sâu là một bước chuyển cần được hướng dẫn.',
-      },
-      {
-        icon: '📚',
-        title: 'Học trước quên sau, chưa biết cách học và tìm nguồn tin cậy',
-        description:
-          'Không ít học viên học nhiều thứ nhưng thiếu framework để ghi nhớ, thiếu kỹ năng tìm kiếm thông tin đáng tin và chưa biết cách biến tò mò thành một quy trình tự học hiệu quả.',
-        quote: 'Biết xem nhiều, nhưng chưa chắc đã biết học đúng.',
-      },
-      {
-        icon: '🧩',
-        title: 'Chưa có nền tảng giải quyết vấn đề một cách có hệ thống',
-        description:
-          'Khi gặp một bài toán mới, nhiều bạn chưa quen cách chia nhỏ vấn đề, tìm giả thuyết, thử nghiệm và sửa dần. Vì vậy các dự án dễ dừng ở mức ý tưởng hoặc bản nháp đầu tiên.',
-        quote: 'Muốn làm được việc lớn hơn, cần biết giải quyết từng vấn đề nhỏ hơn.',
-      },
-      {
-        icon: '🤖',
-        title: 'Thiếu nền tảng để hiểu AI đang đi tới đâu và ứng đối ra sao',
-        description:
-          'AI thay đổi rất nhanh, nhưng nếu chỉ dùng theo phong trào thì học viên khó hiểu được đâu là bản chất, đâu là công cụ, đâu là năng lực mình cần xây để không bị động trước thay đổi công nghệ.',
-        quote: 'Không chỉ biết dùng AI, mà cần biết mình sẽ lớn lên cùng AI như thế nào.',
-      },
     ],
   },
   solution: {

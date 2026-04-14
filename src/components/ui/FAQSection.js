@@ -32,13 +32,19 @@ const defaultFaqData = [
 
 export default function FAQSection({ items }) {
   const [openIndex, setOpenIndex] = useState(null)
-  const faqData =
-    Array.isArray(items) && items.length > 0
-      ? items.map((item) => ({
+  const hasManagedItems = Array.isArray(items)
+  const faqData = hasManagedItems
+    ? items
+        .filter((item) => item?.question?.trim() || item?.answer?.trim())
+        .map((item) => ({
           q: item.question,
           a: item.answer,
         }))
-      : defaultFaqData
+    : defaultFaqData
+
+  if (faqData.length === 0) {
+    return null
+  }
 
   const toggle = (i) => {
     setOpenIndex(openIndex === i ? null : i)
