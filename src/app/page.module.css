@@ -86,7 +86,7 @@
 .hero__inner {
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-  gap: var(--space-3xl);
+  gap: clamp(1.5rem, 2vw, 2.5rem);
   align-items: center;
   position: relative;
   z-index: 1;
@@ -94,7 +94,10 @@
 
 .hero__content {
   animation: fadeInUp 0.8s ease;
-  max-width: 46rem;
+  max-width: 52rem;
+  margin-right: -3.5rem;
+  position: relative;
+  z-index: 1;
 }
 
 .hero__eyebrow {
@@ -2157,6 +2160,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    margin-right: 0;
   }
 
   .hero__title {
