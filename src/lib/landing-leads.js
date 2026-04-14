@@ -130,6 +130,10 @@ function readOptionalString(value) {
   return readString(value, '')
 }
 
+function escapeIlike(value) {
+  return readString(value).replace(/[%_,()]/g, '')
+}
+
 function normalizeStatus(value) {
   return LEAD_STATUSES.has(value) ? value : 'new'
 }
@@ -210,6 +214,68 @@ function isMissingLandingLeadsTable(error) {
   )
 }
 
+function isMissingLeadSummaryFunction(error) {
+  const message = `${error?.message || ''} ${error?.details || ''}`.toLowerCase()
+
+  return (
+    error?.code === '42883' ||
+    error?.code === 'PGRST202' ||
+    (message.includes('admin_lead_summary') &&
+      (message.includes('does not exist') ||
+        message.includes('could not find') ||
+        message.includes('schema cache')))
+  )
+}
+
+function compareValues(a, b, direction) {
+  const left = typeof a === 'string' ? a.toLowerCase() : a ?? ''
+  const right = typeof b === 'string' ? b.toLowerCase() : b ?? ''
+
+  if (left < right) return direction === 'asc' ? -1 : 1
+  if (left > right) return direction === 'asc' ? 1 : -1
+  return 0
+}
+
+function sortLeadRows(rows, sortKey, sortDir) {
+  const direction = sortDir === 'asc' ? 'asc' : 'desc'
+
+  return [...rows].sort((a, b) => {
+    switch (sortKey) {
+      case 'name':
+        return compareValues(a.name, b.name, direction)
+      case 'learnerLabel':
+        return compareValues(a.learnerName, b.learnerName, direction)
+      case 'phone':
+        return compareValues(a.phone, b.phone, direction)
+      case 'stage':
+        return compareValues(a.stage, b.stage, direction)
+      case 'status':
+        return compareValues(a.status, b.status, direction)
+      case 'createdLabel':
+      default:
+        return compareValues(a.createdAt, b.createdAt, direction)
+    }
+  })
+}
+
+function getLeadOrderConfig(sortKey) {
+  switch (sortKey) {
+    case 'name':
+      return { column: 'name', ascending: true }
+    case 'learnerLabel':
+      return { column: 'learner_name', ascending: true, nullsFirst: false }
+    case 'phone':
+      return { column: 'phone', ascending: true }
+    case 'stage':
+      return { column: 'stage', ascending: true }
+    case 'status':
+      return { column: 'status', ascending: true }
+    case 'createdLabel':
+    default:
+      return { column: 'created_at', ascending: false }
+  }
+}
+
 async function fetchDatabaseLeads(adminClient) {
   const { data, error } = await adminClient
     .from(LANDING_LEADS_TABLE)
@@ -221,6 +287,65 @@ async function fetchDatabaseLeads(adminClient) {
   }
 
   return (data || []).map(mapLeadRow)
+}
+
+async function queryDatabaseLeads(adminClient, options = {}) {
+  const status = readString(options.status, 'all')
+  const query = escapeIlike(options.query)
+  const page = Number.isInteger(options.page) && options.page >= 0 ? options.page : 0
+  const perPage =
+    Number.isInteger(options.perPage) && options.perPage > 0
+      ? Math.min(options.perPage, 100)
+      : 10
+  const sortKey = readString(options.sortKey, 'createdLabel')
+  const sortDir = readString(options.sortDir, 'desc') === 'asc' ? 'asc' : 'desc'
+  const orderConfig = getLeadOrderConfig(sortKey)
+
+  let queryBuilder = adminClient
+    .from(LANDING_LEADS_TABLE)
+    .select(LANDING_LEADS_SELECT, { count: 'exact' })
+
+  if (status && status !== 'all') {
+    queryBuilder = queryBuilder.eq('status', status)
+  }
+
+  if (query) {
+    queryBuilder = queryBuilder.or(
+      [
+        `name.ilike.%${query}%`,
+        `learner_name.ilike.%${query}%`,
+        `phone.ilike.%${query}%`,
+        `email.ilike.%${query}%`,
+        `stage.ilike.%${query}%`,
+        `status.ilike.%${query}%`,
+      ].join(',')
+    )
+  }
+
+  const start = page * perPage
+  const end = start + perPage - 1
+  const ascending = sortDir === 'asc' ? true : false
+  const { data, count, error } = await queryBuilder
+    .order(orderConfig.column, {
+      ascending,
+      nullsFirst: orderConfig.nullsFirst,
+    })
+    .range(start, end)
+
+  if (error) {
+    throw error
+  }
+
+  const totalItems = count || 0
+  return {
+    leads: (data || []).map(mapLeadRow),
+    pagination: {
+      page,
+      perPage,
+      totalItems,
+      totalPages: Math.max(1, Math.ceil(totalItems / perPage)),
+    },
+  }
 }
 
 async function insertDatabaseLead(adminClient, lead) {
@@ -463,6 +588,46 @@ async function getDatabaseLeadsWithBackfill(adminClient) {
   return leads
 }
 
+async function queryLegacyLandingLeads(options = {}) {
+  const status = readString(options.status, 'all')
+  const query = readString(options.query).toLowerCase()
+  const page = Number.isInteger(options.page) && options.page >= 0 ? options.page : 0
+  const perPage =
+    Number.isInteger(options.perPage) && options.perPage > 0
+      ? Math.min(options.perPage, 100)
+      : 10
+  const sortKey = readString(options.sortKey, 'createdLabel')
+  const sortDir = readString(options.sortDir, 'desc') === 'asc' ? 'asc' : 'desc'
+
+  const allLeads = await getLandingLeads()
+  const statusFilteredLeads =
+    status && status !== 'all'
+      ? allLeads.filter((lead) => lead.status === status)
+      : allLeads
+  const queryFilteredLeads = query
+    ? statusFilteredLeads.filter((lead) =>
+        [lead.name, lead.learnerName, lead.phone, lead.email, lead.stage, lead.status]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+          .includes(query)
+      )
+    : statusFilteredLeads
+  const sortedLeads = sortLeadRows(queryFilteredLeads, sortKey, sortDir)
+  const totalItems = sortedLeads.length
+  const start = page * perPage
+
+  return {
+    leads: sortedLeads.slice(start, start + perPage),
+    pagination: {
+      page,
+      perPage,
+      totalItems,
+      totalPages: Math.max(1, Math.ceil(totalItems / perPage)),
+    },
+  }
+}
+
 export async function getLandingLeads() {
   const adminClient = createAdminClient()
 
@@ -481,6 +646,48 @@ export async function getLandingLeads() {
     console.warn('getLandingLeads fallback:', error?.message || error)
     return []
   }
+}
+
+export async function queryLandingLeads(options = {}) {
+  const adminClient = createAdminClient()
+
+  try {
+    return await queryDatabaseLeads(adminClient, options)
+  } catch (error) {
+    if (!isMissingLandingLeadsTable(error)) {
+      throw error
+    }
+  }
+
+  return queryLegacyLandingLeads(options)
+}
+
+export async function getLandingLeadSummary() {
+  const adminClient = createAdminClient()
+
+  try {
+    const { data, error } = await adminClient.rpc('admin_lead_summary')
+
+    if (error) {
+      throw error
+    }
+
+    const row = Array.isArray(data) ? data[0] : data
+    return {
+      total: Number(row?.total || 0),
+      new: Number(row?.new_count || 0),
+      contacted: Number(row?.contacted_count || 0),
+      qualified: Number(row?.qualified_count || 0),
+      enrolled: Number(row?.enrolled_count || 0),
+      archived: Number(row?.archived_count || 0),
+    }
+  } catch (error) {
+    if (!isMissingLeadSummaryFunction(error) && !isMissingLandingLeadsTable(error)) {
+      throw error
+    }
+  }
+
+  return summarizeLeads(await getLandingLeads())
 }
 
 export async function createLandingLead(input) {
