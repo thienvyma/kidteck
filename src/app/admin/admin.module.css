@@ -1810,12 +1810,12 @@
 }
 
 .landingContextPane {
-  position: sticky;
-  top: 88px;
+  position: static;
+  top: auto;
   align-self: start;
-  height: calc(100vh - 108px);
-  min-height: 0;
-  overflow: hidden;
+  height: auto;
+  min-height: auto;
+  overflow: visible;
 }
 
 .landingContextCard {
@@ -1827,9 +1827,9 @@
   border-radius: var(--radius-xl);
   background: var(--color-white);
   box-shadow: var(--shadow-sm);
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
+  height: auto;
+  min-height: auto;
+  overflow: visible;
 }
 
 .landingContextHead {
@@ -1875,15 +1875,8 @@
 .landingContextForm {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
   gap: var(--space-lg);
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  padding-right: 0.35rem;
-  padding-bottom: 0.25rem;
-  scrollbar-gutter: stable;
+  overflow: visible;
 }
 
 .sidebarCollapsed .sidebarHeader {

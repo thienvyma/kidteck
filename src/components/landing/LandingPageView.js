@@ -9,6 +9,10 @@ import FutureRobotScene from '@/components/landing/FutureRobotScene'
 const roadmapVariants = ['l1', 'l2', 'l3']
 const pricingBadgeVariants = ['success', 'primary', 'accent']
 
+function getRenderableStringList(items = []) {
+  return (items || []).filter((item) => typeof item === 'string' && item.trim())
+}
+
 function formatExternalUrl(url) {
   if (!url) return '#'
   let clean = String(url).replace(/['"]+/g, '').trim()
@@ -83,9 +87,15 @@ export default function LandingPageView({
   const solutionPillars = (content.solution?.pillars || []).filter(
     (item) => item?.title?.trim() || item?.description?.trim() || item?.icon?.trim()
   )
+  const heroTrustItems = getRenderableStringList(content.hero?.trustItems)
+  const solutionBeforeItems = getRenderableStringList(content.solution?.beforeItems)
+  const solutionAfterItems = getRenderableStringList(content.solution?.afterItems)
   const resultShowcaseItems = (content.results?.showcaseItems || []).filter(
     (item) => item?.title?.trim() || item?.description?.trim() || item?.icon?.trim()
   )
+  const resultBeforeItems = getRenderableStringList(content.results?.beforeItems)
+  const resultAfterItems = getRenderableStringList(content.results?.afterItems)
+  const ctaBenefits = getRenderableStringList(content.cta?.benefits)
   const footerContactLinks = (content.footer?.contactLinks || []).filter(
     (item) => item?.label?.trim() || item?.href?.trim()
   )
@@ -182,7 +192,7 @@ export default function LandingPageView({
             </div>
 
             <div className={styles.hero__trust}>
-              {content.hero.trustItems.map((item) => (
+              {heroTrustItems.map((item) => (
                 <div key={item} className={styles['hero__trust-item']}>
                   ✓ {item}
                 </div>
@@ -208,7 +218,7 @@ export default function LandingPageView({
               <div className={`${styles.solution__col} ${styles['solution__col--before']}`}>
                 <h3 className={styles['solution__col-title']}>{content.solution.beforeTitle}</h3>
                 <div className={styles['solution__col-list']}>
-                  {content.solution.beforeItems.map((item) => (
+                  {solutionBeforeItems.map((item) => (
                     <div key={item} className={styles['solution__col-item']}>
                       <span>✕</span>
                       <span>{item}</span>
@@ -222,7 +232,7 @@ export default function LandingPageView({
               <div className={`${styles.solution__col} ${styles['solution__col--after']}`}>
                 <h3 className={styles['solution__col-title']}>{content.solution.afterTitle}</h3>
                 <div className={styles['solution__col-list']}>
-                  {content.solution.afterItems.map((item) => (
+                  {solutionAfterItems.map((item) => (
                     <div key={item} className={styles['solution__col-item']}>
                       <span>✓</span>
                       <span>{item}</span>
@@ -317,7 +327,7 @@ export default function LandingPageView({
             <div className={styles['results__before-after']}>
               <div className={`${styles.results__col} ${styles['results__col--before']}`}>
                 <h3 className={styles['results__col-title']}>{content.results.beforeTitle}</h3>
-                {content.results.beforeItems.map((item) => (
+                {resultBeforeItems.map((item) => (
                   <div key={item} className={styles['results__col-item']}>
                     <span>•</span>
                     <span>{item}</span>
@@ -329,7 +339,7 @@ export default function LandingPageView({
 
               <div className={`${styles.results__col} ${styles['results__col--after']}`}>
                 <h3 className={styles['results__col-title']}>{content.results.afterTitle}</h3>
-                {content.results.afterItems.map((item) => (
+                {resultAfterItems.map((item) => (
                   <div key={item} className={styles['results__col-item']}>
                     <span>•</span>
                     <span>{item}</span>
@@ -567,7 +577,7 @@ export default function LandingPageView({
               <h2 className={styles['cta-final__title']}>{content.cta.title}</h2>
               <p className={styles['cta-final__desc']}>{content.cta.description}</p>
               <div className={styles['cta-final__benefits']}>
-                {content.cta.benefits.map((item) => (
+                {ctaBenefits.map((item) => (
                   <div key={item} className={styles['cta-final__benefit']}>
                     ✓ {item}
                   </div>

@@ -33,8 +33,7 @@ function arrayToTextarea(values = []) {
 function textareaToArray(value) {
   return value
     .split('\n')
-    .map((item) => item.trim())
-    .filter(Boolean)
+    .map((item) => item.replace(/\r/g, ''))
 }
 
 function formatTimestamp(value) {
