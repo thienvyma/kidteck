@@ -16,13 +16,22 @@ function getSectionHref(anchorBase, sectionId) {
   return `${anchorBase}#${sectionId}`
 }
 
-export default function Navbar({ header, anchorBase = '/', homeHref = '/' }) {
+export default function Navbar({
+  header,
+  anchorBase = '/',
+  homeHref = '/',
+  sectionVisibility,
+}) {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const labels = {
     ...DEFAULT_HEADER,
     ...(header || {}),
   }
+  const showRoadmapLink = sectionVisibility?.catalog !== false
+  const showContactLink = sectionVisibility?.contact !== false
+  const showFaqLink = sectionVisibility?.faq !== false
+  const showCtaLink = sectionVisibility?.cta !== false
 
   useEffect(() => {
     const options = { passive: true }
@@ -51,27 +60,33 @@ export default function Navbar({ header, anchorBase = '/', homeHref = '/' }) {
         <div
           className={`${styles.navbar__links} ${isOpen ? styles['navbar__links--open'] : ''}`}
         >
-          <Link
-            href={getSectionHref(anchorBase, 'roadmap')}
-            className={styles.navbar__link}
-            onClick={handleLinkClick}
-          >
-            {labels.roadmapLabel}
-          </Link>
-          <Link
-            href={getSectionHref(anchorBase, 'contact-direct')}
-            className={styles.navbar__link}
-            onClick={handleLinkClick}
-          >
-            {labels.contactLabel}
-          </Link>
-          <Link
-            href={getSectionHref(anchorBase, 'faq')}
-            className={styles.navbar__link}
-            onClick={handleLinkClick}
-          >
-            {labels.faqLabel}
-          </Link>
+          {showRoadmapLink && (
+            <Link
+              href={getSectionHref(anchorBase, 'roadmap')}
+              className={styles.navbar__link}
+              onClick={handleLinkClick}
+            >
+              {labels.roadmapLabel}
+            </Link>
+          )}
+          {showContactLink && (
+            <Link
+              href={getSectionHref(anchorBase, 'contact-direct')}
+              className={styles.navbar__link}
+              onClick={handleLinkClick}
+            >
+              {labels.contactLabel}
+            </Link>
+          )}
+          {showFaqLink && (
+            <Link
+              href={getSectionHref(anchorBase, 'faq')}
+              className={styles.navbar__link}
+              onClick={handleLinkClick}
+            >
+              {labels.faqLabel}
+            </Link>
+          )}
           <Link href="/blog" className={styles.navbar__link} onClick={handleLinkClick}>
             Tin Tức
           </Link>
@@ -82,13 +97,15 @@ export default function Navbar({ header, anchorBase = '/', homeHref = '/' }) {
           >
             Đăng nhập
           </Link>
-          <Link
-            href={getSectionHref(anchorBase, 'cta')}
-            className={`btn btn--primary btn--sm ${styles.navbar__cta}`}
-            onClick={handleLinkClick}
-          >
-            {labels.ctaLabel}
-          </Link>
+          {showCtaLink && (
+            <Link
+              href={getSectionHref(anchorBase, 'cta')}
+              className={`btn btn--primary btn--sm ${styles.navbar__cta}`}
+              onClick={handleLinkClick}
+            >
+              {labels.ctaLabel}
+            </Link>
+          )}
         </div>
 
         <button

@@ -160,7 +160,10 @@ export default async function BlogPostPage({ params }) {
 
   return (
     <>
-      <Navbar header={landingHeaderData.header} />
+      <Navbar
+        header={landingHeaderData.header}
+        sectionVisibility={landingHeaderData.sectionVisibility}
+      />
 
       <script
         type="application/ld+json"

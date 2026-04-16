@@ -1,4 +1,17 @@
 export const defaultLandingContent = {
+  sectionVisibility: {
+    header: true,
+    hero: true,
+    solution: true,
+    catalog: true,
+    results: true,
+    method: true,
+    commitment: true,
+    contact: true,
+    faq: true,
+    cta: true,
+    footer: true,
+  },
   header: {
     contactLabel: 'Lien he',
     roadmapLabel: 'Lộ trình',

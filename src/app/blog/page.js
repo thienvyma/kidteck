@@ -109,7 +109,10 @@ export default async function BlogArchivePage({ searchParams }) {
 
   return (
     <>
-      <Navbar header={landingHeaderData.header} />
+      <Navbar
+        header={landingHeaderData.header}
+        sectionVisibility={landingHeaderData.sectionVisibility}
+      />
       
       <main className={`container section ${styles.blogArchivePage}`}>
         

@@ -61,6 +61,16 @@ function readStringArray(values, fallback) {
   return normalized
 }
 
+function normalizeSectionVisibility(values, fallback) {
+  if (!values || typeof values !== 'object' || Array.isArray(values)) {
+    return fallback
+  }
+
+  return Object.fromEntries(
+    Object.keys(fallback).map((sectionId) => [sectionId, values[sectionId] !== false])
+  )
+}
+
 function normalizeCard(item, fallback) {
   return {
     icon: readString(item?.icon, fallback.icon),
@@ -113,6 +123,10 @@ export function normalizeLandingContent(input) {
   const fallback = cloneDefaultLandingContent()
 
   return {
+    sectionVisibility: normalizeSectionVisibility(
+      input?.sectionVisibility,
+      fallback.sectionVisibility
+    ),
     header: {
       contactLabel: readString(input?.header?.contactLabel, fallback.header.contactLabel),
       roadmapLabel: readString(input?.header?.roadmapLabel, fallback.header.roadmapLabel),
@@ -484,6 +498,7 @@ export async function getLandingHeaderData() {
 
   return {
     header: content.header,
+    sectionVisibility: content.sectionVisibility,
   }
 }
 

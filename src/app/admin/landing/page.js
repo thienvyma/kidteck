@@ -139,12 +139,17 @@ export default function AdminLandingPage() {
     () =>
       LANDING_SECTIONS.reduce((accumulator, section) => {
         const contentKey = SECTION_CONTENT_KEYS[section.id]
+        const visibilityChanged =
+          (content?.sectionVisibility?.[section.id] !== false) !==
+          (savedContent?.sectionVisibility?.[section.id] !== false)
+
         if (!contentKey) {
-          accumulator[section.id] = false
+          accumulator[section.id] = visibilityChanged
           return accumulator
         }
 
         accumulator[section.id] =
+          visibilityChanged ||
           JSON.stringify(content?.[contentKey] ?? null) !==
           JSON.stringify(savedContent?.[contentKey] ?? null)
 
@@ -164,11 +169,18 @@ export default function AdminLandingPage() {
     activeSectionIndex >= 0 && activeSectionIndex < LANDING_SECTIONS.length - 1
       ? LANDING_SECTIONS[activeSectionIndex + 1]
       : null
+  const activeSectionVisible = content?.sectionVisibility?.[activeSection] !== false
+  const visibleSectionCount = LANDING_SECTIONS.filter(
+    (section) => content?.sectionVisibility?.[section.id] !== false
+  ).length
   const previewTarget = getPreviewTarget(activeSection)
-  const liveOpenHref = previewTarget === 'footer' ? '/' : `/#${previewTarget}`
+  const liveOpenHref =
+    !activeSectionVisible || previewTarget === 'footer' ? '/' : `/#${previewTarget}`
   const previewBaseHref = `/landing-preview${previewRefreshKey ? `?preview=${previewRefreshKey}` : ''}`
   const previewOpenHref =
-    previewTarget === 'footer' ? previewBaseHref : `${previewBaseHref}#${previewTarget}`
+    !activeSectionVisible || previewTarget === 'footer'
+      ? previewBaseHref
+      : `${previewBaseHref}#${previewTarget}`
   const previewFrameSrc = previewBaseHref
 
   useEffect(() => {
@@ -383,6 +395,16 @@ export default function AdminLandingPage() {
       next[section][arrayField].splice(targetIndex, 0, movedItem)
       return next
     })
+  }
+
+  function setSectionVisibility(sectionId, isVisible) {
+    setContent((current) => ({
+      ...current,
+      sectionVisibility: {
+        ...(current.sectionVisibility || {}),
+        [sectionId]: isVisible,
+      },
+    }))
   }
 
   function focusSection(sectionId) {
@@ -881,14 +903,16 @@ export default function AdminLandingPage() {
                   rel="noreferrer"
                   className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
                 >
-                  Mo section nay
+                  {activeSectionVisible ? 'Mo section nay' : 'Mo preview root'}
                 </a>
               </div>
 
               <div className={styles.landingPreviewMeta}>
                 <span>Dang chon: {activeSectionMeta.label}</span>
                 <span>
-                  {hasUnsavedChanges
+                  {!activeSectionVisible
+                    ? 'Khoi nay dang an tren landing. Ban van co the chinh noi dung va bam Hien lai khi san sang.'
+                    : hasUnsavedChanges
                     ? 'Preview dang phan anh ban draft chua luu. Panel ben phai chi hien thi dung khoi ban dang chon.'
                     : 'Preview dang bam theo ban da luu gan nhat va san sang doi context theo click.'}
                 </span>
@@ -940,10 +964,28 @@ export default function AdminLandingPage() {
                   <div className={styles.landingContextTitleRow}>
                     <span className={styles.sectionCardHeader}>{activeSectionMeta.title}</span>
                     <span className={styles.landingEditorSectionBadge}>{activeSectionMeta.badge}</span>
+                    <span
+                      className={`${styles.landingEditorStatusPill} ${
+                        styles[
+                          activeSectionVisible
+                            ? 'landingEditorStatusPill--success'
+                            : 'landingEditorStatusPill--warning'
+                        ]
+                      }`}
+                    >
+                      {activeSectionVisible ? 'Dang hien' : 'Dang an'}
+                    </span>
                   </div>
                   <p className={styles.accountNote}>{activeSectionMeta.lead}</p>
                 </div>
                 <div className={styles.landingContextActions}>
+                  <button
+                    type="button"
+                    className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
+                    onClick={() => setSectionVisibility(activeSection, !activeSectionVisible)}
+                  >
+                    {activeSectionVisible ? 'An khoi landing' : 'Hien lai section'}
+                  </button>
                   <button
                     type="button"
                     className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
@@ -963,6 +1005,41 @@ export default function AdminLandingPage() {
                 </div>
               </div>
 
+              <div>
+                <div className={styles.landingEditorMetaTitle}>
+                  Tat ca section ({visibleSectionCount}/{LANDING_SECTIONS.length} dang hien)
+                </div>
+                <p className={styles.accountNote}>
+                  Khoi dang an van xuat hien trong panel nay de ban co the mo lai bat cu luc nao.
+                </p>
+              </div>
+
+              <div className={styles.landingEditorNav}>
+                {LANDING_SECTIONS.map((section) => {
+                  const sectionVisible = content?.sectionVisibility?.[section.id] !== false
+
+                  return (
+                    <button
+                      key={section.id}
+                      type="button"
+                      className={`${styles.landingEditorNavItem} ${
+                        activeSection === section.id ? styles.landingEditorNavItemActive : ''
+                      }`}
+                      onClick={() => focusSection(section.id)}
+                    >
+                      <span className={styles.landingEditorNavLabel}>
+                        <span>{section.label}</span>
+                        <span className={styles.landingEditorNavMeta}>
+                          {sectionVisible ? 'Dang hien' : 'Dang an'}
+                          {dirtySections[section.id] ? ' • Chua luu' : ''}
+                        </span>
+                      </span>
+                      <span className={styles.landingEditorSectionBadge}>{section.badge}</span>
+                    </button>
+                  )
+                })}
+              </div>
+
               <div className={styles.landingContextMeta}>
                 <span>
                   {dirtySections[activeSection]
@@ -970,7 +1047,9 @@ export default function AdminLandingPage() {
                     : 'Khoi nay dang khop voi ban da luu gan nhat.'}
                 </span>
                 <span>
-                  Bam truc tiep trong preview de doi section. Panel nay chi giu mot khoi de ban tap trung chinh sua.
+                  {activeSectionVisible
+                    ? 'Bam truc tiep trong preview de doi section. Panel nay chi giu mot khoi de ban tap trung chinh sua.'
+                    : 'Khoi nay dang an nen preview se khong hien. Ban co the tiep tuc sua noi dung truoc khi hien lai.'}
                 </span>
               </div>
 

@@ -99,6 +99,35 @@ export default function LandingPageView({
   const footerContactLinks = (content.footer?.contactLinks || []).filter(
     (item) => item?.label?.trim() || item?.href?.trim()
   )
+  const sectionVisibility = content.sectionVisibility || {}
+  const showHeader = sectionVisibility.header !== false
+  const showHero = sectionVisibility.hero !== false
+  const showSolution = sectionVisibility.solution !== false
+  const showCatalog = sectionVisibility.catalog !== false
+  const showResults = sectionVisibility.results !== false
+  const showMethod = sectionVisibility.method !== false
+  const showCommitment = sectionVisibility.commitment !== false
+  const showContact = sectionVisibility.contact !== false
+  const showFaq = sectionVisibility.faq !== false
+  const showCta = sectionVisibility.cta !== false
+  const showFooter = sectionVisibility.footer !== false
+  const footerQuickLinks = [
+    {
+      sectionId: 'faq',
+      href: '#faq',
+      label: content.footer.faqLabel,
+    },
+    {
+      sectionId: 'commitment',
+      href: '#commitment',
+      label: content.footer.commitmentLabel,
+    },
+    {
+      sectionId: 'cta',
+      href: '#cta',
+      label: content.footer.ctaLabel,
+    },
+  ].filter((item) => sectionVisibility[item.sectionId] !== false)
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -164,11 +193,19 @@ export default function LandingPageView({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
-      <div {...getPreviewSectionProps('header', '', 'landing-preview-header')}>
-        <Navbar header={content.header} anchorBase={anchorBase} homeHref={anchorBase} />
-      </div>
+      {showHeader && (
+        <div {...getPreviewSectionProps('header', '', 'landing-preview-header')}>
+          <Navbar
+            header={content.header}
+            anchorBase={anchorBase}
+            homeHref={anchorBase}
+            sectionVisibility={sectionVisibility}
+          />
+        </div>
+      )}
 
-      <section {...getPreviewSectionProps('hero', styles.hero, 'hero')}>
+      {showHero && (
+        <section {...getPreviewSectionProps('hero', styles.hero, 'hero')}>
         <div className={styles['hero__bg-shapes']}>
           <div className={`${styles.hero__shape} ${styles['hero__shape--1']}`} />
           <div className={`${styles.hero__shape} ${styles['hero__shape--2']}`} />
@@ -182,14 +219,20 @@ export default function LandingPageView({
             <h1 className={styles.hero__title}>{content.hero.title}</h1>
             <p className={styles.hero__description}>{content.hero.description}</p>
 
-            <div className={styles.hero__actions}>
-              <a href="#cta" className="btn btn--primary btn--lg">
-                {content.hero.primaryCtaLabel}
-              </a>
-              <a href="#roadmap" className="btn btn--secondary btn--lg">
-                {content.hero.secondaryCtaLabel}
-              </a>
-            </div>
+            {(showCta || showCatalog) && (
+              <div className={styles.hero__actions}>
+                {showCta && (
+                  <a href="#cta" className="btn btn--primary btn--lg">
+                    {content.hero.primaryCtaLabel}
+                  </a>
+                )}
+                {showCatalog && (
+                  <a href="#roadmap" className="btn btn--secondary btn--lg">
+                    {content.hero.secondaryCtaLabel}
+                  </a>
+                )}
+              </div>
+            )}
 
             <div className={styles.hero__trust}>
               {heroTrustItems.map((item) => (
@@ -206,9 +249,13 @@ export default function LandingPageView({
             </div>
           </div>
         </div>
-      </section>
+        </section>
+      )}
 
-      <section {...getPreviewSectionProps('solution', `section ${styles.solution}`, 'solution')}>
+      {showSolution && (
+        <section
+          {...getPreviewSectionProps('solution', `section ${styles.solution}`, 'solution')}
+        >
         <div className="container">
           <div className={`${styles.sectionShell} ${styles.sectionShellSky}`}>
             <h2 className="section__title">{content.solution.title}</h2>
@@ -256,11 +303,13 @@ export default function LandingPageView({
             </div>
           </div>
         </div>
-      </section>
+        </section>
+      )}
 
-      <section
-        {...getPreviewSectionProps('catalog', `section ${styles.roadmapSection}`, 'roadmap')}
-      >
+      {showCatalog && (
+        <section
+          {...getPreviewSectionProps('catalog', `section ${styles.roadmapSection}`, 'roadmap')}
+        >
         <div className="container">
           <div className={`${styles.sectionShell} ${styles.sectionShellDeep}`}>
             <h2 className="section__title">
@@ -316,9 +365,11 @@ export default function LandingPageView({
             )}
           </div>
         </div>
-      </section>
+        </section>
+      )}
 
-      <section {...getPreviewSectionProps('results', `section ${styles.results}`, 'results')}>
+      {showResults && (
+        <section {...getPreviewSectionProps('results', `section ${styles.results}`, 'results')}>
         <div className="container">
           <div className={`${styles.sectionShell} ${styles.sectionShellBright}`}>
             <h2 className="section__title">{content.results.title}</h2>
@@ -364,11 +415,13 @@ export default function LandingPageView({
             )}
           </div>
         </div>
-      </section>
+        </section>
+      )}
 
-      <section
-        {...getPreviewSectionProps('method', `section ${styles.methodSection}`, 'method')}
-      >
+      {showMethod && (
+        <section
+          {...getPreviewSectionProps('method', `section ${styles.methodSection}`, 'method')}
+        >
         <div className="container">
           <div className={`${styles.sectionShell} ${styles.sectionShellDeep}`}>
             <h2 className="section__title">{content.method.title}</h2>
@@ -385,15 +438,17 @@ export default function LandingPageView({
             </div>
           </div>
         </div>
-      </section>
+        </section>
+      )}
 
-      <section
-        {...getPreviewSectionProps(
-          'commitment',
-          `section ${styles.commitment}`,
-          'commitment'
-        )}
-      >
+      {showCommitment && (
+        <section
+          {...getPreviewSectionProps(
+            'commitment',
+            `section ${styles.commitment}`,
+            'commitment'
+          )}
+        >
         <div className="container">
           <div className={`${styles.sectionShell} ${styles.sectionShellViolet}`}>
             <h2 className="section__title">{content.commitment.title}</h2>
@@ -422,9 +477,11 @@ export default function LandingPageView({
             </div>
           </div>
         </div>
-      </section>
+        </section>
+      )}
 
-      <section {...getPreviewSectionProps('contact', 'section', 'contact-direct')}>
+      {showContact && (
+        <section {...getPreviewSectionProps('contact', 'section', 'contact-direct')}>
         <div className="container">
           <div className={`${styles.sectionShell} ${styles.sectionShellSky}`}>
             <h2 className="section__title">
@@ -557,9 +614,11 @@ export default function LandingPageView({
             </div>
           </div>
         </div>
-      </section>
+        </section>
+      )}
 
-      <section {...getPreviewSectionProps('faq', `section ${styles.faq}`, 'faq')}>
+      {showFaq && (
+        <section {...getPreviewSectionProps('faq', `section ${styles.faq}`, 'faq')}>
         <div className="container">
           <div className={`${styles.sectionShell} ${styles.sectionShellBright}`}>
             <h2 className="section__title">{content.faq.title}</h2>
@@ -568,9 +627,11 @@ export default function LandingPageView({
             <FAQSection items={content.faq.items} />
           </div>
         </div>
-      </section>
+        </section>
+      )}
 
-      <section {...getPreviewSectionProps('cta', `section ${styles['cta-final']}`, 'cta')}>
+      {showCta && (
+        <section {...getPreviewSectionProps('cta', `section ${styles['cta-final']}`, 'cta')}>
         <div className="container">
           <div className={styles['cta-final__inner']}>
             <div>
@@ -593,9 +654,11 @@ export default function LandingPageView({
             />
           </div>
         </div>
-      </section>
+        </section>
+      )}
 
-      <footer {...getPreviewSectionProps('footer', styles.footer)}>
+      {showFooter && (
+        <footer {...getPreviewSectionProps('footer', styles.footer)}>
         <div className="container">
           <div className={styles.footer__inner}>
             <div>
@@ -604,26 +667,26 @@ export default function LandingPageView({
               </div>
               <p className={styles['footer__brand-desc']}>{content.footer.description}</p>
             </div>
-            <div>
-              <div className={styles['footer__col-title']}>{content.footer.roadmapTitle}</div>
-              {levels.slice(0, 3).map((level, index) => (
-                <a key={level.id} href="#roadmap" className={styles.footer__link}>
-                  Level {index + 1}: {level.name}
-                </a>
-              ))}
-            </div>
-            <div>
-              <div className={styles['footer__col-title']}>{content.footer.quickLinksTitle}</div>
-              <a href="#faq" className={styles.footer__link}>
-                {content.footer.faqLabel}
-              </a>
-              <a href="#commitment" className={styles.footer__link}>
-                {content.footer.commitmentLabel}
-              </a>
-              <a href="#cta" className={styles.footer__link}>
-                {content.footer.ctaLabel}
-              </a>
-            </div>
+            {showCatalog && levels.length > 0 && (
+              <div>
+                <div className={styles['footer__col-title']}>{content.footer.roadmapTitle}</div>
+                {levels.slice(0, 3).map((level, index) => (
+                  <a key={level.id} href="#roadmap" className={styles.footer__link}>
+                    Level {index + 1}: {level.name}
+                  </a>
+                ))}
+              </div>
+            )}
+            {footerQuickLinks.length > 0 && (
+              <div>
+                <div className={styles['footer__col-title']}>{content.footer.quickLinksTitle}</div>
+                {footerQuickLinks.map((item) => (
+                  <a key={item.sectionId} href={item.href} className={styles.footer__link}>
+                    {item.label}
+                  </a>
+                ))}
+              </div>
+            )}
             <div>
               <div className={styles['footer__col-title']}>{content.footer.contactTitle}</div>
               {footerContactLinks.map((item, index) => {
@@ -646,7 +709,8 @@ export default function LandingPageView({
           </div>
           <div className={styles.footer__bottom}>{content.footer.copyright}</div>
         </div>
-      </footer>
+        </footer>
+      )}
     </>
   )
 }
