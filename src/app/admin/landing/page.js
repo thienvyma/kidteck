@@ -734,12 +734,31 @@ export default function AdminLandingPage() {
                 {block.visibilityKey && (
                   <button
                     type="button"
-                    className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
+                    className={`${styles.contentEditorToggle} ${
+                      blockVisible
+                        ? styles.contentEditorToggleVisible
+                        : styles.contentEditorToggleHidden
+                    }`}
                     onClick={() => setEditorBlockVisibility(section, block, !blockVisible)}
+                    aria-label={
+                      blockVisible
+                        ? block.hideLabel || 'Ẩn khối'
+                        : block.showLabel || 'Hiện lại khối'
+                    }
+                    title={
+                      blockVisible
+                        ? block.hideLabel || 'Ẩn khối'
+                        : block.showLabel || 'Hiện lại khối'
+                    }
                   >
-                    {blockVisible
-                      ? block.hideLabel || 'Ẩn khối'
-                      : block.showLabel || 'Hiện lại khối'}
+                    <span className={styles.contentEditorToggleIcon} aria-hidden="true">
+                      <LandingPanelIcon
+                        kind={blockVisible ? 'toggle-hidden' : 'toggle-visible'}
+                      />
+                    </span>
+                    <span className={styles.contentEditorToggleLabel}>
+                      {blockVisible ? 'Ẩn' : 'Hiện'}
+                    </span>
                   </button>
                 )}
               </div>

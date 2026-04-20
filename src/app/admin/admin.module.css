@@ -1525,6 +1525,68 @@
   gap: var(--space-xs);
 }
 
+.contentEditorToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 36px;
+  padding: 0.45rem 0.7rem;
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  background: var(--color-white);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.contentEditorToggle:hover {
+  transform: translateY(-1px);
+}
+
+.contentEditorToggleIcon {
+  width: 1rem;
+  height: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.contentEditorToggleIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.contentEditorToggleLabel {
+  white-space: nowrap;
+}
+
+.contentEditorToggleVisible {
+  border-color: rgba(225, 112, 85, 0.22);
+  background: rgba(225, 112, 85, 0.08);
+  color: #c65135;
+}
+
+.contentEditorToggleVisible:hover {
+  border-color: rgba(225, 112, 85, 0.3);
+  background: rgba(225, 112, 85, 0.14);
+}
+
+.contentEditorToggleHidden {
+  border-color: rgba(0, 184, 148, 0.22);
+  background: rgba(0, 184, 148, 0.08);
+  color: var(--color-success);
+}
+
+.contentEditorToggleHidden:hover {
+  border-color: rgba(0, 184, 148, 0.3);
+  background: rgba(0, 184, 148, 0.14);
+}
+
 .contentEditorHeader {
   font-size: var(--font-size-sm);
   font-weight: 700;
