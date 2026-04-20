@@ -27,8 +27,9 @@ export default function BrandLogo({
         src={theme === 'dark' ? '/AIGen_whitelogo.png' : '/AIGen_blacklogo.png'}
         alt="AIgenlabs Logo"
         className={styles.brandLogo__img}
-        width={320}
-        height={96}
+        width={865}
+        height={288}
+        sizes={size === 'lg' ? '(max-width: 480px) 12rem, (max-width: 768px) 15rem, 18rem' : '10rem'}
         priority
       />
       
