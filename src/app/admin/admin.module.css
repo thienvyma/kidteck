@@ -1666,6 +1666,10 @@
   color: var(--color-gray-700);
   font-size: 12px;
   font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.38rem;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -1678,6 +1682,32 @@
 .landingRepeaterActionButton:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.landingRepeaterActionButtonIcon {
+  width: 0.95rem;
+  height: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.landingRepeaterActionButtonIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.landingRepeaterActionButtonDanger {
+  border-color: rgba(225, 112, 85, 0.22);
+  background: rgba(225, 112, 85, 0.08);
+  color: #c65135;
+}
+
+.landingRepeaterActionButtonDanger:hover:not(:disabled) {
+  border-color: rgba(225, 112, 85, 0.34);
+  background: rgba(225, 112, 85, 0.14);
+  color: #b83c1f;
 }
 
 .landingRepeaterFooter {

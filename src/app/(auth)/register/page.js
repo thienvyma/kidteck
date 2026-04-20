@@ -9,7 +9,7 @@ import styles from '../auth.module.css'
 export default function RegisterPage() {
   const router = useRouter()
   const supabase = createClient()
-  
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -17,7 +17,7 @@ export default function RegisterPage() {
     parentName: '',
     password: '',
     confirmPassword: '',
-    agreeTerms: false
+    agreeTerms: false,
   })
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -25,14 +25,13 @@ export default function RegisterPage() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : value,
     }))
   }
 
   const validatePhone = (phone) => {
-    // Basic VN phone format check: 0xxx or +84xxx, exactly 10-11 digits mostly
     const phoneRegex = /^(0|\+84)[3|5|7|8|9][0-9]{8}$/
     return phoneRegex.test(phone)
   }
@@ -42,7 +41,6 @@ export default function RegisterPage() {
     setLoading(true)
     setError('')
 
-    // Validations
     if (formData.password.length < 6) {
       setError('Mật khẩu phải lớn hơn hoặc bằng 6 ký tự.')
       setLoading(false)
@@ -67,8 +65,6 @@ export default function RegisterPage() {
       return
     }
 
-    // Call Supabase SignUp
-    // Rule #12: destructure data & error
     const { data, error: signUpError } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
@@ -76,9 +72,9 @@ export default function RegisterPage() {
         data: {
           full_name: formData.fullName,
           phone: formData.phone,
-          parent_name: formData.parentName || null
-        }
-      }
+          parent_name: formData.parentName || null,
+        },
+      },
     })
 
     if (signUpError) {
@@ -91,8 +87,28 @@ export default function RegisterPage() {
       return
     }
 
-    // Auto profile trigger will create profile in DB.
-    // So we just push to /student
+    if (!data.session?.user) {
+      router.push('/login')
+      return
+    }
+
+    const bootstrapResponse = await fetch('/api/auth/register-profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fullName: formData.fullName,
+        phone: formData.phone,
+        parentName: formData.parentName || null,
+      }),
+    })
+
+    if (!bootstrapResponse.ok) {
+      setLoading(false)
+      setError('Tài khoản đã tạo nhưng profile/role chưa khởi tạo đúng. Vui lòng liên hệ admin.')
+      router.push('/account-error')
+      return
+    }
+
     router.push('/student')
   }
 
@@ -103,7 +119,19 @@ export default function RegisterPage() {
 
       {error && (
         <div className={styles.errorAlert}>
-          <svg style={{width:'20px', height:'20px', marginRight:'8px', flexShrink:0}} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+          <svg
+            style={{ width: '20px', height: '20px', marginRight: '8px', flexShrink: 0 }}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
           {error}
         </div>
       )}
@@ -162,7 +190,7 @@ export default function RegisterPage() {
               <input
                 id="password"
                 name="password"
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 className="input"
                 value={formData.password}
                 onChange={handleChange}
@@ -176,26 +204,41 @@ export default function RegisterPage() {
                 onClick={() => setShowPassword(!showPassword)}
                 tabIndex="-1"
               >
-                <svg style={{width:'20px', height:'20px'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   {showPassword ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                    />
                   ) : (
                     <>
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
                     </>
                   )}
                 </svg>
               </button>
             </div>
           </div>
-          
+
           <div className={styles.formGroup}>
             <label className="label" htmlFor="confirmPassword">Xác nhận mật khẩu</label>
             <input
               id="confirmPassword"
               name="confirmPassword"
-              type={showPassword ? "text" : "password"}
+              type={showPassword ? 'text' : 'password'}
               className="input"
               value={formData.confirmPassword}
               onChange={handleChange}
@@ -235,8 +278,8 @@ export default function RegisterPage() {
           </label>
         </div>
 
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           className={`btn btn--primary ${styles.submitBtn}`}
           disabled={loading}
         >

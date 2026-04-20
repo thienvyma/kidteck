@@ -14,7 +14,7 @@ export const revalidate = 60
 async function getBlog(slug) {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   )
 
   const { data, error } = await supabase
@@ -33,7 +33,7 @@ async function getBlog(slug) {
 async function getRecentBlogs(excludeSlug) {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   )
 
   const { data, error } = await supabase
@@ -51,7 +51,7 @@ async function getRecentBlogs(excludeSlug) {
 async function getAllTags() {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   )
   const { data } = await supabase.from('blogs').select('tags').eq('is_published', true)
   if (!data) return []

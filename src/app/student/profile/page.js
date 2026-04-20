@@ -23,28 +23,17 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
-        const user = session?.user
+        const response = await fetch('/api/student/profile', { cache: 'no-store' })
+        const payload = await response.json()
 
-        if (!user) {
-          return
+        if (!response.ok) {
+          throw new Error(payload.error || 'Không thể tải hồ sơ')
         }
 
-        const [profileResult, enrollmentResult] = await Promise.all([
-          supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
-          supabase
-            .from('enrollments')
-            .select('id, status, enrolled_at, levels(name)')
-            .eq('student_id', user.id)
-            .order('enrolled_at', { ascending: false }),
-        ])
+        const prof = payload.profile
+        const enrollmentRows = payload.enrollments || []
 
-        const prof = profileResult.data
-        const enrollmentRows = enrollmentResult.data || []
-
-        setProfile({ ...prof, email: user.email })
+        setProfile(prof)
         setGithub(prof?.avatar_url || '')
         setWebsite(prof?.website_url || '')
         setEnrollments(
@@ -63,7 +52,7 @@ export default function ProfilePage() {
     }
 
     fetchProfile()
-  }, [supabase])
+  }, [])
 
   const handleSave = async () => {
     if (!profile?.id) {
@@ -72,13 +61,19 @@ export default function ProfilePage() {
 
     setSaving(true)
     setMessage('')
-    const { error } = await supabase
-      .from('profiles')
-      .update({ avatar_url: github, website_url: website })
-      .eq('id', profile.id)
 
-    if (error) {
-      setMessage(`❌ Lỗi: ${error.message}`)
+    const response = await fetch('/api/student/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        avatarUrl: github,
+        websiteUrl: website,
+      }),
+    })
+    const payload = await response.json()
+
+    if (!response.ok) {
+      setMessage(`❌ Lỗi: ${payload.error}`)
     } else {
       setMessage('✅ Đã lưu!')
     }
@@ -87,7 +82,7 @@ export default function ProfilePage() {
 
   const handleSavePassword = async () => {
     setPasswordMessage('')
-    
+
     if (!oldPassword) {
       setPasswordMessage('❌ Lỗi: Vui lòng nhập mật khẩu hiện tại.')
       return
@@ -97,7 +92,7 @@ export default function ProfilePage() {
       setPasswordMessage('❌ Lỗi: Mật khẩu mới phải có ít nhất 6 ký tự.')
       return
     }
-    
+
     if (password !== confirmPassword) {
       setPasswordMessage('❌ Lỗi: Xác nhận mật khẩu không khớp.')
       return
@@ -105,8 +100,9 @@ export default function ProfilePage() {
 
     setPasswordSaving(true)
 
-    // Lấy thông tin email từ session hiện tại
-    const { data: { user } } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
     if (!user?.email) {
       setPasswordMessage('❌ Lỗi: Không tìm thấy thông tin phiên đăng nhập.')
@@ -114,7 +110,6 @@ export default function ProfilePage() {
       return
     }
 
-    // Xác thực người dùng bằng mật khẩu hiện tại (Re-authenticate)
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: user.email,
       password: oldPassword,
@@ -126,7 +121,6 @@ export default function ProfilePage() {
       return
     }
 
-    // Tiến hành đổi sang mật khẩu mới
     const { error } = await supabase.auth.updateUser({ password })
 
     if (error) {
@@ -176,7 +170,7 @@ export default function ProfilePage() {
       </div>
 
       <div className={styles.profileCard}>
-        <h4 className={styles.profileCardTitle}>📋 Thông tin liên hệ</h4>
+        <h4 className={styles.profileCardTitle}>Thông tin liên hệ</h4>
         <div className={styles.profileGrid}>
           <div className={styles.profileField}>
             <span className={styles.profileFieldLabel}>Điện thoại</span>
@@ -195,7 +189,7 @@ export default function ProfilePage() {
       </div>
 
       <div className={styles.profileCard}>
-        <h4 className={styles.profileCardTitle}>📚 Lịch sử đăng ký</h4>
+        <h4 className={styles.profileCardTitle}>Lịch sử đăng ký</h4>
         {enrollments.length === 0 ? (
           <p style={{ color: 'var(--color-gray-500)' }}>Chưa đăng ký khóa nào.</p>
         ) : (
@@ -221,7 +215,7 @@ export default function ProfilePage() {
       </div>
 
       <div className={styles.profileCard}>
-        <h4 className={styles.profileCardTitle}>🔗 Portfolio</h4>
+        <h4 className={styles.profileCardTitle}>Portfolio</h4>
         <div className={styles.profileField}>
           <label className={styles.profileFieldLabel}>GitHub URL</label>
           <input
@@ -259,7 +253,7 @@ export default function ProfilePage() {
       </div>
 
       <div className={styles.profileCard}>
-        <h4 className={styles.profileCardTitle}>🔒 Đổi mật khẩu</h4>
+        <h4 className={styles.profileCardTitle}>Đổi mật khẩu</h4>
         <div className={styles.profileField}>
           <label className={styles.profileFieldLabel}>Mật khẩu hiện tại</label>
           <input
@@ -293,7 +287,9 @@ export default function ProfilePage() {
         {passwordMessage && (
           <p
             style={{
-              color: passwordMessage.startsWith('✅') ? 'var(--color-success)' : 'var(--color-error)',
+              color: passwordMessage.startsWith('✅')
+                ? 'var(--color-success)'
+                : 'var(--color-error)',
               fontWeight: 500,
               marginTop: 'var(--space-sm)',
             }}
@@ -301,12 +297,14 @@ export default function ProfilePage() {
             {passwordMessage}
           </p>
         )}
-        <button onClick={handleSavePassword} disabled={passwordSaving} className={styles.profileSaveBtn}>
+        <button
+          onClick={handleSavePassword}
+          disabled={passwordSaving}
+          className={styles.profileSaveBtn}
+        >
           {passwordSaving ? 'Đang cập nhật...' : 'Cập nhật mật khẩu'}
         </button>
       </div>
-
-
     </>
   )
 }

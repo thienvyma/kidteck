@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
+import { getDashboardPathForRole, isAppRole } from '@/lib/auth-roles'
 
 /**
  * Proxy â€” Route Protection + Session Refresh
@@ -61,11 +62,17 @@ export async function proxy(request) {
     .eq('id', user.id)
     .maybeSingle()
 
-  const role = profile?.role === 'admin' ? 'admin' : 'student'
+  const role = isAppRole(profile?.role) ? profile.role : null
+
+  if (!role) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/account-error'
+    return NextResponse.redirect(url)
+  }
 
   if (pathname === '/login' || pathname === '/register') {
     const url = request.nextUrl.clone()
-    url.pathname = role === 'admin' ? '/admin' : '/student'
+    url.pathname = getDashboardPathForRole(role)
     return NextResponse.redirect(url)
   }
 

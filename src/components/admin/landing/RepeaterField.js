@@ -6,6 +6,18 @@ function defaultItemTitle(index) {
   return `Item ${index + 1}`
 }
 
+function TrashIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+      <path d="M3 6h18" />
+      <path d="M8 6V4h8v2" />
+      <path d="M19 6l-1 14H6L5 6" />
+      <path d="M10 11v5" />
+      <path d="M14 11v5" />
+    </svg>
+  )
+}
+
 export default function RepeaterField({
   title,
   note,
@@ -71,12 +83,15 @@ export default function RepeaterField({
                 </button>
                 <button
                   type="button"
-                  className={styles.landingRepeaterActionButton}
+                  className={`${styles.landingRepeaterActionButton} ${styles.landingRepeaterActionButtonDanger}`}
                   onClick={() => onRemove(index)}
                   disabled={items.length <= minItems}
                   aria-label={`Xoa ${getItemTitle(item, index)}`}
                 >
-                  Xoa
+                  <span className={styles.landingRepeaterActionButtonIcon} aria-hidden="true">
+                    <TrashIcon />
+                  </span>
+                  <span>Xoa</span>
                 </button>
               </div>
             </div>

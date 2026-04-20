@@ -1,24 +1,19 @@
-import { createServerClient } from '@/lib/supabase-server'
+import { redirect } from 'next/navigation'
 import AdminDashboardClient from './AdminDashboardClient'
+import { getAuthContext } from '@/lib/server-auth'
 
 export default async function AdminDashboard() {
-  const supabase = await createServerClient()
-  let adminName = 'Admin'
+  const { supabase, user, profile, role } = await getAuthContext()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('full_name')
-      .eq('id', user.id)
-      .single()
-
-    adminName = profile?.full_name || 'Admin'
+  if (!user) {
+    redirect('/login')
   }
 
+  if (role !== 'admin') {
+    redirect(role === 'student' ? '/student' : '/account-error')
+  }
+
+  const adminName = profile?.full_name || 'Admin'
   const now = new Date()
   const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
 
@@ -77,10 +72,7 @@ export default async function AdminDashboard() {
   }
 
   const unpaidActiveEnrollments = (activeEnrollments || []).filter((row) => {
-    const latestPayment = latestPaymentByEnrollment.get(
-      `${row.student_id}:${row.level_id}`
-    )
-
+    const latestPayment = latestPaymentByEnrollment.get(`${row.student_id}:${row.level_id}`)
     return latestPayment?.status !== 'paid'
   }).length
 
