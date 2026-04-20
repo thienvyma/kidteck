@@ -209,15 +209,21 @@ export const LANDING_EDITOR_SECTIONS = [
           { key: 'subtitle', label: 'Subtitle', type: 'text' },
         ],
       },
+    ],
+    editorBlocks: [
       {
+        type: 'field-card',
+        title: 'Khối guarantee / hoàn tiền',
+        note: 'Ẩn khối này nếu muốn bỏ phần cam kết buổi học đầu nhưng vẫn giữ các card commitment phía trên.',
+        visibilityKey: 'showGuarantee',
+        hideLabel: 'Ẩn khối guarantee',
+        showLabel: 'Hiện lại khối guarantee',
         layout: 'grid',
         fields: [
           { key: 'guaranteeTitle', label: 'Tiêu đề guarantee', type: 'text' },
           { key: 'guaranteeText', label: 'Mô tả guarantee', type: 'textarea', rows: 3 },
         ],
       },
-    ],
-    editorBlocks: [
       {
         type: 'fixed-items',
         arrayField: 'items',

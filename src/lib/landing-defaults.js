@@ -151,6 +151,7 @@ export const defaultLandingContent = {
     ],
   },
   commitment: {
+    showGuarantee: true,
     title: 'Những điều gia đình có thể kiểm chứng trong quá trình học',
     subtitle:
       'AIgenlabs ưu tiên trải nghiệm học thật, dữ liệu thật và sự minh bạch thay vì kể quá tay những điều sản phẩm chưa có.',

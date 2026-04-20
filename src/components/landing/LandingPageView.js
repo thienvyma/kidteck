@@ -100,6 +100,7 @@ export default function LandingPageView({
   const footerContactLinks = (content.footer?.contactLinks || []).filter(
     (item) => item?.label?.trim() || item?.href?.trim()
   )
+  const showCommitmentGuarantee = content.commitment?.showGuarantee !== false
   const sectionVisibility = content.sectionVisibility || {}
   const showHeader = sectionVisibility.header !== false
   const showHero = sectionVisibility.hero !== false
@@ -469,15 +470,17 @@ export default function LandingPageView({
               ))}
             </div>
 
-            <div className={styles.commitment__guarantee}>
-              <div className={styles['commitment__guarantee-icon']}>🛡️</div>
-              <div className={styles['commitment__guarantee-title']}>
-                {content.commitment.guaranteeTitle}
+            {showCommitmentGuarantee && (
+              <div className={styles.commitment__guarantee}>
+                <div className={styles['commitment__guarantee-icon']}>🛡️</div>
+                <div className={styles['commitment__guarantee-title']}>
+                  {content.commitment.guaranteeTitle}
+                </div>
+                <p className={styles['commitment__guarantee-text']}>
+                  {content.commitment.guaranteeText}
+                </p>
               </div>
-              <p className={styles['commitment__guarantee-text']}>
-                {content.commitment.guaranteeText}
-              </p>
-            </div>
+            )}
           </div>
         </div>
         </section>

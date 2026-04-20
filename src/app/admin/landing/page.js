@@ -715,6 +715,75 @@ export default function AdminLandingPage() {
       )
     }
 
+    if (block.type === 'field-card') {
+      const blockVisible = getEditorBlockVisibility(section, block)
+      const blockFields = Array.isArray(block.fields) ? block.fields : []
+
+      return (
+        <div key={`${section.id}-block-${blockIndex}`} className={styles.contentEditorStack}>
+          {(block.title || block.note || block.visibilityKey) && (
+            <div className={styles.contentEditorCard}>
+              <div className={styles.contentEditorToolbar}>
+                <div className={styles.contentEditorToolbarMeta}>
+                  {block.title && <div className={styles.contentEditorHeader}>{block.title}</div>}
+                  <span className={styles.contentEditorHint}>
+                    {blockVisible
+                      ? block.note || 'Khối này đang hiển thị trên landing public.'
+                      : 'Khối này đang ẩn trên landing public và preview, nhưng dữ liệu vẫn được giữ lại.'}
+                  </span>
+                </div>
+                {block.visibilityKey && (
+                  <button
+                    type="button"
+                    className={`${styles.contentEditorToggle} ${
+                      blockVisible
+                        ? styles.contentEditorToggleVisible
+                        : styles.contentEditorToggleHidden
+                    }`}
+                    onClick={() => setEditorBlockVisibility(section, block, !blockVisible)}
+                    aria-label={
+                      blockVisible
+                        ? block.hideLabel || 'Ẩn khối'
+                        : block.showLabel || 'Hiện lại khối'
+                    }
+                    title={
+                      blockVisible
+                        ? block.hideLabel || 'Ẩn khối'
+                        : block.showLabel || 'Hiện lại khối'
+                    }
+                  >
+                    <span className={styles.contentEditorToggleIcon} aria-hidden="true">
+                      <LandingPanelIcon
+                        kind={blockVisible ? 'toggle-hidden' : 'toggle-visible'}
+                      />
+                    </span>
+                    <span className={styles.contentEditorToggleLabel}>
+                      {blockVisible ? 'Ẩn' : 'Hiện'}
+                    </span>
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div
+            className={
+              block.layout === 'stack' ? styles.contentEditorStack : styles.contentEditorGrid
+            }
+          >
+            {blockFields.map((field) => (
+              <FieldRenderer
+                key={`${section.id}-${field.key}`}
+                field={field}
+                value={getSchemaFieldValue(section, field)}
+                onChange={(value) => handleSchemaFieldChange(section, field, value)}
+              />
+            ))}
+          </div>
+        </div>
+      )
+    }
+
     if (block.type === 'comparison') {
       const blockVisible = getEditorBlockVisibility(section, block)
 

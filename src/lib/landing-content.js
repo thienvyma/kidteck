@@ -188,6 +188,10 @@ export function normalizeLandingContent(input) {
     commitment: {
       title: readString(input?.commitment?.title, fallback.commitment.title),
       subtitle: readString(input?.commitment?.subtitle, fallback.commitment.subtitle),
+      showGuarantee: readBoolean(
+        input?.commitment?.showGuarantee,
+        fallback.commitment.showGuarantee
+      ),
       items: normalizeObjectArray(input?.commitment?.items, fallback.commitment.items),
       guaranteeTitle: readString(
         input?.commitment?.guaranteeTitle,
