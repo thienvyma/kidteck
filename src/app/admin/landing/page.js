@@ -83,6 +83,7 @@ function createEmptyLinkItem() {
 
 export default function AdminLandingPage() {
   const previewFrameRef = useRef(null)
+  const contextFormRef = useRef(null)
   const skipNextPreviewSyncRef = useRef(false)
   const latestContentRef = useRef(cloneDefaultLandingContent())
   const latestActiveSectionRef = useRef('header')
@@ -94,6 +95,7 @@ export default function AdminLandingPage() {
   const [feedback, setFeedback] = useState(null)
   const [activeSection, setActiveSection] = useState('header')
   const [collapsedSections, setCollapsedSections] = useState(() => createSectionState(false))
+  const [sectionSwitcherOpen, setSectionSwitcherOpen] = useState(false)
   const [previewDevice, setPreviewDevice] = useState('desktop')
   const [previewRefreshKey, setPreviewRefreshKey] = useState(0)
   const [previewLoading, setPreviewLoading] = useState(true)
@@ -169,6 +171,8 @@ export default function AdminLandingPage() {
     activeSectionIndex >= 0 && activeSectionIndex < LANDING_SECTIONS.length - 1
       ? LANDING_SECTIONS[activeSectionIndex + 1]
       : null
+  const activeSectionOrderLabel =
+    activeSectionIndex >= 0 ? `${activeSectionIndex + 1}/${LANDING_SECTIONS.length}` : ''
   const activeSectionVisible = content?.sectionVisibility?.[activeSection] !== false
   const visibleSectionCount = LANDING_SECTIONS.filter(
     (section) => content?.sectionVisibility?.[section.id] !== false
@@ -189,6 +193,10 @@ export default function AdminLandingPage() {
 
   useEffect(() => {
     latestActiveSectionRef.current = activeSection
+  }, [activeSection])
+
+  useEffect(() => {
+    contextFormRef.current?.scrollTo({ top: 0, left: 0, behavior: 'auto' })
   }, [activeSection])
 
   useEffect(() => {
@@ -225,11 +233,7 @@ export default function AdminLandingPage() {
       }
 
       skipNextPreviewSyncRef.current = true
-      setActiveSection(sectionId)
-      setCollapsedSections((current) => ({
-        ...current,
-        [sectionId]: false,
-      }))
+      focusSection(sectionId)
     }
 
     window.addEventListener('message', handlePreviewSelection)
@@ -407,8 +411,25 @@ export default function AdminLandingPage() {
     }))
   }
 
+  function getEditorBlockVisibility(section, block) {
+    if (!section.contentKey || !block.visibilityKey) {
+      return true
+    }
+
+    return content?.[section.contentKey]?.[block.visibilityKey] !== false
+  }
+
+  function setEditorBlockVisibility(section, block, isVisible) {
+    if (!section.contentKey || !block.visibilityKey) {
+      return
+    }
+
+    updateSection(section.contentKey, block.visibilityKey, isVisible)
+  }
+
   function focusSection(sectionId) {
     setActiveSection(sectionId)
+    setSectionSwitcherOpen(false)
     setCollapsedSections((current) => ({
       ...current,
       [sectionId]: false,
@@ -638,31 +659,61 @@ export default function AdminLandingPage() {
     }
 
     if (block.type === 'comparison') {
+      const blockVisible = getEditorBlockVisibility(section, block)
+
       return (
-        <div key={`${section.id}-block-${blockIndex}`} className={styles.contentEditorGrid}>
-          {block.columns.map((column) => (
-            <label
-              key={`${section.id}-${column.titleKey}`}
-              className={styles.contentEditorCard}
-            >
-              <span className={styles.formLabel}>{column.label}</span>
-              <input
-                className={styles.formInput}
-                value={content[section.contentKey]?.[column.titleKey] || ''}
-                onChange={(event) =>
-                  updateSection(section.contentKey, column.titleKey, event.target.value)
-                }
-              />
-              <textarea
-                className={styles.formTextarea}
-                rows={column.rows || 5}
-                value={arrayToTextarea(content[section.contentKey]?.[column.itemsKey] || [])}
-                onChange={(event) =>
-                  updateArrayField(section.contentKey, column.itemsKey, event.target.value)
-                }
-              />
-            </label>
-          ))}
+        <div key={`${section.id}-block-${blockIndex}`} className={styles.contentEditorStack}>
+          {(block.title || block.note || block.visibilityKey) && (
+            <div className={styles.contentEditorCard}>
+              <div className={styles.contentEditorToolbar}>
+                <div className={styles.contentEditorToolbarMeta}>
+                  {block.title && <div className={styles.contentEditorHeader}>{block.title}</div>}
+                  <span className={styles.contentEditorHint}>
+                    {blockVisible
+                      ? block.note || 'Khối này đang hiển thị trên landing public.'
+                      : 'Khối này đang ẩn trên landing public và preview, nhưng dữ liệu vẫn được giữ lại.'}
+                  </span>
+                </div>
+                {block.visibilityKey && (
+                  <button
+                    type="button"
+                    className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
+                    onClick={() => setEditorBlockVisibility(section, block, !blockVisible)}
+                  >
+                    {blockVisible
+                      ? block.hideLabel || 'Ẩn khối'
+                      : block.showLabel || 'Hiện lại khối'}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className={styles.contentEditorGrid}>
+            {block.columns.map((column) => (
+              <label
+                key={`${section.id}-${column.titleKey}`}
+                className={styles.contentEditorCard}
+              >
+                <span className={styles.formLabel}>{column.label}</span>
+                <input
+                  className={styles.formInput}
+                  value={content[section.contentKey]?.[column.titleKey] || ''}
+                  onChange={(event) =>
+                    updateSection(section.contentKey, column.titleKey, event.target.value)
+                  }
+                />
+                <textarea
+                  className={styles.formTextarea}
+                  rows={column.rows || 5}
+                  value={arrayToTextarea(content[section.contentKey]?.[column.itemsKey] || [])}
+                  onChange={(event) =>
+                    updateArrayField(section.contentKey, column.itemsKey, event.target.value)
+                  }
+                />
+              </label>
+            ))}
+          </div>
         </div>
       )
     }
@@ -719,7 +770,8 @@ export default function AdminLandingPage() {
     return null
   }
 
-  function renderSchemaSection(sectionId, extraContent = null) {
+  function renderSchemaSection(sectionId, options = {}) {
+    const { extraContent = null, embedded = false } = options
     const section = LANDING_EDITOR_SECTION_MAP[sectionId]
     const fieldGroups = Array.isArray(section?.fieldGroups) ? section.fieldGroups : []
     const editorBlocks = Array.isArray(section?.editorBlocks) ? section.editorBlocks : []
@@ -728,18 +780,8 @@ export default function AdminLandingPage() {
       return null
     }
 
-    return (
-      <LandingSectionCard
-        key={section.id}
-        sectionId={section.id}
-        title={section.title}
-        lead={section.lead}
-        badge={section.badge}
-        active={activeSection === section.id}
-        collapsed={collapsedSections[section.id]}
-        dirty={dirtySections[section.id]}
-        onToggle={() => toggleSection(section.id)}
-      >
+    const contentBody = (
+      <>
         {fieldGroups.map((group, groupIndex) => {
           const groupFields = group.fields.map((field) => (
             <FieldRenderer
@@ -766,6 +808,30 @@ export default function AdminLandingPage() {
         })}
         {editorBlocks.map((block, blockIndex) => renderEditorBlock(section, block, blockIndex))}
         {extraContent}
+      </>
+    )
+
+    if (embedded) {
+      return (
+        <div key={`${section.id}-embedded`} className={styles.landingContextSectionEditor}>
+          {contentBody}
+        </div>
+      )
+    }
+
+    return (
+      <LandingSectionCard
+        key={section.id}
+        sectionId={section.id}
+        title={section.title}
+        lead={section.lead}
+        badge={section.badge}
+        active={activeSection === section.id}
+        collapsed={collapsedSections[section.id]}
+        dirty={dirtySections[section.id]}
+        onToggle={() => toggleSection(section.id)}
+      >
+        {contentBody}
       </LandingSectionCard>
     )
   }
@@ -975,10 +1041,20 @@ export default function AdminLandingPage() {
                     >
                       {activeSectionVisible ? 'Dang hien' : 'Dang an'}
                     </span>
+                    {dirtySections[activeSection] && (
+                      <span
+                        className={`${styles.landingEditorStatusPill} ${
+                          styles['landingEditorStatusPill--warning']
+                        }`}
+                      >
+                        Chua luu
+                      </span>
+                    )}
                   </div>
                   <p className={styles.accountNote}>{activeSectionMeta.lead}</p>
                 </div>
                 <div className={styles.landingContextActions}>
+                  <span className={styles.landingContextOrderBadge}>{activeSectionOrderLabel}</span>
                   <button
                     type="button"
                     className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
@@ -1005,60 +1081,78 @@ export default function AdminLandingPage() {
                 </div>
               </div>
 
-              <div>
-                <div className={styles.landingEditorMetaTitle}>
-                  Tat ca section ({visibleSectionCount}/{LANDING_SECTIONS.length} dang hien)
-                </div>
-                <p className={styles.accountNote}>
-                  Khoi dang an van xuat hien trong panel nay de ban co the mo lai bat cu luc nao.
-                </p>
-              </div>
-
-              <div className={styles.landingEditorNav}>
-                {LANDING_SECTIONS.map((section) => {
-                  const sectionVisible = content?.sectionVisibility?.[section.id] !== false
-
-                  return (
-                    <button
-                      key={section.id}
-                      type="button"
-                      className={`${styles.landingEditorNavItem} ${
-                        activeSection === section.id ? styles.landingEditorNavItemActive : ''
-                      }`}
-                      onClick={() => focusSection(section.id)}
-                    >
-                      <span className={styles.landingEditorNavLabel}>
-                        <span>{section.label}</span>
-                        <span className={styles.landingEditorNavMeta}>
-                          {sectionVisible ? 'Dang hien' : 'Dang an'}
-                          {dirtySections[section.id] ? ' • Chua luu' : ''}
-                        </span>
-                      </span>
-                      <span className={styles.landingEditorSectionBadge}>{section.badge}</span>
-                    </button>
-                  )
-                })}
-              </div>
-
-              <div className={styles.landingContextMeta}>
+              <div className={styles.landingContextStatusStrip}>
                 <span>
                   {dirtySections[activeSection]
-                    ? 'Khoi nay dang co thay doi chua luu.'
+                    ? 'Ban nhap nay dang co thay doi chua luu.'
                     : 'Khoi nay dang khop voi ban da luu gan nhat.'}
                 </span>
                 <span>
-                  {activeSectionVisible
-                    ? 'Bam truc tiep trong preview de doi section. Panel nay chi giu mot khoi de ban tap trung chinh sua.'
-                    : 'Khoi nay dang an nen preview se khong hien. Ban co the tiep tuc sua noi dung truoc khi hien lai.'}
+                  Preview ben trai la cach chon section chinh. Danh sach day du ben duoi chi de nhay nhanh khi can.
                 </span>
               </div>
 
               <form
                 id="landing-editor-form"
+                ref={contextFormRef}
                 className={styles.landingContextForm}
                 onSubmit={handleSubmit}
               >
-                {renderSchemaSection(activeSection)}
+                <div className={styles.landingContextPrimaryEditor}>
+                  {renderSchemaSection(activeSection, { embedded: true })}
+                </div>
+
+                <div className={styles.landingContextSwitcher}>
+                  <button
+                    type="button"
+                    className={styles.landingContextSwitcherToggle}
+                    onClick={() => setSectionSwitcherOpen((current) => !current)}
+                    aria-expanded={sectionSwitcherOpen}
+                    aria-controls="landing-section-switcher"
+                  >
+                    <span className={styles.landingContextSwitcherToggleMeta}>
+                      <span className={styles.landingEditorMetaTitle}>
+                        Tat ca section ({visibleSectionCount}/{LANDING_SECTIONS.length} dang hien)
+                      </span>
+                      <span className={styles.accountNote}>
+                        {sectionSwitcherOpen
+                          ? 'Thu gon danh sach de tap trung vao form chinh sua.'
+                          : 'Mo danh sach khi can chuyen nhanh section ma khong can click trong preview.'}
+                      </span>
+                    </span>
+                    <span className={styles.landingContextSwitcherToggleAction}>
+                      {sectionSwitcherOpen ? 'Thu gon' : 'Mo danh sach'}
+                    </span>
+                  </button>
+
+                  {sectionSwitcherOpen && (
+                    <div id="landing-section-switcher" className={styles.landingEditorNav}>
+                      {LANDING_SECTIONS.map((section) => {
+                        const sectionVisible = content?.sectionVisibility?.[section.id] !== false
+
+                        return (
+                          <button
+                            key={section.id}
+                            type="button"
+                            className={`${styles.landingEditorNavItem} ${
+                              activeSection === section.id ? styles.landingEditorNavItemActive : ''
+                            }`}
+                            onClick={() => focusSection(section.id)}
+                          >
+                            <span className={styles.landingEditorNavLabel}>
+                              <span>{section.label}</span>
+                              <span className={styles.landingEditorNavMeta}>
+                                {sectionVisible ? 'Dang hien' : 'Dang an'}
+                                {dirtySections[section.id] ? ' • Chua luu' : ''}
+                              </span>
+                            </span>
+                            <span className={styles.landingEditorSectionBadge}>{section.badge}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
 
                 <div className={styles.quickActions}>
                   <button

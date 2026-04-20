@@ -49,6 +49,14 @@ function readOptionalString(value) {
   return readString(value, '')
 }
 
+function readBoolean(value, fallback) {
+  if (typeof value !== 'boolean') {
+    return fallback
+  }
+
+  return value
+}
+
 function readStringArray(values, fallback) {
   if (!Array.isArray(values)) {
     return fallback
@@ -150,6 +158,10 @@ export function normalizeLandingContent(input) {
     solution: {
       title: readString(input?.solution?.title, fallback.solution.title),
       subtitle: readString(input?.solution?.subtitle, fallback.solution.subtitle),
+      showComparison: readBoolean(
+        input?.solution?.showComparison,
+        fallback.solution.showComparison
+      ),
       beforeTitle: readString(input?.solution?.beforeTitle, fallback.solution.beforeTitle),
       beforeItems: readStringArray(input?.solution?.beforeItems, fallback.solution.beforeItems),
       afterTitle: readString(input?.solution?.afterTitle, fallback.solution.afterTitle),

@@ -88,6 +88,7 @@ export default function LandingPageView({
     (item) => item?.title?.trim() || item?.description?.trim() || item?.icon?.trim()
   )
   const heroTrustItems = getRenderableStringList(content.hero?.trustItems)
+  const showSolutionComparison = content.solution?.showComparison !== false
   const solutionBeforeItems = getRenderableStringList(content.solution?.beforeItems)
   const solutionAfterItems = getRenderableStringList(content.solution?.afterItems)
   const resultShowcaseItems = (content.results?.showcaseItems || []).filter(
@@ -261,7 +262,8 @@ export default function LandingPageView({
             <h2 className="section__title">{content.solution.title}</h2>
             <p className="section__subtitle">{content.solution.subtitle}</p>
 
-            <div className={styles.solution__comparison}>
+            {showSolutionComparison && (
+              <div className={styles.solution__comparison}>
               <div className={`${styles.solution__col} ${styles['solution__col--before']}`}>
                 <h3 className={styles['solution__col-title']}>{content.solution.beforeTitle}</h3>
                 <div className={styles['solution__col-list']}>
@@ -288,6 +290,7 @@ export default function LandingPageView({
                 </div>
               </div>
             </div>
+            )}
 
             <div className={styles.solution__pillars}>
               {solutionPillars.map((item, index) => (

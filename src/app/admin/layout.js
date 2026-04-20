@@ -1,21 +1,56 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import Sidebar from '@/components/admin/Sidebar'
 import styles from './admin.module.css'
 
+const SIDEBAR_COLLAPSED_STORAGE_KEY = 'admin-sidebar-collapsed'
+const SIDEBAR_COLLAPSED_EVENT = 'admin-sidebar-collapsed-change'
+
+function getSidebarCollapsedServerSnapshot() {
+  return false
+}
+
+function getSidebarCollapsedSnapshot() {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  return window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === 'true'
+}
+
+function subscribeSidebarCollapsed(callback) {
+  if (typeof window === 'undefined') {
+    return () => {}
+  }
+
+  function handleChange(event) {
+    if (event.type === 'storage' && event.key !== SIDEBAR_COLLAPSED_STORAGE_KEY) {
+      return
+    }
+
+    callback()
+  }
+
+  window.addEventListener('storage', handleChange)
+  window.addEventListener(SIDEBAR_COLLAPSED_EVENT, handleChange)
+
+  return () => {
+    window.removeEventListener('storage', handleChange)
+    window.removeEventListener(SIDEBAR_COLLAPSED_EVENT, handleChange)
+  }
+}
+
 export default function AdminLayout({ children }) {
   const [supabase] = useState(() => createClient())
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    if (typeof window === 'undefined') {
-      return false
-    }
-
-    return window.localStorage.getItem('admin-sidebar-collapsed') === 'true'
-  })
+  const sidebarCollapsed = useSyncExternalStore(
+    subscribeSidebarCollapsed,
+    getSidebarCollapsedSnapshot,
+    getSidebarCollapsedServerSnapshot
+  )
   const [adminName, setAdminName] = useState('Admin')
 
   useEffect(() => {
@@ -49,15 +84,9 @@ export default function AdminLayout({ children }) {
   }
 
   const toggleSidebarCollapsed = () => {
-    setSidebarCollapsed((current) => {
-      const next = !current
-
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem('admin-sidebar-collapsed', String(next))
-      }
-
-      return next
-    })
+    const next = !sidebarCollapsed
+    window.localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, String(next))
+    window.dispatchEvent(new CustomEvent(SIDEBAR_COLLAPSED_EVENT, { detail: next }))
   }
 
   const closeSidebar = () => {

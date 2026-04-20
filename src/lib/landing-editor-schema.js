@@ -87,6 +87,11 @@ export const LANDING_EDITOR_SECTIONS = [
     editorBlocks: [
       {
         type: 'comparison',
+        title: 'Before / after comparison',
+        note: 'Ẩn khối này nếu muốn bỏ phần so sánh trước/sau nhưng vẫn giữ pillars bên dưới.',
+        visibilityKey: 'showComparison',
+        hideLabel: 'Ẩn khối before / after',
+        showLabel: 'Hiện lại khối before / after',
         columns: [
           { titleKey: 'beforeTitle', itemsKey: 'beforeItems', label: 'Cột trước', rows: 5 },
           { titleKey: 'afterTitle', itemsKey: 'afterItems', label: 'Cột sau', rows: 5 },

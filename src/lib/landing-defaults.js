@@ -35,6 +35,7 @@ export const defaultLandingContent = {
     title: 'AIgenlabs thiên về tư duy điều phối và triển khai',
     subtitle:
       'Thay vì dừng ở prompt hay vibe coding, học viên được rèn 4 lớp nền tảng đi cùng nhau: tập trung sâu hơn, học đúng hơn, giải quyết vấn đề có hệ thống hơn và hiểu AI ở mức đủ chắc để thích nghi với sự thay đổi công nghệ.',
+    showComparison: true,
     beforeTitle: 'Làm theo cảm hứng',
     beforeItems: [
       'Bị cuốn vào nhịp tiêu thụ nội dung nhanh và phản hồi nhanh',
