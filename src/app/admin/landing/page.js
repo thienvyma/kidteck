@@ -81,6 +81,63 @@ function createEmptyLinkItem() {
   }
 }
 
+function LandingPanelIcon({ kind }) {
+  if (kind === 'toggle-visible') {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+        <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    )
+  }
+
+  if (kind === 'toggle-hidden') {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+        <path d="M3 3l18 18" />
+        <path d="M10.6 10.7a3 3 0 0 0 4.2 4.2" />
+        <path d="M9.9 5.1A11.8 11.8 0 0 1 12 5c6.5 0 10 7 10 7a17.2 17.2 0 0 1-3.2 4.1" />
+        <path d="M6.2 6.3A17.9 17.9 0 0 0 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4-.8" />
+      </svg>
+    )
+  }
+
+  if (kind === 'previous') {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+        <path d="M15 18l-6-6 6-6" />
+        <path d="M20 12H9" />
+      </svg>
+    )
+  }
+
+  if (kind === 'next') {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+        <path d="M9 18l6-6-6-6" />
+        <path d="M4 12h11" />
+      </svg>
+    )
+  }
+
+  if (kind === 'reload') {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+        <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+        <path d="M21 3v6h-6" />
+      </svg>
+    )
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+      <path d="M12 3v18" />
+      <path d="M7 8l5-5 5 5" />
+      <path d="M5 21h14" />
+    </svg>
+  )
+}
+
 export default function AdminLandingPage() {
   const previewFrameRef = useRef(null)
   const contextFormRef = useRef(null)
@@ -838,8 +895,8 @@ export default function AdminLandingPage() {
 
   if (loading) {
     return (
-      <div className={styles.pageHeader}>
-        <div>
+      <div className={`${styles.pageHeader} ${styles.landingEditorPageHeader}`}>
+        <div className={styles.landingEditorHeaderCompact}>
           <h2 className={styles.pageTitle}>Landing Content</h2>
           <p className={styles.curriculumLead}>Dang tai noi dung landing...</p>
         </div>
@@ -849,8 +906,8 @@ export default function AdminLandingPage() {
 
   return (
     <>
-      <div className={styles.pageHeader}>
-        <div className={styles.landingEditorTitleBlock}>
+      <div className={`${styles.pageHeader} ${styles.landingEditorPageHeader}`}>
+        <div className={styles.landingEditorHeaderCompact}>
           <div className={styles.landingEditorTitleRow}>
             <h2 className={styles.pageTitle}>Landing Content</h2>
             <span
@@ -860,14 +917,10 @@ export default function AdminLandingPage() {
             >
               {editorStatusLabel}
             </span>
+            {lastSavedLabel && (
+              <span className={styles.landingEditorMetaInline}>Luu gan nhat: {lastSavedLabel}</span>
+            )}
           </div>
-          <p className={styles.curriculumLead}>
-            Preview la be mat chinh. Bam truc tiep vao section trong landing de mo panel chinh
-            sua dung context, khong can cuon qua mot form dai nhu truoc.
-          </p>
-          {lastSavedLabel && (
-            <div className={styles.landingEditorMetaStamp}>Luu gan nhat: {lastSavedLabel}</div>
-          )}
         </div>
 
         <div className={styles.quickActions}>
@@ -1055,29 +1108,51 @@ export default function AdminLandingPage() {
                 </div>
                 <div className={styles.landingContextActions}>
                   <span className={styles.landingContextOrderBadge}>{activeSectionOrderLabel}</span>
-                  <button
-                    type="button"
-                    className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
-                    onClick={() => setSectionVisibility(activeSection, !activeSectionVisible)}
-                  >
-                    {activeSectionVisible ? 'An khoi landing' : 'Hien lai section'}
-                  </button>
-                  <button
-                    type="button"
-                    className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
-                    onClick={() => previousSection && focusSection(previousSection.id)}
-                    disabled={!previousSection}
-                  >
-                    Khoi truoc
-                  </button>
-                  <button
-                    type="button"
-                    className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
-                    onClick={() => nextSection && focusSection(nextSection.id)}
-                    disabled={!nextSection}
-                  >
-                    Khoi sau
-                  </button>
+                  <div className={styles.landingContextActionGroup}>
+                    <button
+                      type="button"
+                      className={`${styles.landingContextActionButton} ${
+                        activeSectionVisible
+                          ? styles.landingContextActionButtonWarning
+                          : styles.landingContextActionButtonSuccess
+                      }`}
+                      onClick={() => setSectionVisibility(activeSection, !activeSectionVisible)}
+                    >
+                      <span className={styles.landingContextActionButtonIcon} aria-hidden="true">
+                        <LandingPanelIcon
+                          kind={activeSectionVisible ? 'toggle-hidden' : 'toggle-visible'}
+                        />
+                      </span>
+                      <span className={styles.landingContextActionButtonLabel}>
+                        {activeSectionVisible ? 'An khoi landing' : 'Hien lai section'}
+                      </span>
+                    </button>
+
+                    <div className={styles.landingContextPager}>
+                      <button
+                        type="button"
+                        className={`${styles.landingContextActionButton} ${styles.landingContextActionButtonGhost}`}
+                        onClick={() => previousSection && focusSection(previousSection.id)}
+                        disabled={!previousSection}
+                      >
+                        <span className={styles.landingContextActionButtonIcon} aria-hidden="true">
+                          <LandingPanelIcon kind="previous" />
+                        </span>
+                        <span className={styles.landingContextActionButtonLabel}>Khoi truoc</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.landingContextActionButton} ${styles.landingContextActionButtonGhost}`}
+                        onClick={() => nextSection && focusSection(nextSection.id)}
+                        disabled={!nextSection}
+                      >
+                        <span className={styles.landingContextActionButtonIcon} aria-hidden="true">
+                          <LandingPanelIcon kind="next" />
+                        </span>
+                        <span className={styles.landingContextActionButtonLabel}>Khoi sau</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1154,24 +1229,42 @@ export default function AdminLandingPage() {
                   )}
                 </div>
 
-                <div className={styles.quickActions}>
+              </form>
+
+              <div className={styles.landingContextDock}>
+                <div className={styles.landingContextDockMeta}>
+                  <span className={styles.landingEditorMetaTitle}>Thao tac nhanh</span>
+                  <span className={styles.accountNote}>
+                    Luu hoac tai lai ma khong can cuon xuong cuoi form.
+                  </span>
+                </div>
+                <div className={styles.landingContextDockActions}>
                   <button
                     type="button"
-                    className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
+                    className={`${styles.landingContextActionButton} ${styles.landingContextActionButtonGhost}`}
                     onClick={handleReloadFromServer}
                     disabled={saving}
                   >
-                    Tai lai tu server
+                    <span className={styles.landingContextActionButtonIcon} aria-hidden="true">
+                      <LandingPanelIcon kind="reload" />
+                    </span>
+                    <span className={styles.landingContextActionButtonLabel}>Tai lai tu server</span>
                   </button>
                   <button
                     type="submit"
-                    className={`${styles.quickActionBtn} ${styles['quickActionBtn--primary']}`}
+                    form="landing-editor-form"
+                    className={`${styles.landingContextActionButton} ${styles.landingContextActionButtonPrimary}`}
                     disabled={saving}
                   >
-                    {saving ? 'Dang luu...' : 'Luu landing content'}
+                    <span className={styles.landingContextActionButtonIcon} aria-hidden="true">
+                      <LandingPanelIcon kind="save" />
+                    </span>
+                    <span className={styles.landingContextActionButtonLabel}>
+                      {saving ? 'Dang luu...' : 'Luu landing content'}
+                    </span>
                   </button>
                 </div>
-              </form>
+              </div>
             </div>
           </aside>
         </div>
