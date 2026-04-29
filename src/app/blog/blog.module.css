@@ -8,6 +8,10 @@
   border: 1px solid rgba(108, 92, 231, 0.08); /* Phù hợp với shell bright */
 }
 
+.archiveShell {
+  overflow: hidden;
+}
+
 .headerArea {
   margin-bottom: var(--space-3xl);
   text-align: center;
@@ -47,6 +51,16 @@
   transform: scale(1.05);
 }
 
+.heroCardNoImage {
+  background:
+    linear-gradient(135deg, rgba(108, 92, 231, 0.08), rgba(0, 210, 211, 0.06)),
+    var(--color-white);
+}
+
+.heroCardNoImage .heroContent {
+  padding-top: var(--space-2xl);
+}
+
 .heroImageWrapper {
   width: 100%;
   aspect-ratio: 16 / 9; /* Ép buộc kích thước chuẩn Tạp chí */
@@ -75,7 +89,8 @@
   color: var(--color-gray-900);
   margin-bottom: var(--space-md);
   line-height: 1.3;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
+  overflow-wrap: break-word;
 }
 
 .heroDescription {
@@ -169,6 +184,12 @@
   background: var(--color-gray-100);
 }
 
+.hImageWrapperEmpty {
+  background:
+    linear-gradient(135deg, rgba(108, 92, 231, 0.1), rgba(0, 210, 211, 0.08)),
+    var(--color-gray-100);
+}
+
 .hImage {
   width: 100%;
   height: 100%;
@@ -246,6 +267,12 @@
 
 .widget:hover {
   transform: none;
+}
+
+.searchWidget,
+.tagsWidget,
+.popularWidget {
+  min-width: 0;
 }
 
 .widgetTitle {
@@ -425,14 +452,187 @@
 }
 
 @media (max-width: 768px) {
-  .pageTitle { font-size: 2.25rem; }
+  .blogArchivePage {
+    padding-top: 6rem;
+    padding-bottom: 2.5rem;
+  }
+
+  .blogArchivePage .archiveShell {
+    padding: 0 1rem;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .blogArchivePage .archiveShell::before,
+  .blogArchivePage .archiveShell::after {
+    display: none;
+  }
+
+  .headerArea {
+    margin-bottom: 1.3rem;
+    text-align: left;
+  }
+
+  .headerArea :global(.section__title) {
+    text-align: left;
+    font-size: 1.65rem;
+    line-height: 1.18;
+    margin-bottom: 0.65rem;
+  }
+
+  .headerArea :global(.section__subtitle) {
+    display: -webkit-box;
+    max-width: none;
+    margin-bottom: 0;
+    overflow: hidden;
+    color: var(--color-gray-700);
+    font-size: 0.98rem;
+    line-height: 1.58;
+    text-align: left;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+
+  .magazineLayout {
+    gap: 1.5rem;
+  }
+
+  .heroCard {
+    margin-bottom: 1.9rem;
+    border-radius: var(--radius-lg);
+  }
+
+  .heroCardNoImage {
+    border-color: rgba(108, 92, 231, 0.14);
+  }
+
+  .heroCardNoImage .heroContent {
+    padding-top: 1.45rem;
+  }
+
+  .heroImageWrapper {
+    aspect-ratio: 16 / 10;
+  }
+
+  .heroContent {
+    padding: 1.45rem 1.25rem 1.35rem;
+  }
+
+  .heroTitle {
+    font-size: clamp(1.35rem, 5.7vw, 1.68rem);
+    line-height: 1.22;
+    margin-bottom: 0.75rem;
+  }
+
+  .heroDescription {
+    display: -webkit-box;
+    margin-bottom: 1.1rem;
+    overflow: hidden;
+    font-size: 0.98rem;
+    line-height: 1.6;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+
+  .metadataRow {
+    flex-wrap: wrap;
+    gap: 0.6rem 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .metaDataText {
+    font-size: 0.82rem;
+  }
+
+  .authorMeta {
+    gap: 0.65rem;
+  }
+
+  .avatar {
+    width: 34px;
+    height: 34px;
+  }
+
+  .postFeed {
+    gap: 1rem;
+  }
+
+  .sectionTitle {
+    margin-bottom: 0;
+    padding-bottom: 0.8rem;
+    font-size: 1.15rem;
+  }
+
   .horizontalCard {
     flex-direction: column;
-    gap: 16px;
+    gap: 0.9rem;
+    padding: 1rem;
   }
+
   .hImageWrapper {
     width: 100%;
-    height: 200px;
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+
+  .hTitle {
+    font-size: 1.16rem;
+    line-height: 1.3;
+  }
+
+  .hDescription {
+    font-size: 0.92rem;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+
+  .sidebar {
+    gap: 1rem;
+    margin-top: 0.2rem;
+  }
+
+  .searchWidget,
+  .popularWidget {
+    display: none;
+  }
+
+  .widget {
+    padding: 1.15rem;
+    border-radius: var(--radius-lg);
+  }
+
+  .widgetTitle {
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+  }
+
+  .tagCloud {
+    flex-wrap: wrap;
+    margin-inline: 0;
+    padding-bottom: 0;
+    overflow-x: visible;
+  }
+
+  .tag {
+    flex: 0 0 auto;
+    max-width: 100%;
+  }
+
+  .newsletterWidget {
+    padding: 1.25rem;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 2rem;
   }
 }
 

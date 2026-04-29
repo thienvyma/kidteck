@@ -58,6 +58,15 @@ async function getAllTags() {
   return Array.from(tagSet).sort()
 }
 
+function formatBlogDate(value) {
+  if (!value) return ''
+  return new Date(value).toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+}
+
 import landingStyles from '../page.module.css';
 
 export default async function BlogArchivePage({ searchParams }) {
@@ -75,6 +84,7 @@ export default async function BlogArchivePage({ searchParams }) {
   const isPageOne = currentPage === 1;
   const hero = isPageOne && blogs.length > 0 ? blogs[0] : null;
   const feedBlogs = isPageOne ? blogs.slice(1) : blogs;
+  const popularBlogs = hero ? blogs.slice(1, 4) : blogs.slice(0, 3);
 
   // Render pagination buttons
   const renderPagination = () => {
@@ -115,7 +125,7 @@ export default async function BlogArchivePage({ searchParams }) {
       
       <main className={`container section ${styles.blogArchivePage}`}>
         
-        <div className={`${landingStyles.sectionShell} ${landingStyles.sectionShellBright}`}>
+        <div className={`${landingStyles.sectionShell} ${landingStyles.sectionShellBright} ${styles.archiveShell}`}>
           
           <div className={styles.headerArea}>
               <h1 className="section__title">
@@ -138,9 +148,9 @@ export default async function BlogArchivePage({ searchParams }) {
                   
                   {/* Hero section chỉ hiện ở Page 1 */}
                   {hero && (
-                      <Link href={`/blog/${hero.slug}`} className={`${styles.heroCard} card`}>
-                          <div className={styles.heroImageWrapper}>
-                              {hero.cover_image_url ? (
+                      <Link href={`/blog/${hero.slug}`} className={`${styles.heroCard} ${!hero.cover_image_url ? styles.heroCardNoImage : ''} card`}>
+                          {hero.cover_image_url && (
+                              <div className={styles.heroImageWrapper}>
                                   <Image
                                     src={hero.cover_image_url}
                                     alt={hero.title}
@@ -150,14 +160,11 @@ export default async function BlogArchivePage({ searchParams }) {
                                     priority
                                     referrerPolicy="no-referrer"
                                   />
-                              ) : (
-                                  <div className={styles.placeholderBg}>&#128247;</div>
-                              )}
-                          </div>
+                              </div>
+                          )}
                           <div className={styles.heroContent}>
                               <div className={styles.metadataRow}>
                                   <span className="badge badge--success">NỔI BẬT</span>
-                                  <span className={styles.metaDataText}>7 phút đọc</span>
                               </div>
                               <h2 className={styles.heroTitle}>{hero.title}</h2>
                               <p className={styles.heroDescription}>{hero.description}</p>
@@ -165,7 +172,7 @@ export default async function BlogArchivePage({ searchParams }) {
                                   <div className={styles.avatar}>A</div>
                                   <div className={styles.authorDetails}>
                                       <span className={styles.authorName}>AIgenlabs Team</span>
-                                      <span className={styles.publishDate}>{new Date(hero.published_at).toLocaleDateString('vi-VN')}</span>
+                                      <span className={styles.publishDate}>{formatBlogDate(hero.published_at)}</span>
                                   </div>
                               </div>
                           </div>
@@ -173,13 +180,13 @@ export default async function BlogArchivePage({ searchParams }) {
                   )}
 
                   {/* Danh sách bài đăng (Horizontal) */}
+                  {feedBlogs.length > 0 && (
                   <div className={styles.postFeed}>
                       <h3 className={styles.sectionTitle}>Mới nhất</h3>
-                      {feedBlogs.length === 0 && <p className={styles.emptyStateMinimal}>Chưa có thêm bài viết nào.</p>}
                       {feedBlogs.map(blog => {
                           return (
                               <Link href={`/blog/${blog.slug}`} key={blog.id} className={`${styles.horizontalCard} card`}>
-                                  <div className={styles.hImageWrapper}>
+                                  <div className={`${styles.hImageWrapper} ${!blog.cover_image_url ? styles.hImageWrapperEmpty : ''}`}>
                                       {blog.cover_image_url ? (
                                           <Image
                                             src={blog.cover_image_url}
@@ -190,24 +197,25 @@ export default async function BlogArchivePage({ searchParams }) {
                                             referrerPolicy="no-referrer"
                                           />
                                       ) : (
-                                          <div className={styles.placeholderBg}>&#128247;</div>
+                                          <div className={styles.placeholderBg}>AI</div>
                                       )}
                                   </div>
                                   <div className={styles.hContent}>
                                       <div className={styles.metadataRow}>
                                           <span className="badge badge--primary">CHUYÊN MÔN</span>
-                                          <span className={styles.metaDataText}>5 phút đọc</span>
+                                          <span className={styles.metaDataText}>{formatBlogDate(blog.published_at)}</span>
                                       </div>
                                       <h2 className={styles.hTitle}>{blog.title}</h2>
                                       <p className={styles.hDescription}>{blog.description}</p>
                                       <div className={styles.hFooter}>
-                                          <span className={styles.publishDate}>{new Date(blog.published_at).toLocaleDateString('vi-VN', { year: 'numeric', month: 'short', day: 'numeric'})}</span>
+                                          <span className={styles.publishDate}>{formatBlogDate(blog.published_at)}</span>
                                       </div>
                                   </div>
                               </Link>
                           )
                       })}
                   </div>
+                  )}
 
                   {/* Component Phân Trang */}
                   {renderPagination()}
@@ -218,7 +226,7 @@ export default async function BlogArchivePage({ searchParams }) {
               <aside className={styles.sidebar}>
                   
                   {/* Search Bar (Mock) */}
-                  <div className={`${styles.widget} card`}>
+                  <div className={`${styles.widget} ${styles.searchWidget} card`}>
                       <h4 className={styles.widgetTitle}>Tìm kiếm</h4>
                       <div className={styles.searchBox}>
                           <input type="text" placeholder="Tìm kiếm bài viết..." className="input" disabled />
@@ -227,31 +235,34 @@ export default async function BlogArchivePage({ searchParams }) {
                   </div>
 
                   {/* Categories */}
-                  <div className={`${styles.widget} card`}>
+                  {allTags.length > 0 && (
+                  <div className={`${styles.widget} ${styles.tagsWidget} card`}>
                       <h4 className={styles.widgetTitle}>Chủ đề nổi bật</h4>
                       <div className={styles.tagCloud}>
-                          {allTags.length === 0 && <span className={styles.tag}>Chưa có chủ đề</span>}
                           {allTags.map(tag => (
                               <span key={tag} className={styles.tag}>{tag}</span>
                           ))}
                       </div>
                   </div>
+                  )}
 
                   {/* Featured / Popular Posts (Mock) */}
-                  <div className={`${styles.widget} card`}>
+                  {popularBlogs.length > 0 && (
+                  <div className={`${styles.widget} ${styles.popularWidget} card`}>
                       <h4 className={styles.widgetTitle}>Đáng chú ý</h4>
                       <div className={styles.popularList}>
-                          {blogs.slice(0, 3).map((b, i) => (
+                          {popularBlogs.map((b, i) => (
                               <Link href={`/blog/${b.slug}`} key={b.id} className={styles.popularItem}>
                                   <span className={styles.popularRank}>0{i+1}</span>
                                   <div className={styles.popularContent}>
                                       <h5 className={styles.popularTitle}>{b.title}</h5>
-                                      <span className={styles.metaDataText}>{new Date(b.published_at).toLocaleDateString('vi-VN')}</span>
+                                      <span className={styles.metaDataText}>{formatBlogDate(b.published_at)}</span>
                                   </div>
                               </Link>
                           ))}
                       </div>
                   </div>
+                  )}
 
                   {/* Newsletter Box - Style như Landing Page */}
                   <div className={`${landingStyles.sectionShell} ${landingStyles.sectionShellDeep} ${styles.widget} ${styles.newsletterWidget}`}>
