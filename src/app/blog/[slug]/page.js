@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { createClient } from '@supabase/supabase-js'
 import ReactMarkdown from 'react-markdown'
 import Navbar from '@/components/ui/Navbar'
 import { getLandingHeaderData } from '@/lib/landing-content'
+import { createPublicSupabaseClient } from '@/lib/public-supabase'
 import { sanitizeHTML } from '@/lib/sanitize'
 import styles from '../blog.module.css'
 import landingStyles from '../../page.module.css'
@@ -12,16 +12,14 @@ import landingStyles from '../../page.module.css'
 export const revalidate = 60
 
 async function getBlog(slug) {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
+  const supabase = createPublicSupabaseClient()
+  if (!supabase) return null
 
   const { data, error } = await supabase
     .from('blogs')
     .select('*')
     .eq('slug', slug)
-    .single()
+    .maybeSingle()
 
   if (error || !data || !data.is_published) {
     return null
@@ -31,10 +29,8 @@ async function getBlog(slug) {
 }
 
 async function getRecentBlogs(excludeSlug) {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
+  const supabase = createPublicSupabaseClient()
+  if (!supabase) return []
 
   const { data, error } = await supabase
     .from('blogs')
@@ -49,10 +45,9 @@ async function getRecentBlogs(excludeSlug) {
 }
 
 async function getAllTags() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
+  const supabase = createPublicSupabaseClient()
+  if (!supabase) return []
+
   const { data } = await supabase.from('blogs').select('tags').eq('is_published', true)
   if (!data) return []
 
@@ -63,6 +58,25 @@ async function getAllTags() {
     }
   })
   return Array.from(tagSet).sort()
+}
+
+export async function generateStaticParams() {
+  const supabase = createPublicSupabaseClient()
+  if (!supabase) return []
+
+  const { data, error } = await supabase
+    .from('blogs')
+    .select('slug')
+    .eq('is_published', true)
+
+  if (error) {
+    console.warn('blog generateStaticParams error:', error.message)
+    return []
+  }
+
+  return (data || [])
+    .filter((blog) => typeof blog.slug === 'string' && blog.slug.trim())
+    .map((blog) => ({ slug: blog.slug }))
 }
 
 export async function generateMetadata({ params }) {
@@ -102,6 +116,7 @@ export default async function BlogPostPage({ params }) {
     notFound()
   }
 
+  const content = typeof blog.content === 'string' ? blog.content : ''
   const publishedDate = new Date(blog.published_at).toLocaleDateString('vi-VN', {
     weekday: 'long',
     year: 'numeric',
@@ -152,8 +167,8 @@ export default async function BlogPostPage({ params }) {
     ],
   }
 
-  const articleHtml = /<[a-z][\s\S]*>/i.test(blog.content)
-    ? sanitizeHTML(blog.content).replace(/<img(?!.*?referrerpolicy)[^>]*>/gi, (match) =>
+  const articleHtml = /<[a-z][\s\S]*>/i.test(content)
+    ? sanitizeHTML(content).replace(/<img(?!.*?referrerpolicy)[^>]*>/gi, (match) =>
         match.replace('<img', '<img referrerpolicy="no-referrer" loading="lazy" decoding="async"')
       )
     : null
@@ -242,7 +257,7 @@ export default async function BlogPostPage({ params }) {
                         ),
                       }}
                     >
-                      {blog.content}
+                      {content}
                     </ReactMarkdown>
                   )}
                 </article>

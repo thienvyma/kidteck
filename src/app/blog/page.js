@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { createClient } from '@supabase/supabase-js'
 import Navbar from '@/components/ui/Navbar'
 import { getLandingHeaderData } from '@/lib/landing-content'
+import { createPublicSupabaseClient } from '@/lib/public-supabase'
 import styles from './blog.module.css'
 
 export const revalidate = 60 // ISR caching auto-revalidate 
@@ -18,10 +18,10 @@ export const metadata = {
 const ITEMS_PER_PAGE = 6;
 
 async function getBlogs(page = 1) {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
+  const supabase = createPublicSupabaseClient()
+  if (!supabase) {
+    return { data: [], totalPages: 0, currentPage: page }
+  }
   
   const from = (page - 1) * ITEMS_PER_PAGE;
   const to = from + ITEMS_PER_PAGE - 1;
@@ -43,10 +43,9 @@ async function getBlogs(page = 1) {
 }
 
 async function getAllTags() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
+  const supabase = createPublicSupabaseClient()
+  if (!supabase) return []
+
   const { data } = await supabase.from('blogs').select('tags').eq('is_published', true)
   if (!data) return []
   
