@@ -21,6 +21,10 @@
   align-items: flex-start;
 }
 
+.mainContent {
+  min-width: 0;
+}
+
 .sidebar {
   position: sticky;
   top: var(--space-4xl);
@@ -236,6 +240,14 @@
 }
 
 /* --- Sidebar Widgets --- */
+.widget {
+  padding: var(--space-xl);
+}
+
+.widget:hover {
+  transform: none;
+}
+
 .widgetTitle {
   font-size: var(--font-size-lg);
   font-weight: 700;
@@ -434,6 +446,18 @@
   padding: var(--space-4xl) 0;
 }
 
+.singleBlogShell {
+  overflow: hidden;
+}
+
+.backLinkRow {
+  margin-bottom: 1.5rem;
+}
+
+.backBtnWrapper {
+  white-space: normal;
+}
+
 .articleContainer {
   max-width: 860px;
   margin: 0 auto;
@@ -473,13 +497,15 @@
   color: var(--color-gray-900);
   line-height: 1.25;
   margin-bottom: var(--space-lg);
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
+  overflow-wrap: break-word;
 }
 
 .articleMeta {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
   gap: var(--space-md);
   font-size: 0.95rem;
   color: var(--color-gray-500);
@@ -622,6 +648,20 @@
   padding: 0;
 }
 
+.articleProse {
+  overflow-wrap: break-word;
+}
+
+.articleProse > div {
+  min-width: 0;
+}
+
+.articleProse table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
 
 
 /* --- Responsive Single Blog --- */
@@ -629,7 +669,47 @@
 
 @media (max-width: 768px) {
   .singleBlogWrapper {
-    padding-top: var(--space-xl);
+    padding: 5.75rem 0 1.5rem;
+  }
+
+  .singleBlogWrapper .singleBlogShell {
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .singleBlogWrapper .singleBlogShell::before,
+  .singleBlogWrapper .singleBlogShell::after {
+    display: none;
+  }
+
+  .singleBlogWrapper .headerArea {
+    margin-bottom: 1.25rem;
+    text-align: left;
+  }
+
+  .singleBlogWrapper :global(.section__title),
+  .singleBlogWrapper :global(.section__subtitle) {
+    text-align: left;
+  }
+
+  .singleBlogWrapper :global(.section__title) {
+    font-size: 1.35rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .singleBlogWrapper :global(.section__subtitle) {
+    display: none;
+  }
+
+  .backLinkRow {
+    margin-bottom: 0.9rem;
+  }
+
+  .singleBlogWrapper .sidebar {
+    display: none;
   }
   
   .articleContainer {
@@ -640,16 +720,60 @@
   }
 
   .articleHeader {
-    padding: var(--space-xl) var(--space-xl) 0 var(--space-xl);
+    padding: 1.35rem 1rem 0;
+    margin-bottom: 1.25rem;
+    text-align: left;
+  }
+
+  .articleTitle {
+    font-size: clamp(1.55rem, 7vw, 2rem);
+    line-height: 1.22;
+    margin-bottom: 0.9rem;
+  }
+
+  .articleMeta {
+    justify-content: flex-start;
+    gap: 0.45rem 0.9rem;
+    font-size: 0.86rem;
   }
 
   .articleProse {
-    padding: 0 var(--space-xl) var(--space-xl) var(--space-xl);
-    font-size: 1.05rem; /* Hạ xíu trên đt */
+    padding: 0 1rem 1.35rem;
+    font-size: 1rem;
+    line-height: 1.68;
+  }
+
+  .articleProse p {
+    margin-bottom: 0.9em;
+  }
+
+  .articleProse h2 {
+    font-size: 1.35rem;
+  }
+
+  .articleProse h3 {
+    font-size: 1.18rem;
   }
 
   .articleProse blockquote {
-    font-size: 1.1rem;
     padding: 1em;
+    font-size: 1rem;
+    margin: 1.2em 0;
+  }
+
+  .articleProse pre {
+    margin-inline: -0.25rem;
+    padding: 1rem;
+    font-size: 0.86rem;
+  }
+}
+
+@media (max-width: 390px) {
+  .articleTitle {
+    font-size: 1.45rem;
+  }
+
+  .articleProse {
+    font-size: 0.98rem;
   }
 }

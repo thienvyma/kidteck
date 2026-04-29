@@ -60,6 +60,12 @@ async function getAllTags() {
   return Array.from(tagSet).sort()
 }
 
+function normalizeArticleContent(value) {
+  if (typeof value !== 'string') return ''
+
+  return value.replace(/&nbsp;|\u00a0/g, ' ')
+}
+
 export async function generateStaticParams() {
   const supabase = createPublicSupabaseClient()
   if (!supabase) return []
@@ -116,7 +122,7 @@ export default async function BlogPostPage({ params }) {
     notFound()
   }
 
-  const content = typeof blog.content === 'string' ? blog.content : ''
+  const content = normalizeArticleContent(blog.content)
   const publishedDate = new Date(blog.published_at).toLocaleDateString('vi-VN', {
     weekday: 'long',
     year: 'numeric',
@@ -186,7 +192,7 @@ export default async function BlogPostPage({ params }) {
       />
 
       <div className={styles.singleBlogWrapper}>
-        <div className={`container ${landingStyles.sectionShell} ${landingStyles.sectionShellBright}`}>
+        <div className={`container ${landingStyles.sectionShell} ${landingStyles.sectionShellBright} ${styles.singleBlogShell}`}>
           <div className={styles.headerArea}>
             <h1 className="section__title">
               <span className="gradient-text">Góc nhìn công nghệ</span>
@@ -199,7 +205,7 @@ export default async function BlogPostPage({ params }) {
 
           <div className={styles.magazineLayout}>
             <div className={styles.mainContent}>
-              <div style={{ marginBottom: '1.5rem' }}>
+              <div className={styles.backLinkRow}>
                 <Link href="/blog" className={`btn btn--secondary btn--sm ${styles.backBtnWrapper}`}>
                   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18" style={{ marginRight: '6px' }}>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
