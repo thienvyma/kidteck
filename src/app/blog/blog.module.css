@@ -491,6 +491,15 @@
   margin-bottom: var(--space-2xl);
 }
 
+.articleMobileNav {
+  display: none;
+}
+
+.articleMobileBack {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
 .articleTitle {
   font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 800;
@@ -516,6 +525,15 @@
   display: flex;
   align-items: center;
   gap: var(--space-xs);
+}
+
+.articleMeta span + span::before {
+  content: "";
+  width: 4px;
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: currentColor;
+  opacity: 0.45;
 }
 
 /* --- Vùng Nội dung chính (Prose / Typography) --- */
@@ -578,6 +596,14 @@
 .articleProse ol {
   margin-bottom: 1em; /* Giảm margin danh sách */
   padding-left: 1.5em;
+}
+
+.articleProse ul {
+  list-style: disc;
+}
+
+.articleProse ol {
+  list-style: decimal;
 }
 
 .articleProse li {
@@ -662,6 +688,37 @@
   overflow-x: auto;
 }
 
+.articleFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-xl) var(--space-3xl) var(--space-3xl);
+  border-top: 1px solid rgba(108, 92, 231, 0.1);
+}
+
+.articleFooterLink,
+.articleFooterCta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.articleFooterLink {
+  color: var(--color-primary);
+}
+
+.articleFooterCta {
+  padding: 0.72rem 1.1rem;
+  color: var(--color-white);
+  background: var(--gradient-primary);
+  box-shadow: 0 8px 20px rgba(108, 92, 231, 0.2);
+}
+
 
 
 /* --- Responsive Single Blog --- */
@@ -686,8 +743,7 @@
   }
 
   .singleBlogWrapper .headerArea {
-    margin-bottom: 1.25rem;
-    text-align: left;
+    display: none;
   }
 
   .singleBlogWrapper :global(.section__title),
@@ -705,7 +761,7 @@
   }
 
   .backLinkRow {
-    margin-bottom: 0.9rem;
+    display: none;
   }
 
   .singleBlogWrapper .sidebar {
@@ -720,15 +776,27 @@
   }
 
   .articleHeader {
-    padding: 1.35rem 1rem 0;
-    margin-bottom: 1.25rem;
+    padding: 0.95rem 1rem 1rem;
+    margin-bottom: 1.05rem;
     text-align: left;
+    border-bottom: 1px solid rgba(108, 92, 231, 0.08);
+  }
+
+  .articleMobileNav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    color: var(--color-gray-500);
+    font-size: 0.82rem;
+    font-weight: 700;
   }
 
   .articleTitle {
-    font-size: clamp(1.55rem, 7vw, 2rem);
-    line-height: 1.22;
-    margin-bottom: 0.9rem;
+    font-size: clamp(1.6rem, 6.8vw, 2.02rem);
+    line-height: 1.2;
+    margin-bottom: 0.8rem;
   }
 
   .articleMeta {
@@ -738,9 +806,9 @@
   }
 
   .articleProse {
-    padding: 0 1rem 1.35rem;
+    padding: 0 1rem 1.45rem;
     font-size: 1rem;
-    line-height: 1.68;
+    line-height: 1.72;
   }
 
   .articleProse p {
@@ -749,10 +817,15 @@
 
   .articleProse h2 {
     font-size: 1.35rem;
+    margin-top: 1.75em;
+    margin-bottom: 0.65em;
+    line-height: 1.28;
   }
 
   .articleProse h3 {
     font-size: 1.18rem;
+    margin-top: 1.45em;
+    margin-bottom: 0.55em;
   }
 
   .articleProse blockquote {
@@ -765,6 +838,21 @@
     margin-inline: -0.25rem;
     padding: 1rem;
     font-size: 0.86rem;
+  }
+
+  .articleFooter {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1.15rem 1rem 1.45rem;
+  }
+
+  .articleFooterLink,
+  .articleFooterCta {
+    width: 100%;
+  }
+
+  .articleFooterLink {
+    border: 1px solid rgba(108, 92, 231, 0.18);
   }
 }
 

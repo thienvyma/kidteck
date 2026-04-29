@@ -63,7 +63,16 @@ async function getAllTags() {
 function normalizeArticleContent(value) {
   if (typeof value !== 'string') return ''
 
-  return value.replace(/&nbsp;|\u00a0/g, ' ')
+  return value
+    .replace(/&nbsp;|&#160;|\u00a0/g, ' ')
+    .replace(/[ \t]{2,}/g, ' ')
+}
+
+function enhanceArticleHtml(html) {
+  return html
+    .replace(/<p>(?:\s|<br\s*\/?>)*<\/p>/gi, '')
+    .replace(/<p>\s*[-•]\s*([^<]+?)\s*<\/p>/gi, '<ul><li>$1</li></ul>')
+    .replace(/<\/ul>\s*<ul>/gi, '')
 }
 
 export async function generateStaticParams() {
@@ -124,10 +133,9 @@ export default async function BlogPostPage({ params }) {
 
   const content = normalizeArticleContent(blog.content)
   const publishedDate = new Date(blog.published_at).toLocaleDateString('vi-VN', {
-    weekday: 'long',
+    day: '2-digit',
+    month: '2-digit',
     year: 'numeric',
-    month: 'long',
-    day: 'numeric',
   })
 
   const jsonLd = {
@@ -174,7 +182,7 @@ export default async function BlogPostPage({ params }) {
   }
 
   const articleHtml = /<[a-z][\s\S]*>/i.test(content)
-    ? sanitizeHTML(content).replace(/<img(?!.*?referrerpolicy)[^>]*>/gi, (match) =>
+    ? enhanceArticleHtml(sanitizeHTML(content)).replace(/<img(?!.*?referrerpolicy)[^>]*>/gi, (match) =>
         match.replace('<img', '<img referrerpolicy="no-referrer" loading="lazy" decoding="async"')
       )
     : null
@@ -216,10 +224,16 @@ export default async function BlogPostPage({ params }) {
 
               <main className={styles.articleContainer}>
                 <header className={styles.articleHeader}>
+                  <div className={styles.articleMobileNav}>
+                    <Link href="/blog" className={styles.articleMobileBack}>
+                      ← Tin tức
+                    </Link>
+                    <span>Góc nhìn công nghệ</span>
+                  </div>
                   <h1 className={styles.articleTitle}>{blog.title}</h1>
                   <div className={styles.articleMeta}>
-                    <span>✍️ AIgenlabs Academy</span>
-                    <span>🗓 {publishedDate}</span>
+                    <span>AIgenlabs Academy</span>
+                    <span>{publishedDate}</span>
                   </div>
                 </header>
 
@@ -267,6 +281,15 @@ export default async function BlogPostPage({ params }) {
                     </ReactMarkdown>
                   )}
                 </article>
+
+                <footer className={styles.articleFooter}>
+                  <Link href="/blog" className={styles.articleFooterLink}>
+                    Xem thêm bài viết
+                  </Link>
+                  <Link href="/#cta" className={styles.articleFooterCta}>
+                    Nhận tư vấn
+                  </Link>
+                </footer>
               </main>
             </div>
 
