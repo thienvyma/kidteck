@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Navbar from '@/components/ui/Navbar'
 import { getLandingHeaderData } from '@/lib/landing-content'
 import { createPublicSupabaseClient } from '@/lib/public-supabase'
+import { normalizeImageUrl } from '@/lib/blog-media'
 import styles from './blog.module.css'
 
 export const revalidate = 60 // ISR caching auto-revalidate 
@@ -85,6 +86,7 @@ export default async function BlogArchivePage({ searchParams }) {
   const hero = isPageOne && blogs.length > 0 ? blogs[0] : null;
   const feedBlogs = isPageOne ? blogs.slice(1) : blogs;
   const popularBlogs = hero ? blogs.slice(1, 4) : blogs.slice(0, 3);
+  const heroImageUrl = normalizeImageUrl(hero?.cover_image_url)
 
   // Render pagination buttons
   const renderPagination = () => {
@@ -148,11 +150,11 @@ export default async function BlogArchivePage({ searchParams }) {
                   
                   {/* Hero section chỉ hiện ở Page 1 */}
                   {hero && (
-                      <Link href={`/blog/${hero.slug}`} className={`${styles.heroCard} ${!hero.cover_image_url ? styles.heroCardNoImage : ''} card`}>
-                          {hero.cover_image_url && (
+                      <Link href={`/blog/${hero.slug}`} className={`${styles.heroCard} ${!heroImageUrl ? styles.heroCardNoImage : ''} card`}>
+                          {heroImageUrl && (
                               <div className={styles.heroImageWrapper}>
                                   <Image
-                                    src={hero.cover_image_url}
+                                    src={heroImageUrl}
                                     alt={hero.title}
                                     className={styles.heroImage}
                                     fill
@@ -184,12 +186,13 @@ export default async function BlogArchivePage({ searchParams }) {
                   <div className={styles.postFeed}>
                       <h3 className={styles.sectionTitle}>Mới nhất</h3>
                       {feedBlogs.map(blog => {
+                          const imageUrl = normalizeImageUrl(blog.cover_image_url)
                           return (
                               <Link href={`/blog/${blog.slug}`} key={blog.id} className={`${styles.horizontalCard} card`}>
-                                  <div className={`${styles.hImageWrapper} ${!blog.cover_image_url ? styles.hImageWrapperEmpty : ''}`}>
-                                      {blog.cover_image_url ? (
+                                  <div className={`${styles.hImageWrapper} ${!imageUrl ? styles.hImageWrapperEmpty : ''}`}>
+                                      {imageUrl ? (
                                           <Image
-                                            src={blog.cover_image_url}
+                                            src={imageUrl}
                                             alt={blog.title}
                                             className={styles.hImage}
                                             fill

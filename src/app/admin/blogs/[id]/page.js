@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import 'react-quill-new/dist/quill.snow.css'
+import { normalizeImageUrl } from '@/lib/blog-media'
 import styles from '../../admin.module.css'
 
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false })
@@ -81,6 +82,7 @@ export default function BlogEditorPage() {
     content: '',
     is_published: false,
   })
+  const coverPreviewUrl = normalizeImageUrl(form.cover_image_url)
 
   useEffect(() => {
     if (isNew) return
@@ -264,7 +266,7 @@ export default function BlogEditorPage() {
               <span style={{ fontSize: '0.75rem', color: 'var(--color-gray-500)', marginTop: '4px' }}>
                 Ho tro dan san link chia se tu Google Drive. Form se tu chuyen thanh mang hinh hien thi.
               </span>
-              {form.cover_image_url && (
+              {coverPreviewUrl && (
                 <div
                   style={{
                     marginTop: '12px',
@@ -275,7 +277,7 @@ export default function BlogEditorPage() {
                 >
                   <div style={{ position: 'relative', width: '100%', height: '160px' }}>
                     <Image
-                      src={form.cover_image_url}
+                      src={coverPreviewUrl}
                       alt="Cover Preview"
                       fill
                       sizes="800px"

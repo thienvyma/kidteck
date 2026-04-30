@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient, requireRole } from '@/lib/server-auth'
+import { normalizeImageUrl } from '@/lib/blog-media'
 
 export async function GET() {
   try {
@@ -37,12 +39,17 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
+    const coverImageUrl = normalizeImageUrl(body.cover_image_url)
+    if (body.cover_image_url && !coverImageUrl) {
+      return NextResponse.json({ error: 'Invalid cover image URL' }, { status: 400 })
+    }
+
     const adminClient = createServiceRoleClient()
     const payload = {
       title: body.title,
       slug: body.slug,
       description: body.description || null,
-      cover_image_url: body.cover_image_url || null,
+      cover_image_url: coverImageUrl || null,
       tags: Array.isArray(body.tags) ? body.tags : [],
       content: body.content || '',
       is_published: body.is_published === true,
@@ -58,6 +65,11 @@ export async function POST(request) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 })
+    }
+
+    revalidatePath('/blog')
+    if (payload.slug) {
+      revalidatePath(`/blog/${payload.slug}`)
     }
 
     return NextResponse.json({ blog: data })

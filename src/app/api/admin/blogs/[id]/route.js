@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient, requireRole } from '@/lib/server-auth'
+import { normalizeImageUrl } from '@/lib/blog-media'
 
 export async function GET(_request, { params }) {
   try {
@@ -40,11 +42,16 @@ export async function PATCH(request, { params }) {
     }
 
     const body = await request.json()
+    const coverImageUrl = normalizeImageUrl(body.cover_image_url)
+    if (body.cover_image_url && !coverImageUrl) {
+      return NextResponse.json({ error: 'Invalid cover image URL' }, { status: 400 })
+    }
+
     const payload = {
       title: body.title,
       slug: body.slug,
       description: body.description || null,
-      cover_image_url: body.cover_image_url || null,
+      cover_image_url: coverImageUrl || null,
       tags: Array.isArray(body.tags) ? body.tags : [],
       content: body.content || '',
       is_published: body.is_published === true,
@@ -52,10 +59,24 @@ export async function PATCH(request, { params }) {
     }
 
     const adminClient = createServiceRoleClient()
+    const { data: currentBlog } = await adminClient
+      .from('blogs')
+      .select('slug')
+      .eq('id', id)
+      .maybeSingle()
+
     const { error } = await adminClient.from('blogs').update(payload).eq('id', id)
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 })
+    }
+
+    revalidatePath('/blog')
+    if (currentBlog?.slug) {
+      revalidatePath(`/blog/${currentBlog.slug}`)
+    }
+    if (payload.slug && payload.slug !== currentBlog?.slug) {
+      revalidatePath(`/blog/${payload.slug}`)
     }
 
     return NextResponse.json({ success: true })
@@ -78,10 +99,21 @@ export async function DELETE(_request, { params }) {
     }
 
     const adminClient = createServiceRoleClient()
+    const { data: currentBlog } = await adminClient
+      .from('blogs')
+      .select('slug')
+      .eq('id', id)
+      .maybeSingle()
+
     const { error } = await adminClient.from('blogs').delete().eq('id', id)
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 })
+    }
+
+    revalidatePath('/blog')
+    if (currentBlog?.slug) {
+      revalidatePath(`/blog/${currentBlog.slug}`)
     }
 
     return NextResponse.json({ success: true })

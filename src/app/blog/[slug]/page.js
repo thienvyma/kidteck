@@ -6,6 +6,7 @@ import Navbar from '@/components/ui/Navbar'
 import { getLandingHeaderData } from '@/lib/landing-content'
 import { createPublicSupabaseClient } from '@/lib/public-supabase'
 import { sanitizeHTML } from '@/lib/sanitize'
+import { normalizeImageUrl } from '@/lib/blog-media'
 import styles from '../blog.module.css'
 import landingStyles from '../../page.module.css'
 
@@ -102,13 +103,15 @@ export async function generateMetadata({ params }) {
     return { title: 'Không tìm thấy bài viết | AIgenlabs' }
   }
 
+  const coverImageUrl = normalizeImageUrl(blog.cover_image_url)
+
   return {
     title: `${blog.title} | AIgenlabs`,
     description: blog.description || 'Góc nhìn công nghệ trên AIgenlabs.',
     openGraph: {
       title: blog.title,
       description: blog.description,
-      images: blog.cover_image_url ? [{ url: blog.cover_image_url }] : [],
+      images: coverImageUrl ? [{ url: coverImageUrl }] : [],
       type: 'article',
       publishedTime: blog.published_at,
     },
@@ -132,6 +135,7 @@ export default async function BlogPostPage({ params }) {
   }
 
   const content = normalizeArticleContent(blog.content)
+  const coverImageUrl = normalizeImageUrl(blog.cover_image_url)
   const publishedDate = new Date(blog.published_at).toLocaleDateString('vi-VN', {
     day: '2-digit',
     month: '2-digit',
@@ -143,7 +147,7 @@ export default async function BlogPostPage({ params }) {
     '@type': 'BlogPosting',
     headline: blog.title,
     description: blog.description,
-    image: blog.cover_image_url,
+    image: coverImageUrl || undefined,
     datePublished: blog.published_at,
     dateModified: blog.updated_at || blog.published_at,
     publisher: {
@@ -237,10 +241,10 @@ export default async function BlogPostPage({ params }) {
                   </div>
                 </header>
 
-                {blog.cover_image_url && (
+                {coverImageUrl && (
                   <div className={styles.articleCoverWrapper}>
                     <Image
-                      src={blog.cover_image_url}
+                      src={coverImageUrl}
                       alt={`Ảnh bìa bài viết: ${blog.title}`}
                       className={styles.articleCover}
                       fill
@@ -261,20 +265,25 @@ export default async function BlogPostPage({ params }) {
                   ) : (
                     <ReactMarkdown
                       components={{
-                        img: ({ node, alt, src = '', ...props }) => (
-                          <Image
-                            {...props}
-                            src={src}
-                            alt={alt || ''}
-                            width={1600}
-                            height={900}
-                            sizes="100vw"
-                            referrerPolicy="no-referrer"
-                            loading="lazy"
-                            decoding="async"
-                            style={{ width: '100%', height: 'auto' }}
-                          />
-                        ),
+                        img: ({ node, alt, src = '', ...props }) => {
+                          const imageUrl = normalizeImageUrl(src)
+                          if (!imageUrl) return null
+
+                          return (
+                            <Image
+                              {...props}
+                              src={imageUrl}
+                              alt={alt || ''}
+                              width={1600}
+                              height={900}
+                              sizes="100vw"
+                              referrerPolicy="no-referrer"
+                              loading="lazy"
+                              decoding="async"
+                              style={{ width: '100%', height: 'auto' }}
+                            />
+                          )
+                        },
                       }}
                     >
                       {content}
