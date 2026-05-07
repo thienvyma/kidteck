@@ -1214,13 +1214,13 @@
 }
 
 @media (max-width: 768px) {
-  .heroImageWrapper,
-  .hImageWrapper:not(.hImageWrapperEmpty),
-  .articleCoverWrapper {
+  .hImageWrapper:not(.hImageWrapperEmpty) {
     display: flex;
     align-items: flex-start;
     justify-content: center;
-    width: 100%;
+    align-self: center;
+    width: fit-content;
+    max-width: 100%;
     height: auto;
     max-height: none;
     aspect-ratio: auto;
@@ -1228,9 +1228,7 @@
     overflow: visible;
   }
 
-  .heroImageWrapper .coverPicture,
-  .hImageWrapper:not(.hImageWrapperEmpty) .coverPicture,
-  .articleCoverWrapper .coverPicture {
+  .hImageWrapper:not(.hImageWrapperEmpty) .coverPicture {
     display: inline-block;
     width: auto;
     max-width: 100%;
@@ -1238,9 +1236,7 @@
     line-height: 0;
   }
 
-  .heroImageWrapper .heroImage,
-  .hImageWrapper:not(.hImageWrapperEmpty) .hImage,
-  .articleCoverWrapper .articleCover {
+  .hImageWrapper:not(.hImageWrapperEmpty) .hImage {
     display: block;
     width: auto;
     max-width: 100%;
@@ -1248,4 +1244,39 @@
     object-fit: contain;
     object-position: center;
   }
+}
+
+.heroImageWrapper,
+.articleCoverWrapper {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  align-self: center;
+  width: fit-content;
+  max-width: 100%;
+  height: auto;
+  max-height: none;
+  margin-inline: auto;
+  aspect-ratio: auto;
+  background: transparent;
+  overflow: visible;
+}
+
+.heroImageWrapper .coverPicture,
+.articleCoverWrapper .coverPicture {
+  display: inline-block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  line-height: 0;
+}
+
+.heroImageWrapper .heroImage,
+.articleCoverWrapper .articleCover {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  object-position: center;
 }
