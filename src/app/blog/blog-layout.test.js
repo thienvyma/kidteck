@@ -4,19 +4,19 @@ import test from 'node:test'
 
 const css = readFileSync(new URL('./blog.module.css', import.meta.url), 'utf8')
 
-test('mobile art-directed covers keep the source image ratio instead of fixed frames', () => {
-  const mobileArtDirectionRule = css.match(
-    /@media \(max-width: 768px\)[\s\S]*?\.heroImageWrapper\.heroImageWrapperArtDirected,[\s\S]*?\.articleCoverWrapper\.articleCoverWrapperArtDirected \{(?<body>[\s\S]*?)\}/
+test('mobile covers keep the source image ratio instead of fixed frames', () => {
+  const mobileNaturalCoverRule = css.match(
+    /@media \(max-width: 768px\)[\s\S]*?\.heroImageWrapper,[\s\S]*?\.hImageWrapper:not\(\.hImageWrapperEmpty\),[\s\S]*?\.articleCoverWrapper \{(?<body>[\s\S]*?)\}/
   )?.groups?.body
 
-  assert.ok(mobileArtDirectionRule, 'expected a mobile art-direction wrapper rule')
-  assert.match(mobileArtDirectionRule, /aspect-ratio:\s*auto;/)
-  assert.match(mobileArtDirectionRule, /height:\s*auto;/)
-  assert.match(mobileArtDirectionRule, /max-height:\s*none;/)
-  assert.match(mobileArtDirectionRule, /background:\s*transparent;/)
+  assert.ok(mobileNaturalCoverRule, 'expected a mobile natural cover wrapper rule')
+  assert.match(mobileNaturalCoverRule, /aspect-ratio:\s*auto;/)
+  assert.match(mobileNaturalCoverRule, /height:\s*auto;/)
+  assert.match(mobileNaturalCoverRule, /max-height:\s*none;/)
+  assert.match(mobileNaturalCoverRule, /background:\s*transparent;/)
 
   const naturalPictureRule = css.match(
-    /@media \(max-width: 768px\)[\s\S]*?\.articleCoverWrapperArtDirected \.coverPicture \{(?<body>[\s\S]*?)\}/
+    /@media \(max-width: 768px\)[\s\S]*?\.articleCoverWrapper \.coverPicture \{(?<body>[\s\S]*?)\}/
   )?.groups?.body
 
   assert.ok(naturalPictureRule, 'expected a mobile natural-size picture rule')

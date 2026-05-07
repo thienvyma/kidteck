@@ -525,37 +525,6 @@
     aspect-ratio: 16 / 10;
   }
 
-  .heroImageWrapper.heroImageWrapperArtDirected,
-  .hImageWrapper.hImageWrapperArtDirected,
-  .articleCoverWrapper.articleCoverWrapperArtDirected {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    height: auto;
-    max-height: none;
-    aspect-ratio: auto;
-    background: transparent;
-    overflow: visible;
-  }
-
-  .heroImageWrapperArtDirected .coverPicture,
-  .hImageWrapperArtDirected .coverPicture,
-  .articleCoverWrapperArtDirected .coverPicture {
-    width: auto;
-    max-width: 100%;
-    height: auto;
-  }
-
-  .heroImageWrapperArtDirected .heroImage,
-  .hImageWrapperArtDirected .hImage,
-  .articleCoverWrapperArtDirected .articleCover {
-    width: auto;
-    max-width: 100%;
-    height: auto;
-    object-fit: contain;
-    object-position: center;
-  }
-
   .heroContent {
     padding: 1.45rem 1.25rem 1.35rem;
   }
@@ -1241,5 +1210,42 @@
 
   .articleProse {
     font-size: 0.98rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .heroImageWrapper,
+  .hImageWrapper:not(.hImageWrapperEmpty),
+  .articleCoverWrapper {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    aspect-ratio: auto;
+    background: transparent;
+    overflow: visible;
+  }
+
+  .heroImageWrapper .coverPicture,
+  .hImageWrapper:not(.hImageWrapperEmpty) .coverPicture,
+  .articleCoverWrapper .coverPicture {
+    display: inline-block;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    line-height: 0;
+  }
+
+  .heroImageWrapper .heroImage,
+  .hImageWrapper:not(.hImageWrapperEmpty) .hImage,
+  .articleCoverWrapper .articleCover {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+    object-position: center;
   }
 }
