@@ -1,11 +1,11 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import ReactMarkdown from 'react-markdown'
 import Navbar from '@/components/ui/Navbar'
+import { buildSafeArticleHtml, hasArticleHtml, normalizeArticleContent } from '@/lib/blog-content'
 import { getLandingHeaderData } from '@/lib/landing-content'
+import { cloneDefaultLandingContent } from '@/lib/landing-defaults'
 import { createPublicSupabaseClient } from '@/lib/public-supabase'
-import { sanitizeHTML } from '@/lib/sanitize'
 import { normalizeImageUrl } from '@/lib/blog-media'
 import styles from '../blog.module.css'
 import landingStyles from '../../page.module.css'
@@ -13,67 +13,124 @@ import landingStyles from '../../page.module.css'
 export const dynamic = 'force-dynamic'
 
 async function getBlog(slug) {
-  const supabase = createPublicSupabaseClient()
-  if (!supabase) return null
+  try {
+    const supabase = createPublicSupabaseClient()
+    if (!supabase) return null
 
-  const { data, error } = await supabase
-    .from('blogs')
-    .select('*')
-    .eq('slug', slug)
-    .maybeSingle()
+    const { data, error } = await supabase
+      .from('blogs')
+      .select('*')
+      .eq('slug', slug)
+      .maybeSingle()
 
-  if (error || !data || !data.is_published) {
+    if (error || !data || !data.is_published) {
+      return null
+    }
+
+    return data
+  } catch (error) {
+    console.error('Error fetching blog detail:', error)
     return null
   }
-
-  return data
 }
 
 async function getRecentBlogs(excludeSlug) {
-  const supabase = createPublicSupabaseClient()
-  if (!supabase) return []
+  try {
+    const supabase = createPublicSupabaseClient()
+    if (!supabase) return []
 
-  const { data, error } = await supabase
-    .from('blogs')
-    .select('id, slug, title, published_at')
-    .eq('is_published', true)
-    .neq('slug', excludeSlug)
-    .order('published_at', { ascending: false })
-    .limit(3)
+    const { data, error } = await supabase
+      .from('blogs')
+      .select('id, slug, title, published_at')
+      .eq('is_published', true)
+      .neq('slug', excludeSlug)
+      .order('published_at', { ascending: false })
+      .limit(3)
 
-  if (error) return []
-  return data || []
+    if (error) return []
+    return data || []
+  } catch (error) {
+    console.error('Error fetching recent blogs:', error)
+    return []
+  }
 }
 
 async function getAllTags() {
-  const supabase = createPublicSupabaseClient()
-  if (!supabase) return []
+  try {
+    const supabase = createPublicSupabaseClient()
+    if (!supabase) return []
 
-  const { data } = await supabase.from('blogs').select('tags').eq('is_published', true)
-  if (!data) return []
+    const { data } = await supabase.from('blogs').select('tags').eq('is_published', true)
+    if (!data) return []
 
-  const tagSet = new Set()
-  data.forEach((blog) => {
-    if (blog.tags && Array.isArray(blog.tags)) {
-      blog.tags.forEach((tag) => tagSet.add(tag))
+    const tagSet = new Set()
+    data.forEach((blog) => {
+      if (blog.tags && Array.isArray(blog.tags)) {
+        blog.tags.forEach((tag) => tagSet.add(tag))
+      }
+    })
+    return Array.from(tagSet).sort()
+  } catch (error) {
+    console.error('Error fetching blog tags:', error)
+    return []
+  }
+}
+
+async function buildArticleContent(content) {
+  if (hasArticleHtml(content)) {
+    return { type: 'html', html: await buildSafeArticleHtml(content) }
+  }
+
+  try {
+    const ReactMarkdown = (await import('react-markdown')).default
+
+    return {
+      type: 'node',
+      node: (
+        <ReactMarkdown
+          components={{
+            img: ({ alt, src = '', ...props }) => {
+              const imageUrl = normalizeImageUrl(src)
+              if (!imageUrl) return null
+
+              return (
+                <Image
+                  {...props}
+                  src={imageUrl}
+                  alt={alt || ''}
+                  width={1600}
+                  height={900}
+                  sizes="100vw"
+                  referrerPolicy="no-referrer"
+                  loading="lazy"
+                  decoding="async"
+                  style={{ width: '100%', height: 'auto' }}
+                />
+              )
+            },
+          }}
+        >
+          {content}
+        </ReactMarkdown>
+      ),
     }
-  })
-  return Array.from(tagSet).sort()
+  } catch (error) {
+    console.error('Blog markdown render fallback:', error)
+    return { type: 'html', html: await buildSafeArticleHtml(content) }
+  }
 }
 
-function normalizeArticleContent(value) {
-  if (typeof value !== 'string') return ''
-
-  return value
-    .replace(/&nbsp;|&#160;|\u00a0/g, ' ')
-    .replace(/[ \t]{2,}/g, ' ')
-}
-
-function enhanceArticleHtml(html) {
-  return html
-    .replace(/<p>(?:\s|<br\s*\/?>)*<\/p>/gi, '')
-    .replace(/<p>\s*[-•]\s*([^<]+?)\s*<\/p>/gi, '<ul><li>$1</li></ul>')
-    .replace(/<\/ul>\s*<ul>/gi, '')
+async function getSafeLandingHeaderData() {
+  try {
+    return await getLandingHeaderData()
+  } catch (error) {
+    console.error('Blog detail landing header fallback:', error)
+    const fallback = cloneDefaultLandingContent()
+    return {
+      header: fallback.header,
+      sectionVisibility: fallback.sectionVisibility,
+    }
+  }
 }
 
 export async function generateMetadata({ params }) {
@@ -104,16 +161,17 @@ export async function generateMetadata({ params }) {
 
 export default async function BlogPostPage({ params }) {
   const { slug } = await params
-  const [blog, landingHeaderData, recentBlogs, allTags] = await Promise.all([
-    getBlog(slug),
-    getLandingHeaderData(),
-    getRecentBlogs(slug),
-    getAllTags(),
-  ])
+  const blog = await getBlog(slug)
 
   if (!blog) {
     notFound()
   }
+
+  const [landingHeaderData, recentBlogs, allTags] = await Promise.all([
+    getSafeLandingHeaderData(),
+    getRecentBlogs(slug),
+    getAllTags(),
+  ])
 
   const content = normalizeArticleContent(blog.content)
   const coverImageUrl = normalizeImageUrl(blog.cover_image_url)
@@ -166,11 +224,7 @@ export default async function BlogPostPage({ params }) {
     ],
   }
 
-  const articleHtml = /<[a-z][\s\S]*>/i.test(content)
-    ? enhanceArticleHtml(sanitizeHTML(content)).replace(/<img(?!.*?referrerpolicy)[^>]*>/gi, (match) =>
-        match.replace('<img', '<img referrerpolicy="no-referrer" loading="lazy" decoding="async"')
-      )
-    : null
+  const articleContent = await buildArticleContent(content)
 
   return (
     <>
@@ -237,38 +291,14 @@ export default async function BlogPostPage({ params }) {
                 )}
 
                 <article className={styles.articleProse}>
-                  {articleHtml ? (
+                  {articleContent.type === 'html' ? (
                     <div
                       dangerouslySetInnerHTML={{
-                        __html: articleHtml,
+                        __html: articleContent.html,
                       }}
                     />
                   ) : (
-                    <ReactMarkdown
-                      components={{
-                        img: ({ node, alt, src = '', ...props }) => {
-                          const imageUrl = normalizeImageUrl(src)
-                          if (!imageUrl) return null
-
-                          return (
-                            <Image
-                              {...props}
-                              src={imageUrl}
-                              alt={alt || ''}
-                              width={1600}
-                              height={900}
-                              sizes="100vw"
-                              referrerPolicy="no-referrer"
-                              loading="lazy"
-                              decoding="async"
-                              style={{ width: '100%', height: 'auto' }}
-                            />
-                          )
-                        },
-                      }}
-                    >
-                      {content}
-                    </ReactMarkdown>
+                    articleContent.node
                   )}
                 </article>
 

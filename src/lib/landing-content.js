@@ -25,9 +25,16 @@ function getVersionOrder(file) {
 }
 
 function createAdminClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    return null
+  }
+
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    supabaseUrl,
+    serviceRoleKey,
     {
       auth: {
         persistSession: false,
@@ -479,8 +486,13 @@ async function ensureLandingContentSeeded(adminClient) {
 }
 
 export async function getLandingContentDocument() {
-  const adminClient = createAdminClient()
   const fallback = cloneDefaultLandingContent()
+  const adminClient = createAdminClient()
+
+  if (!adminClient) {
+    console.warn('getLandingContentDocument fallback: Supabase admin client is not configured.')
+    return { content: fallback, createdAt: '', updatedAt: '' }
+  }
 
   try {
     const current = await fetchDatabaseLandingContent(adminClient)
@@ -520,6 +532,10 @@ export async function getLandingHeaderData() {
 
 export async function saveLandingContent(content, options = {}) {
   const adminClient = createAdminClient()
+  if (!adminClient) {
+    throw new Error('Supabase admin client is not configured.')
+  }
+
   const normalized = normalizeLandingContent(content)
   const expectedUpdatedAt = readOptionalString(options.expectedUpdatedAt)
 
@@ -556,6 +572,11 @@ export async function saveLandingContent(content, options = {}) {
 
 export async function getLandingLevels() {
   const adminClient = createAdminClient()
+  if (!adminClient) {
+    console.warn('getLandingLevels fallback: Supabase admin client is not configured.')
+    return []
+  }
+
   const { data, error } = await adminClient
     .from('levels')
     .select(`

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient, requireRole } from '@/lib/server-auth'
+import { normalizeBlogContentForStorage } from '@/lib/blog-content'
 import { normalizeImageUrl } from '@/lib/blog-media'
 
 export async function GET(_request, { params }) {
@@ -47,13 +48,14 @@ export async function PATCH(request, { params }) {
       return NextResponse.json({ error: 'Invalid cover image URL' }, { status: 400 })
     }
 
+    const content = await normalizeBlogContentForStorage(body.content || '')
     const payload = {
       title: body.title,
       slug: body.slug,
       description: body.description || null,
       cover_image_url: coverImageUrl || null,
       tags: Array.isArray(body.tags) ? body.tags : [],
-      content: body.content || '',
+      content,
       is_published: body.is_published === true,
       published_at: body.is_published ? body.published_at || new Date().toISOString() : null,
     }
