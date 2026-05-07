@@ -30,22 +30,31 @@ export function textToArticleHtml(value) {
     .join('')
 }
 
-function htmlToPlainText(value) {
-  return String(value)
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[\s\S]*?<\/style>/gi, '')
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/(p|div|h[1-6]|li|blockquote|tr)>/gi, '\n\n')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;|&#160;|\u00a0/g, ' ')
-    .replace(/[ \t]{2,}/g, ' ')
-    .trim()
-}
-
 function readHtmlAttribute(tag, attribute) {
   const pattern = new RegExp(`${attribute}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, 'i')
   const match = tag.match(pattern)
   return match ? match[1] || match[2] || match[3] || '' : ''
+}
+
+function isSafeLinkUrl(value) {
+  const url = String(value || '').trim()
+  if (!url) return false
+
+  if (url.startsWith('/') || url.startsWith('#')) {
+    return true
+  }
+
+  try {
+    const parsed = new URL(url)
+    return ['http:', 'https:', 'mailto:', 'tel:'].includes(parsed.protocol)
+  } catch {
+    return false
+  }
+}
+
+function normalizeLengthAttribute(value) {
+  const normalized = String(value || '').trim()
+  return /^\d{1,5}$/.test(normalized) ? normalized : ''
 }
 
 export function normalizeEmbeddedImages(html) {
@@ -65,13 +74,80 @@ export function enhanceArticleHtml(html) {
     .replace(/<\/ul>\s*<ul>/gi, '')
 }
 
+function fallbackSanitizeHTML(html) {
+  const allowedTags = new Set([
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'p', 'br', 'hr',
+    'ul', 'ol', 'li',
+    'strong', 'em', 'b', 'i', 'u', 's',
+    'a', 'img',
+    'blockquote', 'pre', 'code',
+    'table', 'thead', 'tbody', 'tr', 'th', 'td',
+    'div', 'span', 'sub', 'sup',
+  ])
+
+  return String(html)
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<\s*(script|style|iframe|object|embed|svg|math|form)[\s\S]*?<\s*\/\s*\1\s*>/gi, '')
+    .replace(/<\s*\/?\s*(script|style|iframe|object|embed|svg|math|form|input|button|textarea|select|option|meta|link)[^>]*>/gi, '')
+    .replace(/<\s*(\/?)([a-z][a-z0-9-]*)([^>]*)>/gi, (match, closingSlash, rawTagName, rawAttrs = '') => {
+      const tagName = rawTagName.toLowerCase()
+      if (!allowedTags.has(tagName)) return ''
+
+      if (closingSlash) {
+        return ['br', 'hr', 'img'].includes(tagName) ? '' : `</${tagName}>`
+      }
+
+      if (tagName === 'br' || tagName === 'hr') {
+        return `<${tagName}>`
+      }
+
+      if (tagName === 'img') {
+        const imageUrl = normalizeImageUrl(readHtmlAttribute(match, 'src'))
+        if (!imageUrl) return ''
+
+        const alt = readHtmlAttribute(match, 'alt')
+        const width = normalizeLengthAttribute(readHtmlAttribute(match, 'width'))
+        const height = normalizeLengthAttribute(readHtmlAttribute(match, 'height'))
+
+        return [
+          `<img src="${escapeHTML(imageUrl)}"`,
+          `alt="${escapeHTML(alt)}"`,
+          width ? `width="${width}"` : '',
+          height ? `height="${height}"` : '',
+          'referrerpolicy="no-referrer"',
+          'loading="lazy"',
+          'decoding="async"',
+          '/>',
+        ].filter(Boolean).join(' ')
+      }
+
+      if (tagName === 'a') {
+        const href = readHtmlAttribute(match, 'href')
+        if (!isSafeLinkUrl(href)) return '<a>'
+
+        const title = readHtmlAttribute(match, 'title')
+        const target = readHtmlAttribute(match, 'target') === '_blank' ? ' target="_blank" rel="noopener noreferrer"' : ''
+        return `<a href="${escapeHTML(href)}"${title ? ` title="${escapeHTML(title)}"` : ''}${target}>`
+      }
+
+      const className = readHtmlAttribute(`<${tagName}${rawAttrs}>`, 'class')
+      const safeClassName = className
+        .split(/\s+/)
+        .filter((item) => /^ql-(align|indent|direction)-[\w-]+$/.test(item))
+        .join(' ')
+
+      return safeClassName ? `<${tagName} class="${escapeHTML(safeClassName)}">` : `<${tagName}>`
+    })
+}
+
 async function sanitizeArticleHtml(html) {
   try {
     const { sanitizeHTML } = await import('@/lib/sanitize')
     return sanitizeHTML(html)
   } catch (error) {
     console.error('Blog article sanitize fallback:', error)
-    return textToArticleHtml(htmlToPlainText(html))
+    return fallbackSanitizeHTML(html)
   }
 }
 
