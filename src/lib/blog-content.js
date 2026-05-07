@@ -57,6 +57,73 @@ function normalizeLengthAttribute(value) {
   return /^\d{1,5}$/.test(normalized) ? normalized : ''
 }
 
+function readSafeClassName(tag) {
+  return readHtmlAttribute(tag, 'class')
+    .split(/\s+/)
+    .filter((item) =>
+      /^(ql-(align|indent|direction)-[\w-]+|ql-(checklist|checked|unchecked|syntax|code-block))$/.test(item)
+    )
+    .join(' ')
+}
+
+function buildOpeningTag(tagName, className = '') {
+  return className ? `<${tagName} class="${escapeHTML(className)}">` : `<${tagName}>`
+}
+
+function normalizeQuillListHtml(html) {
+  return String(html).replace(/<ol\b[^>]*>([\s\S]*?)<\/ol>/gi, (listMatch, listInner) => {
+    const itemPattern = /<li\b([^>]*)>([\s\S]*?)<\/li>/gi
+    const items = []
+    let match
+
+    while ((match = itemPattern.exec(listInner)) !== null) {
+      const attrs = match[1] || ''
+      const body = match[2] || ''
+      const listKind = readHtmlAttribute(`<li${attrs}>`, 'data-list')
+      const safeClassName = readSafeClassName(`<li${attrs}>`)
+
+      if (listKind === 'bullet') {
+        items.push({ listTag: 'ul', listClass: '', itemClass: safeClassName, body })
+      } else if (listKind === 'checked' || listKind === 'unchecked') {
+        items.push({
+          listTag: 'ul',
+          listClass: 'ql-checklist',
+          itemClass: [safeClassName, `ql-${listKind}`].filter(Boolean).join(' '),
+          body,
+        })
+      } else {
+        items.push({ listTag: 'ol', listClass: '', itemClass: safeClassName, body })
+      }
+    }
+
+    if (items.length === 0) return listMatch
+
+    let output = ''
+    let openListTag = ''
+    let openListClass = ''
+
+    items.forEach((item) => {
+      if (item.listTag !== openListTag || item.listClass !== openListClass) {
+        if (openListTag) output += `</${openListTag}>`
+        output += buildOpeningTag(item.listTag, item.listClass)
+        openListTag = item.listTag
+        openListClass = item.listClass
+      }
+
+      output += `${buildOpeningTag('li', item.itemClass)}${item.body}</li>`
+    })
+
+    if (openListTag) output += `</${openListTag}>`
+    return output
+  })
+}
+
+function normalizeQuillHtml(html) {
+  return normalizeQuillListHtml(
+    String(html).replace(/<span\b[^>]*class=(?:"[^"]*\bql-ui\b[^"]*"|'[^']*\bql-ui\b[^']*')[^>]*><\/span>/gi, '')
+  )
+}
+
 export function normalizeEmbeddedImages(html) {
   return String(html).replace(/<img\b[^>]*>/gi, (tag) => {
     const imageUrl = normalizeImageUrl(readHtmlAttribute(tag, 'src'))
@@ -131,11 +198,7 @@ function fallbackSanitizeHTML(html) {
         return `<a href="${escapeHTML(href)}"${title ? ` title="${escapeHTML(title)}"` : ''}${target}>`
       }
 
-      const className = readHtmlAttribute(`<${tagName}${rawAttrs}>`, 'class')
-      const safeClassName = className
-        .split(/\s+/)
-        .filter((item) => /^ql-(align|indent|direction)-[\w-]+$/.test(item))
-        .join(' ')
+      const safeClassName = readSafeClassName(`<${tagName}${rawAttrs}>`)
 
       return safeClassName ? `<${tagName} class="${escapeHTML(safeClassName)}">` : `<${tagName}>`
     })
@@ -154,10 +217,10 @@ async function sanitizeArticleHtml(html) {
 export async function buildSafeArticleHtml(content) {
   const normalizedContent = normalizeArticleContent(content)
   const sourceHtml = hasArticleHtml(normalizedContent)
-    ? normalizedContent
+    ? normalizeQuillHtml(normalizedContent)
     : textToArticleHtml(normalizedContent)
   const sanitizedHtml = await sanitizeArticleHtml(sourceHtml)
-  return normalizeEmbeddedImages(enhanceArticleHtml(sanitizedHtml))
+  return normalizeEmbeddedImages(enhanceArticleHtml(normalizeQuillHtml(sanitizedHtml)))
 }
 
 export async function normalizeBlogContentForStorage(content) {

@@ -749,6 +749,16 @@
   margin-bottom: 1em; /* Giảm từ 1.5em xuống 1em */
 }
 
+.articleProse h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--color-gray-900);
+  margin-top: 1.6em;
+  margin-bottom: 0.65em;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
 .articleProse h2 {
   font-size: 1.7rem;
   font-weight: 700;
@@ -769,13 +779,54 @@
 .articleProse h4 {
   font-size: 1.15rem;
   font-weight: 700;
+  color: var(--color-gray-900);
   margin-top: 1.2em;
   margin-bottom: 0.5em;
+}
+
+.articleProse h5,
+.articleProse h6 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-gray-900);
+  margin-top: 1.1em;
+  margin-bottom: 0.45em;
+  line-height: 1.35;
 }
 
 .articleProse strong {
   font-weight: 700;
   color: var(--color-gray-900);
+}
+
+.articleProse em {
+  font-style: italic;
+}
+
+.articleProse u {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.articleProse s {
+  text-decoration: line-through;
+}
+
+.articleProse :global(.ql-align-center) {
+  text-align: center;
+}
+
+.articleProse :global(.ql-align-right) {
+  text-align: right;
+}
+
+.articleProse :global(.ql-align-justify) {
+  text-align: justify;
+}
+
+.articleProse :global(.ql-direction-rtl) {
+  direction: rtl;
+  text-align: inherit;
 }
 
 /* Links */
@@ -816,7 +867,42 @@
   font-weight: bold;
 }
 
-/* Blockquote - Xịn như Medium */
+/* Quill alignment/list helpers */
+.articleProse :global(.ql-indent-1) { margin-left: 2em; }
+.articleProse :global(.ql-indent-2) { margin-left: 4em; }
+.articleProse :global(.ql-indent-3) { margin-left: 6em; }
+.articleProse :global(.ql-indent-4) { margin-left: 8em; }
+.articleProse :global(.ql-indent-5) { margin-left: 10em; }
+.articleProse :global(.ql-indent-6) { margin-left: 12em; }
+.articleProse :global(.ql-indent-7) { margin-left: 14em; }
+.articleProse :global(.ql-indent-8) { margin-left: 16em; }
+
+.articleProse :global(.ql-checklist) {
+  list-style: none;
+  padding-left: 0;
+}
+
+.articleProse :global(.ql-checklist) li {
+  position: relative;
+  padding-left: 1.7em;
+}
+
+.articleProse :global(.ql-checklist) li::before {
+  position: absolute;
+  left: 0;
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.articleProse :global(.ql-checked)::before {
+  content: "\2611";
+}
+
+.articleProse :global(.ql-unchecked)::before {
+  content: "\2610";
+}
+
+/* Blockquote */
 .articleProse blockquote {
   margin: 1.5em 0;
   padding: 1em 1.2em;
@@ -886,6 +972,21 @@
   display: block;
   max-width: 100%;
   overflow-x: auto;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+}
+
+.articleProse th,
+.articleProse td {
+  border: 1px solid var(--color-gray-200);
+  padding: 0.65em 0.8em;
+  text-align: left;
+}
+
+.articleProse th {
+  background: var(--color-gray-100);
+  color: var(--color-gray-900);
+  font-weight: 700;
 }
 
 .articleFooter {
@@ -1015,6 +1116,12 @@
     margin-bottom: 0.9em;
   }
 
+  .articleProse h1 {
+    font-size: 1.5rem;
+    margin-top: 1.75em;
+    margin-bottom: 0.7em;
+  }
+
   .articleProse h2 {
     font-size: 1.35rem;
     margin-top: 1.75em;
@@ -1026,6 +1133,24 @@
     font-size: 1.18rem;
     margin-top: 1.45em;
     margin-bottom: 0.55em;
+  }
+
+  .articleProse h4,
+  .articleProse h5,
+  .articleProse h6 {
+    font-size: 1.04rem;
+    margin-top: 1.25em;
+  }
+
+  .articleProse :global(.ql-indent-1) { margin-left: 1em; }
+  .articleProse :global(.ql-indent-2) { margin-left: 1.5em; }
+  .articleProse :global(.ql-indent-3),
+  .articleProse :global(.ql-indent-4),
+  .articleProse :global(.ql-indent-5),
+  .articleProse :global(.ql-indent-6),
+  .articleProse :global(.ql-indent-7),
+  .articleProse :global(.ql-indent-8) {
+    margin-left: 2em;
   }
 
   .articleProse blockquote {
