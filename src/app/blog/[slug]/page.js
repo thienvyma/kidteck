@@ -6,7 +6,8 @@ import { buildSafeArticleHtml, hasArticleHtml, normalizeArticleContent } from '@
 import { getLandingHeaderData } from '@/lib/landing-content'
 import { cloneDefaultLandingContent } from '@/lib/landing-defaults'
 import { createPublicSupabaseClient } from '@/lib/public-supabase'
-import { normalizeImageUrl } from '@/lib/blog-media'
+import { getBlogCoverImages, normalizeImageUrl } from '@/lib/blog-media'
+import ResponsiveBlogCover from '../ResponsiveBlogCover'
 import styles from '../blog.module.css'
 import landingStyles from '../../page.module.css'
 
@@ -141,7 +142,7 @@ export async function generateMetadata({ params }) {
     return { title: 'Không tìm thấy bài viết | AIgenlabs' }
   }
 
-  const coverImageUrl = normalizeImageUrl(blog.cover_image_url)
+  const coverImages = getBlogCoverImages(blog)
 
   return {
     title: `${blog.title} | AIgenlabs`,
@@ -149,7 +150,7 @@ export async function generateMetadata({ params }) {
     openGraph: {
       title: blog.title,
       description: blog.description,
-      images: coverImageUrl ? [{ url: coverImageUrl }] : [],
+      images: coverImages.desktop ? [{ url: coverImages.desktop }] : [],
       type: 'article',
       publishedTime: blog.published_at,
     },
@@ -174,7 +175,7 @@ export default async function BlogPostPage({ params }) {
   ])
 
   const content = normalizeArticleContent(blog.content)
-  const coverImageUrl = normalizeImageUrl(blog.cover_image_url)
+  const coverImages = getBlogCoverImages(blog)
   const publishedDate = new Date(blog.published_at).toLocaleDateString('vi-VN', {
     day: '2-digit',
     month: '2-digit',
@@ -186,7 +187,7 @@ export default async function BlogPostPage({ params }) {
     '@type': 'BlogPosting',
     headline: blog.title,
     description: blog.description,
-    image: coverImageUrl || undefined,
+    image: coverImages.desktop || undefined,
     datePublished: blog.published_at,
     dateModified: blog.updated_at || blog.published_at,
     publisher: {
@@ -276,17 +277,15 @@ export default async function BlogPostPage({ params }) {
                   </div>
                 </header>
 
-                {coverImageUrl && (
-                  <div className={styles.articleCoverWrapper}>
-                    <Image
-                      src={coverImageUrl}
+                {coverImages.desktop && (
+                  <div className={`${styles.articleCoverWrapper} ${coverImages.hasMobileArtDirection ? styles.articleCoverWrapperArtDirected : ''}`}>
+                    <ResponsiveBlogCover
+                      desktopSrc={coverImages.desktop}
+                      mobileSrc={coverImages.mobile}
                       alt={`Ảnh bìa bài viết: ${blog.title}`}
                       className={styles.articleCover}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 860px"
-                      priority
-                      referrerPolicy="no-referrer"
-                      unoptimized
+                      cover={coverImages.hasMobileArtDirection}
+                      eager
                     />
                   </div>
                 )}

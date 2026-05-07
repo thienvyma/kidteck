@@ -18,6 +18,18 @@ export function normalizeImageUrl(value) {
   }
 }
 
+export function getBlogCoverImages(blog) {
+  const desktop = normalizeImageUrl(blog?.cover_image_url)
+  const mobile = normalizeImageUrl(blog?.cover_image_mobile_url)
+  const fallback = desktop || mobile
+
+  return {
+    desktop: desktop || fallback,
+    mobile: mobile || fallback,
+    hasMobileArtDirection: Boolean(desktop && mobile && desktop !== mobile),
+  }
+}
+
 function normalizeGoogleDriveImageUrl(url) {
   const driveFileMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/)
   if (driveFileMatch?.[1]) {

@@ -41,8 +41,12 @@ export async function POST(request) {
     }
 
     const coverImageUrl = normalizeImageUrl(body.cover_image_url)
+    const coverImageMobileUrl = normalizeImageUrl(body.cover_image_mobile_url)
     if (body.cover_image_url && !coverImageUrl) {
       return NextResponse.json({ error: 'Invalid cover image URL' }, { status: 400 })
+    }
+    if (body.cover_image_mobile_url && !coverImageMobileUrl) {
+      return NextResponse.json({ error: 'Invalid mobile cover image URL' }, { status: 400 })
     }
 
     const content = await normalizeBlogContentForStorage(body.content || '')
@@ -52,6 +56,7 @@ export async function POST(request) {
       slug: body.slug,
       description: body.description || null,
       cover_image_url: coverImageUrl || null,
+      cover_image_mobile_url: coverImageMobileUrl || null,
       tags: Array.isArray(body.tags) ? body.tags : [],
       content,
       is_published: body.is_published === true,

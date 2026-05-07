@@ -7,6 +7,7 @@ CREATE TABLE blogs (
   description TEXT,
   content TEXT NOT NULL,
   cover_image_url TEXT,
+  cover_image_mobile_url TEXT,
   author_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
   is_published BOOLEAN DEFAULT FALSE,
   published_at TIMESTAMPTZ,

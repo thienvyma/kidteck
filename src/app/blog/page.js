@@ -1,9 +1,9 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import Navbar from '@/components/ui/Navbar'
 import { getLandingHeaderData } from '@/lib/landing-content'
 import { createPublicSupabaseClient } from '@/lib/public-supabase'
-import { normalizeImageUrl } from '@/lib/blog-media'
+import { getBlogCoverImages } from '@/lib/blog-media'
+import ResponsiveBlogCover from './ResponsiveBlogCover'
 import styles from './blog.module.css'
 
 export const revalidate = 60 // ISR caching auto-revalidate 
@@ -29,7 +29,10 @@ async function getBlogs(page = 1) {
 
   const { data, error, count } = await supabase
     .from('blogs')
-    .select('id, slug, title, description, cover_image_url, published_at, tags', { count: 'exact' })
+    .select(
+      'id, slug, title, description, cover_image_url, cover_image_mobile_url, published_at, tags',
+      { count: 'exact' }
+    )
     .eq('is_published', true)
     .order('published_at', { ascending: false })
     .range(from, to)
@@ -86,7 +89,7 @@ export default async function BlogArchivePage({ searchParams }) {
   const hero = isPageOne && blogs.length > 0 ? blogs[0] : null;
   const feedBlogs = isPageOne ? blogs.slice(1) : blogs;
   const popularBlogs = hero ? blogs.slice(1, 4) : blogs.slice(0, 3);
-  const heroImageUrl = normalizeImageUrl(hero?.cover_image_url)
+  const heroCover = getBlogCoverImages(hero)
 
   // Render pagination buttons
   const renderPagination = () => {
@@ -150,18 +153,16 @@ export default async function BlogArchivePage({ searchParams }) {
                   
                   {/* Hero section chỉ hiện ở Page 1 */}
                   {hero && (
-                      <Link href={`/blog/${hero.slug}`} className={`${styles.heroCard} ${!heroImageUrl ? styles.heroCardNoImage : ''} card`}>
-                          {heroImageUrl && (
-                              <div className={styles.heroImageWrapper}>
-                                  <Image
-                                    src={heroImageUrl}
+                      <Link href={`/blog/${hero.slug}`} className={`${styles.heroCard} ${!heroCover.desktop ? styles.heroCardNoImage : ''} card`}>
+                          {heroCover.desktop && (
+                              <div className={`${styles.heroImageWrapper} ${heroCover.hasMobileArtDirection ? styles.heroImageWrapperArtDirected : ''}`}>
+                                  <ResponsiveBlogCover
+                                    desktopSrc={heroCover.desktop}
+                                    mobileSrc={heroCover.mobile}
                                     alt={hero.title}
                                     className={styles.heroImage}
-                                    fill
-                                    sizes="(max-width: 1024px) 100vw, 66vw"
-                                    priority
-                                    referrerPolicy="no-referrer"
-                                    unoptimized
+                                    cover={heroCover.hasMobileArtDirection}
+                                    eager
                                   />
                               </div>
                           )}
@@ -187,19 +188,17 @@ export default async function BlogArchivePage({ searchParams }) {
                   <div className={styles.postFeed}>
                       <h3 className={styles.sectionTitle}>Mới nhất</h3>
                       {feedBlogs.map(blog => {
-                          const imageUrl = normalizeImageUrl(blog.cover_image_url)
+                          const cover = getBlogCoverImages(blog)
                           return (
                               <Link href={`/blog/${blog.slug}`} key={blog.id} className={`${styles.horizontalCard} card`}>
-                                  <div className={`${styles.hImageWrapper} ${!imageUrl ? styles.hImageWrapperEmpty : ''}`}>
-                                      {imageUrl ? (
-                                          <Image
-                                            src={imageUrl}
+                                  <div className={`${styles.hImageWrapper} ${cover.hasMobileArtDirection ? styles.hImageWrapperArtDirected : ''} ${!cover.desktop ? styles.hImageWrapperEmpty : ''}`}>
+                                      {cover.desktop ? (
+                                          <ResponsiveBlogCover
+                                            desktopSrc={cover.desktop}
+                                            mobileSrc={cover.mobile}
                                             alt={blog.title}
                                             className={styles.hImage}
-                                            fill
-                                            sizes="(max-width: 768px) 100vw, 260px"
-                                            referrerPolicy="no-referrer"
-                                            unoptimized
+                                            cover={cover.hasMobileArtDirection}
                                           />
                                       ) : (
                                           <div className={styles.placeholderBg}>AI</div>

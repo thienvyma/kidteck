@@ -525,6 +525,16 @@
     aspect-ratio: 16 / 10;
   }
 
+  .heroImageWrapper.heroImageWrapperArtDirected,
+  .hImageWrapper.hImageWrapperArtDirected,
+  .articleCoverWrapper.articleCoverWrapperArtDirected {
+    aspect-ratio: 4 / 5;
+  }
+
+  .articleCoverWrapper.articleCoverWrapperArtDirected {
+    max-height: none;
+  }
+
   .heroContent {
     padding: 1.45rem 1.25rem 1.35rem;
   }
@@ -692,6 +702,18 @@
   object-fit: contain;
   object-position: center;
   display: block;
+}
+
+.coverPicture {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.heroImage.coverImageCropped,
+.hImage.coverImageCropped,
+.articleCover.coverImageCropped {
+  object-fit: cover;
 }
 
 /* --- Vùng Header (Nằm dưới Cover Image, trước nội dung) --- */

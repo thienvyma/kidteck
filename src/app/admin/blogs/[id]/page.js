@@ -78,11 +78,13 @@ export default function BlogEditorPage() {
     slug: '',
     description: '',
     cover_image_url: '',
+    cover_image_mobile_url: '',
     tags: '',
     content: '',
     is_published: false,
   })
   const coverPreviewUrl = normalizeImageUrl(form.cover_image_url)
+  const coverMobilePreviewUrl = normalizeImageUrl(form.cover_image_mobile_url)
 
   useEffect(() => {
     if (isNew) return
@@ -104,6 +106,7 @@ export default function BlogEditorPage() {
           slug: data.slug || '',
           description: data.description || '',
           cover_image_url: data.cover_image_url || '',
+          cover_image_mobile_url: data.cover_image_mobile_url || '',
           tags: (data.tags || []).join(', '),
           content: data.content || '',
           is_published: data.is_published || false,
@@ -120,7 +123,7 @@ export default function BlogEditorPage() {
   }, [isNew, params.id])
 
   const handleChange = (key, value) => {
-    if (key === 'cover_image_url') {
+    if (key === 'cover_image_url' || key === 'cover_image_mobile_url') {
       value = parseGoogleDriveLink(value)
     }
 
@@ -152,6 +155,7 @@ export default function BlogEditorPage() {
         slug: form.slug,
         description: form.description,
         cover_image_url: form.cover_image_url,
+        cover_image_mobile_url: form.cover_image_mobile_url,
         tags: form.tags
           .split(',')
           .map((tag) => tag.trim())
@@ -255,16 +259,16 @@ export default function BlogEditorPage() {
               />
             </label>
 
-            <label className={styles.formField} style={{ gridColumn: '1 / -1' }}>
-              <span className={styles.formLabel}>Anh Thumbnail</span>
+            <label className={styles.formField}>
+              <span className={styles.formLabel}>Ảnh ngang (tablet / PC)</span>
               <input
                 className={styles.formInput}
                 value={form.cover_image_url}
                 onChange={(e) => handleChange('cover_image_url', e.target.value)}
-                placeholder="Link anh .PNG/JPG hoac copy Link Google Drive dan vao"
+                placeholder="Khuyến nghị 16:9, ví dụ 1600x900"
               />
               <span style={{ fontSize: '0.75rem', color: 'var(--color-gray-500)', marginTop: '4px' }}>
-                Ho tro dan san link chia se tu Google Drive. Form se tu chuyen thanh mang hinh hien thi.
+                Hiển thị cho tablet và PC. Hỗ trợ link chia sẻ Google Drive hoặc link ảnh trực tiếp.
               </span>
               {coverPreviewUrl && (
                 <div
@@ -280,6 +284,7 @@ export default function BlogEditorPage() {
                       position: 'relative',
                       width: '100%',
                       height: '160px',
+                      aspectRatio: '16 / 9',
                       background:
                         'linear-gradient(135deg, rgba(108, 92, 231, 0.08), rgba(0, 210, 211, 0.06)), #f3f4f6',
                     }}
@@ -289,6 +294,50 @@ export default function BlogEditorPage() {
                       alt="Cover Preview"
                       fill
                       sizes="800px"
+                      referrerPolicy="no-referrer"
+                      unoptimized
+                      style={{ objectFit: 'contain', objectPosition: 'center' }}
+                    />
+                  </div>
+                </div>
+              )}
+            </label>
+
+            <label className={styles.formField}>
+              <span className={styles.formLabel}>Ảnh dọc (mobile)</span>
+              <input
+                className={styles.formInput}
+                value={form.cover_image_mobile_url}
+                onChange={(e) => handleChange('cover_image_mobile_url', e.target.value)}
+                placeholder="Khuyến nghị 4:5, ví dụ 1080x1350"
+              />
+              <span style={{ fontSize: '0.75rem', color: 'var(--color-gray-500)', marginTop: '4px' }}>
+                Hiển thị riêng trên mobile. Bỏ trống nếu muốn dùng lại ảnh ngang.
+              </span>
+              {coverMobilePreviewUrl && (
+                <div
+                  style={{
+                    marginTop: '12px',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <div
+                    style={{
+                      position: 'relative',
+                      width: '100%',
+                      height: '260px',
+                      aspectRatio: '4 / 5',
+                      background:
+                        'linear-gradient(135deg, rgba(108, 92, 231, 0.08), rgba(0, 210, 211, 0.06)), #f3f4f6',
+                    }}
+                  >
+                    <Image
+                      src={coverMobilePreviewUrl}
+                      alt="Mobile Cover Preview"
+                      fill
+                      sizes="420px"
                       referrerPolicy="no-referrer"
                       unoptimized
                       style={{ objectFit: 'contain', objectPosition: 'center' }}
