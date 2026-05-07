@@ -10,7 +10,7 @@ import { normalizeImageUrl } from '@/lib/blog-media'
 import styles from '../blog.module.css'
 import landingStyles from '../../page.module.css'
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 async function getBlog(slug) {
   const supabase = createPublicSupabaseClient()
@@ -74,25 +74,6 @@ function enhanceArticleHtml(html) {
     .replace(/<p>(?:\s|<br\s*\/?>)*<\/p>/gi, '')
     .replace(/<p>\s*[-•]\s*([^<]+?)\s*<\/p>/gi, '<ul><li>$1</li></ul>')
     .replace(/<\/ul>\s*<ul>/gi, '')
-}
-
-export async function generateStaticParams() {
-  const supabase = createPublicSupabaseClient()
-  if (!supabase) return []
-
-  const { data, error } = await supabase
-    .from('blogs')
-    .select('slug')
-    .eq('is_published', true)
-
-  if (error) {
-    console.warn('blog generateStaticParams error:', error.message)
-    return []
-  }
-
-  return (data || [])
-    .filter((blog) => typeof blog.slug === 'string' && blog.slug.trim())
-    .map((blog) => ({ slug: blog.slug }))
 }
 
 export async function generateMetadata({ params }) {
