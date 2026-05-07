@@ -286,6 +286,7 @@ export default async function BlogPostPage({ params }) {
                       sizes="(max-width: 768px) 100vw, 860px"
                       priority
                       referrerPolicy="no-referrer"
+                      unoptimized
                     />
                   </div>
                 )}

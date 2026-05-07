@@ -161,6 +161,7 @@ export default async function BlogArchivePage({ searchParams }) {
                                     sizes="(max-width: 1024px) 100vw, 66vw"
                                     priority
                                     referrerPolicy="no-referrer"
+                                    unoptimized
                                   />
                               </div>
                           )}
@@ -198,6 +199,7 @@ export default async function BlogArchivePage({ searchParams }) {
                                             fill
                                             sizes="(max-width: 768px) 100vw, 260px"
                                             referrerPolicy="no-referrer"
+                                            unoptimized
                                           />
                                       ) : (
                                           <div className={styles.placeholderBg}>AI</div>

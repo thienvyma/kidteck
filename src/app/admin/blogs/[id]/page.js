@@ -275,7 +275,15 @@ export default function BlogEditorPage() {
                     overflow: 'hidden',
                   }}
                 >
-                  <div style={{ position: 'relative', width: '100%', height: '160px' }}>
+                  <div
+                    style={{
+                      position: 'relative',
+                      width: '100%',
+                      height: '160px',
+                      background:
+                        'linear-gradient(135deg, rgba(108, 92, 231, 0.08), rgba(0, 210, 211, 0.06)), #f3f4f6',
+                    }}
+                  >
                     <Image
                       src={coverPreviewUrl}
                       alt="Cover Preview"
@@ -283,7 +291,7 @@ export default function BlogEditorPage() {
                       sizes="800px"
                       referrerPolicy="no-referrer"
                       unoptimized
-                      style={{ objectFit: 'cover' }}
+                      style={{ objectFit: 'contain', objectPosition: 'center' }}
                     />
                   </div>
                 </div>
