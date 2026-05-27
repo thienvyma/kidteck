@@ -1013,6 +1013,12 @@
   border-color: rgba(0, 184, 148, 0.2);
 }
 
+.feedbackBannerInfo {
+  background: rgba(9, 132, 227, 0.1);
+  color: #0b6eb8;
+  border-color: rgba(9, 132, 227, 0.22);
+}
+
 .feedbackBannerError {
   background: rgba(225, 112, 85, 0.1);
   color: var(--color-error);
@@ -2336,8 +2342,17 @@
   box-shadow: var(--shadow-sm);
 }
 
+.landingEditorNavRow {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-xs);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
 .landingEditorNavItem {
-  width: 100%;
+  flex: 1 1 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2351,6 +2366,7 @@
   font-weight: 600;
   text-align: left;
   transition: all var(--transition-fast);
+  cursor: pointer;
 }
 
 .landingEditorNavLabel {
@@ -2372,15 +2388,51 @@
   color: var(--color-warning);
 }
 
+.landingEditorNavRow:hover .landingEditorNavItem,
 .landingEditorNavItem:hover {
   background: rgba(108, 92, 231, 0.06);
   border-color: rgba(108, 92, 231, 0.14);
 }
 
+.landingEditorNavRowActive .landingEditorNavItem,
 .landingEditorNavItemActive {
   background: rgba(108, 92, 231, 0.1);
   border-color: rgba(108, 92, 231, 0.18);
   color: var(--color-primary);
+}
+
+.landingEditorNavVisibilityButton {
+  flex: 0 0 auto;
+  min-width: 4.3rem;
+  padding: 0 var(--space-sm);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.landingEditorNavVisibilityButtonWarning {
+  background: rgba(225, 112, 85, 0.08);
+  border-color: rgba(225, 112, 85, 0.22);
+  color: #c65135;
+}
+
+.landingEditorNavVisibilityButtonWarning:hover {
+  background: rgba(225, 112, 85, 0.14);
+  border-color: rgba(225, 112, 85, 0.3);
+}
+
+.landingEditorNavVisibilityButtonSuccess {
+  background: rgba(0, 184, 148, 0.08);
+  border-color: rgba(0, 184, 148, 0.24);
+  color: var(--color-success);
+}
+
+.landingEditorNavVisibilityButtonSuccess:hover {
+  background: rgba(0, 184, 148, 0.14);
+  border-color: rgba(0, 184, 148, 0.32);
 }
 
 .landingEditorNavBadge,
@@ -2410,6 +2462,10 @@
 
 .landingEditorSectionCollapsed {
   box-shadow: var(--shadow-sm);
+}
+
+.landingEditorSectionHidden {
+  border-color: rgba(225, 112, 85, 0.22);
 }
 
 .landingEditorSectionHead {
@@ -2449,6 +2505,63 @@
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
+}
+
+.landingEditorSectionVisibility {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.32rem 0.72rem;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.landingEditorSectionVisibilityVisible {
+  background: rgba(0, 184, 148, 0.1);
+  color: var(--color-success);
+}
+
+.landingEditorSectionVisibilityHidden {
+  background: rgba(225, 112, 85, 0.1);
+  color: #c65135;
+}
+
+.landingEditorSectionVisibilityToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.landingEditorSectionVisibilityToggleWarning {
+  background: rgba(225, 112, 85, 0.08);
+  border-color: rgba(225, 112, 85, 0.22);
+  color: #c65135;
+}
+
+.landingEditorSectionVisibilityToggleWarning:hover {
+  background: rgba(225, 112, 85, 0.14);
+}
+
+.landingEditorSectionVisibilityToggleSuccess {
+  background: rgba(0, 184, 148, 0.08);
+  border-color: rgba(0, 184, 148, 0.24);
+  color: var(--color-success);
+}
+
+.landingEditorSectionVisibilityToggleSuccess:hover {
+  background: rgba(0, 184, 148, 0.14);
 }
 
 .landingEditorSectionToggle {
@@ -3012,6 +3125,14 @@
 
   .landingEditorSectionHead {
     flex-direction: column;
+  }
+
+  .landingEditorNavRow {
+    flex-direction: column;
+  }
+
+  .landingEditorNavVisibilityButton {
+    min-height: 40px;
   }
 
   .landingRepeaterHead,

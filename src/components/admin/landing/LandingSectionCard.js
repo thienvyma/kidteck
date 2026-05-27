@@ -7,8 +7,10 @@ export default function LandingSectionCard({
   badge,
   active,
   collapsed,
+  visible = true,
   dirty,
   onToggle,
+  onVisibilityToggle,
   children,
 }) {
   return (
@@ -16,7 +18,9 @@ export default function LandingSectionCard({
       id={`landing-section-${sectionId}`}
       className={`${styles.sectionCard} ${styles.landingEditorSection} ${
         active ? styles.landingEditorSectionActive : ''
-      } ${collapsed ? styles.landingEditorSectionCollapsed : ''}`}
+      } ${collapsed ? styles.landingEditorSectionCollapsed : ''} ${
+        visible ? '' : styles.landingEditorSectionHidden
+      }`}
     >
       <div className={styles.landingEditorSectionHead}>
         <div>
@@ -25,7 +29,29 @@ export default function LandingSectionCard({
         </div>
         <div className={styles.landingEditorSectionActions}>
           {dirty && <span className={styles.landingEditorSectionDirty}>Đã sửa</span>}
+          <span
+            className={`${styles.landingEditorSectionVisibility} ${
+              visible
+                ? styles.landingEditorSectionVisibilityVisible
+                : styles.landingEditorSectionVisibilityHidden
+            }`}
+          >
+            {visible ? 'Đang hiện' : 'Đang ẩn'}
+          </span>
           <span className={styles.landingEditorSectionBadge}>{badge}</span>
+          {onVisibilityToggle && (
+            <button
+              type="button"
+              className={`${styles.landingEditorSectionVisibilityToggle} ${
+                visible
+                  ? styles.landingEditorSectionVisibilityToggleWarning
+                  : styles.landingEditorSectionVisibilityToggleSuccess
+              }`}
+              onClick={onVisibilityToggle}
+            >
+              {visible ? 'Ẩn khỏi landing' : 'Hiện lại landing'}
+            </button>
+          )}
           <button
             type="button"
             className={styles.landingEditorSectionToggle}
@@ -33,7 +59,7 @@ export default function LandingSectionCard({
             aria-expanded={!collapsed}
             aria-controls={`landing-section-body-${sectionId}`}
           >
-            <span>{collapsed ? 'Mở khối' : 'Thu gọn'}</span>
+            <span>{collapsed ? 'Mở form' : 'Thu gọn form'}</span>
             <span
               className={`${styles.landingEditorSectionToggleChevron} ${
                 collapsed ? styles.landingEditorSectionToggleChevronCollapsed : ''
