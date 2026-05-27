@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import { getDashboardPathForRole, isAppRole } from '@/lib/auth-roles'
+import { cleanEnvValue } from '@/lib/env'
 
 /**
  * Proxy - route protection and Supabase session refresh.
@@ -17,8 +18,8 @@ export async function proxy(request) {
   })
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    cleanEnvValue(process.env.NEXT_PUBLIC_SUPABASE_URL),
+    cleanEnvValue(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
     {
       cookies: {
         getAll() {

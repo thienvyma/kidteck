@@ -3,6 +3,7 @@ import 'server-only'
 import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@/lib/supabase-server'
 import { isAppRole } from '@/lib/auth-roles'
+import { getRequiredEnv } from '@/lib/env'
 
 export async function getAuthContext() {
   const supabase = await createServerClient()
@@ -66,12 +67,8 @@ export async function requireRole(requiredRole) {
 }
 
 export function createServiceRoleClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error('Supabase service role is not configured on the server.')
-  }
+  const supabaseUrl = getRequiredEnv('NEXT_PUBLIC_SUPABASE_URL')
+  const serviceRoleKey = getRequiredEnv('SUPABASE_SERVICE_ROLE_KEY')
 
   return createClient(
     supabaseUrl,

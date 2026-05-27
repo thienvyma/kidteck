@@ -1,15 +1,6 @@
 import { createServerClient as createSupabaseServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-
-function getRequiredEnv(name) {
-  const value = process.env[name]
-
-  if (!value) {
-    throw new Error(`${name} is not configured.`)
-  }
-
-  return value
-}
+import { getRequiredEnv } from '@/lib/env'
 
 /**
  * Supabase Server Client
