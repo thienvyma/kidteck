@@ -1,3 +1,5 @@
+import 'server-only'
+
 import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@/lib/supabase-server'
 import { isAppRole } from '@/lib/auth-roles'
@@ -44,6 +46,14 @@ export async function requireRole(requiredRole) {
     }
   }
 
+  if (context.profileError) {
+    return {
+      ...context,
+      error: 'Unable to verify account role',
+      status: 500,
+    }
+  }
+
   if (context.role !== requiredRole) {
     return {
       ...context,
@@ -56,9 +66,16 @@ export async function requireRole(requiredRole) {
 }
 
 export function createServiceRoleClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('Supabase service role is not configured on the server.')
+  }
+
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    supabaseUrl,
+    serviceRoleKey,
     {
       auth: {
         autoRefreshToken: false,

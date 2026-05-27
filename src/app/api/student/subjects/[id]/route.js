@@ -1,15 +1,11 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-import { createServerClient } from '@/lib/supabase-server'
+import { createServiceRoleClient, requireRole } from '@/lib/server-auth'
 import { decryptSubjectContent } from '@/lib/subject-content-crypto'
 
 const ALLOWED_ENROLLMENT_STATUSES = ['active', 'completed']
 
 function createAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  )
+  return createServiceRoleClient()
 }
 
 export async function GET(_request, { params }) {
@@ -21,29 +17,17 @@ export async function GET(_request, { params }) {
       return NextResponse.json({ error: 'Invalid subject id' }, { status: 400 })
     }
 
-    const supabase = await createServerClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await requireRole('student')
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status })
     }
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (profile?.role !== 'student') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+    const { supabase, user } = auth
 
     const adminClient = createAdminClient()
     const { data: subject, error: subjectError } = await adminClient
       .from('subjects')
-      .select('id, level_id, name, description, content, levels(id, name)')
+      .select('id, level_id, name, description, levels(id, name)')
       .eq('id', subjectId)
       .single()
 
@@ -51,13 +35,17 @@ export async function GET(_request, { params }) {
       return NextResponse.json({ error: 'Subject not found' }, { status: 404 })
     }
 
-    const { data: enrollment } = await supabase
+    const { data: enrollment, error: enrollmentError } = await supabase
       .from('enrollments')
       .select('id, status')
       .eq('student_id', user.id)
       .eq('level_id', subject.level_id)
       .in('status', ALLOWED_ENROLLMENT_STATUSES)
       .maybeSingle()
+
+    if (enrollmentError) {
+      return NextResponse.json({ error: enrollmentError.message }, { status: 400 })
+    }
 
     if (!enrollment) {
       return NextResponse.json(
@@ -67,6 +55,16 @@ export async function GET(_request, { params }) {
         },
         { status: 403 }
       )
+    }
+
+    const { data: contentRow, error: contentError } = await adminClient
+      .from('subjects')
+      .select('content')
+      .eq('id', subjectId)
+      .single()
+
+    if (contentError || !contentRow) {
+      return NextResponse.json({ error: 'Subject content not found' }, { status: 404 })
     }
 
     const [{ data: siblings, error: siblingsError }, { data: progressRows, error: progressError }] =
@@ -96,7 +94,7 @@ export async function GET(_request, { params }) {
     return NextResponse.json({
       subject: {
         ...subject,
-        content: decryptSubjectContent(subject.content),
+        content: decryptSubjectContent(contentRow.content),
       },
       siblings: siblings || [],
       progressMap,

@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server'
 import { createLandingLead } from '@/lib/landing-leads'
+import {
+  isAllowedLearnerStage,
+  isValidVietnamMobilePhone,
+} from '@/lib/landing-lead-validation'
 
-const PHONE_PATTERN = /^[0-9+().\s-]{8,20}$/
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function readString(value) {
@@ -27,11 +30,11 @@ function validateLeadInput(body) {
     return { error: 'Vui lòng nhập tên người liên hệ' }
   }
 
-  if (!payload.phone || !PHONE_PATTERN.test(payload.phone)) {
+  if (!payload.phone || !isValidVietnamMobilePhone(payload.phone)) {
     return { error: 'Số điện thoại chưa đúng định dạng' }
   }
 
-  if (!payload.stage) {
+  if (!payload.stage || !isAllowedLearnerStage(payload.stage)) {
     return { error: 'Vui lòng chọn giai đoạn phù hợp' }
   }
 

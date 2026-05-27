@@ -1,11 +1,9 @@
 import 'server-only'
 
-import { createClient } from '@supabase/supabase-js'
 import { cloneDefaultLandingContent } from '@/lib/landing-defaults'
+import { assertLandingContentWriteVersion } from '@/lib/landing-content-version'
+import { createServiceRoleClient } from '@/lib/server-auth'
 
-const LANDING_BUCKET = 'site-content'
-const LANDING_DIR = 'landing'
-const LANDING_FILE_PATTERN = /^content(?:-\d+)?\.json$/
 const LANDING_CONTENT_TABLE = 'landing_content'
 const LANDING_CONTENT_ROW_ID = 'default'
 const LANDING_CONTENT_SELECT = 'id, content, created_at, updated_at'
@@ -15,33 +13,12 @@ const LANDING_CONTENT_CONFLICT_MESSAGE =
 
 let landingContentSeedPromise = null
 
-function getVersionOrder(file) {
-  const match = file?.name?.match(/^content-(\d+)\.json$/)
-  if (match) {
-    return Number(match[1])
-  }
-
-  return new Date(file?.updated_at || file?.created_at || 0).getTime()
-}
-
 function createAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-  if (!supabaseUrl || !serviceRoleKey) {
+  try {
+    return createServiceRoleClient()
+  } catch {
     return null
   }
-
-  return createClient(
-    supabaseUrl,
-    serviceRoleKey,
-    {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-    }
-  )
 }
 
 function readString(value, fallback) {
@@ -115,9 +92,21 @@ function normalizeObjectArray(values, fallback) {
     return fallback
   }
 
-  return values.length > 0
-    ? values.map((item, index) => normalizeCard(item, fallback[index] || fallback[0]))
-    : fallback
+  const visibleItems = values.filter((item) =>
+    ['icon', 'title', 'description', 'quote', 'answer', 'question'].some((field) =>
+      readOptionalString(item?.[field])
+    )
+  )
+
+  return visibleItems.map((item, index) => normalizeCard(item, fallback[index] || fallback[0]))
+}
+
+function normalizeFixedObjectArray(values, fallback) {
+  if (!Array.isArray(values)) {
+    return fallback
+  }
+
+  return fallback.map((fallbackItem, index) => normalizeCard(values[index] || {}, fallbackItem))
 }
 
 function normalizePillarArray(values, fallback) {
@@ -190,7 +179,7 @@ export function normalizeLandingContent(input) {
     method: {
       title: readString(input?.method?.title, fallback.method.title),
       subtitle: readString(input?.method?.subtitle, fallback.method.subtitle),
-      items: normalizeObjectArray(input?.method?.items, fallback.method.items),
+      items: normalizeFixedObjectArray(input?.method?.items, fallback.method.items),
     },
     commitment: {
       title: readString(input?.commitment?.title, fallback.commitment.title),
@@ -199,7 +188,7 @@ export function normalizeLandingContent(input) {
         input?.commitment?.showGuarantee,
         fallback.commitment.showGuarantee
       ),
-      items: normalizeObjectArray(input?.commitment?.items, fallback.commitment.items),
+      items: normalizeFixedObjectArray(input?.commitment?.items, fallback.commitment.items),
       guaranteeTitle: readString(
         input?.commitment?.guaranteeTitle,
         fallback.commitment.guaranteeTitle
@@ -212,13 +201,14 @@ export function normalizeLandingContent(input) {
     faq: {
       title: readString(input?.faq?.title, fallback.faq.title),
       subtitle: readString(input?.faq?.subtitle, fallback.faq.subtitle),
-      items: (Array.isArray(input?.faq?.items) && input.faq.items.length > 0
+      items: Array.isArray(input?.faq?.items)
         ? input.faq.items
-        : fallback.faq.items
-      ).map((item, index) => ({
-        question: readString(item?.question, fallback.faq.items[index]?.question || fallback.faq.items[0].question),
-        answer: readString(item?.answer, fallback.faq.items[index]?.answer || fallback.faq.items[0].answer),
-      })),
+            .map((item) => ({
+              question: readOptionalString(item?.question),
+              answer: readOptionalString(item?.answer),
+            }))
+            .filter((item) => item.question || item.answer)
+        : fallback.faq.items,
     },
     cta: {
       title: readString(input?.cta?.title, fallback.cta.title),
@@ -268,83 +258,6 @@ function createLandingContentConflictError() {
   const error = new Error(LANDING_CONTENT_CONFLICT_MESSAGE)
   error.code = LANDING_CONTENT_CONFLICT_CODE
   return error
-}
-
-function isMissingLandingContentTable(error) {
-  const message = `${error?.message || ''} ${error?.details || ''}`.toLowerCase()
-
-  return (
-    error?.code === '42P01' ||
-    error?.code === 'PGRST205' ||
-    (message.includes('landing_content') &&
-      (message.includes('does not exist') || message.includes('schema cache')))
-  )
-}
-
-async function ensureBucket(adminClient) {
-  const { data: buckets, error: listError } = await adminClient.storage.listBuckets()
-  if (listError) {
-    throw listError
-  }
-
-  const exists = (buckets || []).some((bucket) => bucket.id === LANDING_BUCKET)
-  if (exists) {
-    return
-  }
-
-  const { error: createError } = await adminClient.storage.createBucket(LANDING_BUCKET, {
-    public: false,
-  })
-
-  if (createError) {
-    throw createError
-  }
-}
-
-async function getLatestLandingFile(adminClient) {
-  const { data: files, error } = await adminClient.storage
-    .from(LANDING_BUCKET)
-    .list(LANDING_DIR, {
-      limit: 100,
-    })
-
-  if (error) {
-    throw error
-  }
-
-  const latest = (files || [])
-    .filter((file) => LANDING_FILE_PATTERN.test(file.name))
-    .sort((a, b) => getVersionOrder(b) - getVersionOrder(a))[0]
-
-  if (!latest) {
-    return null
-  }
-
-  return `${LANDING_DIR}/${latest.name}`
-}
-
-async function pruneLandingVersions(adminClient) {
-  const { data: files, error } = await adminClient.storage
-    .from(LANDING_BUCKET)
-    .list(LANDING_DIR, {
-      limit: 100,
-    })
-
-  if (error) {
-    throw error
-  }
-
-  const removable = (files || [])
-    .filter((file) => /^content-\d+\.json$/.test(file.name))
-    .sort((a, b) => getVersionOrder(b) - getVersionOrder(a))
-    .slice(6)
-    .map((file) => `${LANDING_DIR}/${file.name}`)
-
-  if (removable.length === 0) {
-    return
-  }
-
-  await adminClient.storage.from(LANDING_BUCKET).remove(removable)
 }
 
 async function fetchDatabaseLandingContent(adminClient) {
@@ -405,56 +318,6 @@ async function updateDatabaseLandingContent(adminClient, content, expectedUpdate
   return data ? mapLandingContentRecord(data) : null
 }
 
-async function getLegacyLandingContent(adminClient) {
-  const fallback = cloneDefaultLandingContent()
-
-  try {
-    const latestFile = await getLatestLandingFile(adminClient)
-
-    if (!latestFile) {
-      return fallback
-    }
-
-    const { data, error } = await adminClient.storage
-      .from(LANDING_BUCKET)
-      .download(latestFile)
-
-    if (error || !data) {
-      return fallback
-    }
-
-    const text = await data.text()
-    return normalizeLandingContent(JSON.parse(text))
-  } catch (error) {
-    console.warn('getLegacyLandingContent fallback:', error?.message || error)
-    return fallback
-  }
-}
-
-async function saveLegacyLandingContent(adminClient, content) {
-  await ensureBucket(adminClient)
-
-  const filePath = `${LANDING_DIR}/content-${Date.now()}.json`
-  const { error } = await adminClient.storage
-    .from(LANDING_BUCKET)
-    .upload(filePath, Buffer.from(JSON.stringify(content, null, 2), 'utf8'), {
-      contentType: 'application/json',
-      cacheControl: '0',
-    })
-
-  if (error) {
-    throw error
-  }
-
-  await pruneLandingVersions(adminClient)
-
-  return {
-    content,
-    createdAt: '',
-    updatedAt: '',
-  }
-}
-
 async function ensureLandingContentSeeded(adminClient) {
   if (landingContentSeedPromise) {
     return landingContentSeedPromise
@@ -466,10 +329,10 @@ async function ensureLandingContentSeeded(adminClient) {
       return existing
     }
 
-    const legacyContent = await getLegacyLandingContent(adminClient)
+    const defaultContent = cloneDefaultLandingContent()
 
     try {
-      return await insertDatabaseLandingContent(adminClient, legacyContent)
+      return await insertDatabaseLandingContent(adminClient, defaultContent)
     } catch (error) {
       if (error?.code === '23505') {
         return fetchDatabaseLandingContent(adminClient)
@@ -477,19 +340,23 @@ async function ensureLandingContentSeeded(adminClient) {
 
       throw error
     }
-  })().catch((error) => {
+  })().finally(() => {
     landingContentSeedPromise = null
-    throw error
   })
 
   return landingContentSeedPromise
 }
 
-export async function getLandingContentDocument() {
+export async function getLandingContentDocument(options = {}) {
+  const fallbackOnError = options.fallbackOnError === true
   const fallback = cloneDefaultLandingContent()
   const adminClient = createAdminClient()
 
   if (!adminClient) {
+    if (!fallbackOnError) {
+      throw new Error('Supabase admin client is not configured.')
+    }
+
     console.warn('getLandingContentDocument fallback: Supabase admin client is not configured.')
     return { content: fallback, createdAt: '', updatedAt: '' }
   }
@@ -501,14 +368,14 @@ export async function getLandingContentDocument() {
     }
 
     const seeded = await ensureLandingContentSeeded(adminClient)
-    return seeded || { content: fallback, createdAt: '', updatedAt: '' }
+    if (!seeded) {
+      throw new Error('Landing content seed failed.')
+    }
+
+    return seeded
   } catch (error) {
-    if (isMissingLandingContentTable(error)) {
-      return {
-        content: await getLegacyLandingContent(adminClient),
-        createdAt: '',
-        updatedAt: '',
-      }
+    if (!fallbackOnError) {
+      throw error
     }
 
     console.warn('getLandingContentDocument fallback:', error?.message || error)
@@ -530,6 +397,67 @@ export async function getLandingHeaderData() {
   }
 }
 
+function hasText(value) {
+  return typeof value === 'string' && value.trim().length > 0
+}
+
+function isSectionVisible(content, sectionId) {
+  return content.sectionVisibility?.[sectionId] !== false
+}
+
+function assertLandingContentCanPublish(content) {
+  const visibleCoreSections = ['hero', 'solution', 'results', 'method', 'commitment', 'faq', 'cta']
+    .filter((sectionId) => isSectionVisible(content, sectionId))
+
+  if (visibleCoreSections.length === 0) {
+    throw new Error('At least one core landing section must stay visible.')
+  }
+
+  if (
+    isSectionVisible(content, 'hero') &&
+    (!hasText(content.hero?.title) || !hasText(content.hero?.description))
+  ) {
+    throw new Error('Hero title and description are required while hero is visible.')
+  }
+
+  if (isSectionVisible(content, 'solution') && !hasText(content.solution?.title)) {
+    throw new Error('Solution title is required while solution is visible.')
+  }
+
+  if (isSectionVisible(content, 'results') && !hasText(content.results?.title)) {
+    throw new Error('Results title is required while results is visible.')
+  }
+
+  if (
+    isSectionVisible(content, 'method') &&
+    (!hasText(content.method?.title) || (content.method?.items || []).length === 0)
+  ) {
+    throw new Error('Method title and at least one item are required while method is visible.')
+  }
+
+  if (
+    isSectionVisible(content, 'commitment') &&
+    (!hasText(content.commitment?.title) || (content.commitment?.items || []).length === 0)
+  ) {
+    throw new Error('Commitment title and at least one item are required while commitment is visible.')
+  }
+
+  if (
+    isSectionVisible(content, 'faq') &&
+    (!hasText(content.faq?.title) ||
+      !(content.faq?.items || []).some((item) => hasText(item.question) && hasText(item.answer)))
+  ) {
+    throw new Error('FAQ title and at least one complete question are required while FAQ is visible.')
+  }
+
+  if (
+    isSectionVisible(content, 'cta') &&
+    (!hasText(content.cta?.title) || !hasText(content.cta?.submitLabel))
+  ) {
+    throw new Error('CTA title and submit label are required while CTA is visible.')
+  }
+}
+
 export async function saveLandingContent(content, options = {}) {
   const adminClient = createAdminClient()
   if (!adminClient) {
@@ -537,37 +465,39 @@ export async function saveLandingContent(content, options = {}) {
   }
 
   const normalized = normalizeLandingContent(content)
+  assertLandingContentCanPublish(normalized)
   const expectedUpdatedAt = readOptionalString(options.expectedUpdatedAt)
 
-  try {
-    const current = await ensureLandingContentSeeded(adminClient)
+  const current = await fetchDatabaseLandingContent(adminClient)
+  assertLandingContentWriteVersion(current, expectedUpdatedAt)
 
-    if (!current) {
-      return insertDatabaseLandingContent(adminClient, normalized)
-    }
-
-    if (expectedUpdatedAt) {
-      const saved = await updateDatabaseLandingContent(
-        adminClient,
-        normalized,
-        expectedUpdatedAt
-      )
-
-      if (!saved) {
+  if (!current) {
+    try {
+      return await insertDatabaseLandingContent(adminClient, normalized)
+    } catch (error) {
+      if (error?.code === '23505') {
         throw createLandingContentConflictError()
       }
 
-      return saved
-    }
-
-    return updateDatabaseLandingContent(adminClient, normalized)
-  } catch (error) {
-    if (!isMissingLandingContentTable(error)) {
       throw error
     }
   }
 
-  return saveLegacyLandingContent(adminClient, normalized)
+  if (expectedUpdatedAt) {
+    const saved = await updateDatabaseLandingContent(
+      adminClient,
+      normalized,
+      expectedUpdatedAt
+    )
+
+    if (!saved) {
+      throw createLandingContentConflictError()
+    }
+
+    return saved
+  }
+
+  return updateDatabaseLandingContent(adminClient, normalized)
 }
 
 export async function getLandingLevels() {
@@ -577,38 +507,43 @@ export async function getLandingLevels() {
     return []
   }
 
-  const { data, error } = await adminClient
-    .from('levels')
-    .select(`
-      id,
-      name,
-      slug,
-      description,
-      price,
-      subject_count,
-      duration_weeks,
-      sort_order,
-      is_active,
-      subjects (
+  try {
+    const { data, error } = await adminClient
+      .from('levels')
+      .select(`
         id,
         name,
+        slug,
         description,
-        sort_order
-      )
-    `)
-    .eq('is_active', true)
-    .order('sort_order', { ascending: true })
+        price,
+        subject_count,
+        duration_weeks,
+        sort_order,
+        is_active,
+        subjects (
+          id,
+          name,
+          description,
+          sort_order
+        )
+      `)
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true })
 
-  if (error) {
-    throw error
+    if (error) {
+      throw error
+    }
+
+    return (data || []).map((level) => ({
+      ...level,
+      subjects: [...(level.subjects || [])].sort(
+        (a, b) => (a.sort_order || 0) - (b.sort_order || 0)
+      ),
+    }))
+  } catch (error) {
+    console.error('getLandingLevels fallback:', error)
+    return []
   }
-
-  return (data || []).map((level) => ({
-    ...level,
-    subjects: [...(level.subjects || [])].sort(
-      (a, b) => (a.sort_order || 0) - (b.sort_order || 0)
-    ),
-  }))
 }
 
 export async function getLandingPageData() {

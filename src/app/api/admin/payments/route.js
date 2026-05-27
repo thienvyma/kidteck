@@ -1,39 +1,17 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-import { createServerClient } from '@/lib/supabase-server'
+import { createServiceRoleClient, requireRole } from '@/lib/server-auth'
+import { requireTargetStudent } from '@/lib/student-target'
 
 const PAYMENT_METHODS = new Set(['bank_transfer', 'momo', 'cash', 'other'])
 const PAYMENT_STATUSES = new Set(['pending', 'paid', 'refunded'])
 const PAYMENT_ROWS_VIEW = 'admin_payment_rows'
 
 async function verifyAdmin() {
-  const supabase = await createServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { error: 'Unauthorized', status: 401 }
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.role !== 'admin') {
-    return { error: 'Forbidden - admin only', status: 403 }
-  }
-
-  return { user }
+  return requireRole('admin')
 }
 
 function createAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  )
+  return createServiceRoleClient()
 }
 
 function readString(value) {
@@ -152,6 +130,11 @@ function isMissingPaymentSummaryFunction(error) {
 }
 
 async function syncEnrollmentActivation(adminClient, studentId, levelId) {
+  const target = await requireTargetStudent(adminClient, studentId)
+  if (target.error) {
+    throw new Error(target.error)
+  }
+
   const { data: existing, error: readError } = await adminClient
     .from('enrollments')
     .select('id, status')
@@ -414,6 +397,12 @@ export async function GET(request) {
     const sortDir = readString(searchParams.get('sortDir')) === 'desc' ? 'desc' : 'asc'
 
     const adminClient = createAdminClient()
+    if (studentId) {
+      const target = await requireTargetStudent(adminClient, studentId)
+      if (target.error) {
+        return NextResponse.json({ error: target.error }, { status: target.status })
+      }
+    }
 
     try {
       const [rowsResult, summary] = await Promise.all([
@@ -499,6 +488,11 @@ export async function POST(request) {
     }
 
     const adminClient = createAdminClient()
+    const target = await requireTargetStudent(adminClient, studentId)
+    if (target.error) {
+      return NextResponse.json({ error: target.error }, { status: target.status })
+    }
+
     const insertData = {
       student_id: studentId,
       level_id: levelId,
@@ -564,6 +558,11 @@ export async function PATCH(request) {
 
     if (readError || !existing) {
       return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
+    }
+
+    const target = await requireTargetStudent(adminClient, existing.student_id)
+    if (target.error) {
+      return NextResponse.json({ error: target.error }, { status: target.status })
     }
 
     const updateData =

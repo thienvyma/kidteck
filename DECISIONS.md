@@ -1,6 +1,6 @@
 # 📝 DECISIONS.md — Sổ Quyết Định Thiết Kế
 
-## D1: Next.js 14 App Router (không Pages Router)
+## D1: Next.js App Router (not Pages Router)
 **Quyết định**: Dùng App Router + Server Components
 **Lý do**: SEO tốt hơn, streaming, nested layouts, RSC mặc định
 **Alternatives**: Pages Router (rejected: legacy, không có RSC)

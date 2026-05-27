@@ -21,18 +21,33 @@ export async function POST(request) {
     }
 
     const adminClient = createServiceRoleClient()
-    const { error } = await adminClient.from('profiles').upsert(
-      {
-        id: user.id,
-        full_name: fullName.trim(),
-        role: 'student',
-        phone: body.phone || user.user_metadata?.phone || null,
-        parent_name: body.parentName || user.user_metadata?.parent_name || null,
-      },
-      {
-        onConflict: 'id',
-      }
-    )
+    const { data: existingProfile, error: readError } = await adminClient
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (readError) {
+      return NextResponse.json({ error: readError.message }, { status: 400 })
+    }
+
+    const profilePayload = {
+      full_name: fullName.trim(),
+      phone: body.phone || user.user_metadata?.phone || null,
+      parent_name: body.parentName || user.user_metadata?.parent_name || null,
+      updated_at: new Date().toISOString(),
+    }
+
+    const { error } = existingProfile
+      ? await adminClient
+          .from('profiles')
+          .update(profilePayload)
+          .eq('id', user.id)
+      : await adminClient.from('profiles').insert({
+          id: user.id,
+          ...profilePayload,
+          role: 'student',
+        })
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 })

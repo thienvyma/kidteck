@@ -10,7 +10,7 @@
 │  (Public)  │  (/admin/*)     │  (/student/*)         │
 │  page.js   │  Sidebar+Pages  │  Sidebar+Pages        │
 ├────────────┴────────────────┴───────────────────────┤
-│                    MIDDLEWARE                         │
+│                    PROXY                              │
 │            Route protection (role-based)              │
 ├─────────────────────────────────────────────────────┤
 │                    AUTH LAYER                         │
@@ -22,7 +22,8 @@
 │                    DATABASE                           │
 │  Supabase (PostgreSQL + RLS + Triggers)              │
 │  Tables: profiles, levels, subjects, enrollments,    │
-│          progress, payments                          │
+│          progress, payments, blogs, landing CMS,     │
+│          landing leads                               │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -30,7 +31,7 @@
 
 | Layer | Technology | Lý do |
 |---|---|---|
-| Framework | Next.js 14 (App Router) | SSR, routing, Server Components |
+| Framework | Next.js App Router (`next@16.2.1`) | SSR, routing, Server Components, metadata |
 | Language | JavaScript (ES2022) | Đơn giản, vibe coding friendly |
 | Styling | Vanilla CSS + CSS Modules | Full control, no dependencies |
 | Font | Inter (Google Fonts) | Vietnamese support, modern |
@@ -73,7 +74,7 @@ src/
 │   ├── auth.js              ← Auth helpers
 │   └── utils.js             ← Formatting, validation
 │
-└── middleware.js             ← Route protection (before render)
+└── proxy.js                  ← Route protection/session refresh (before render)
 ```
 
 ## Data Flow
@@ -82,7 +83,7 @@ src/
 Server Component              Client Component
      │                              │
      ├── supabase-server.js         ├── supabase.js
-     │   (cookies → session)        │   (localStorage → session)
+     │   (cookies → session)        │   (Supabase browser session)
      │                              │
      ├── SELECT (read)              ├── INSERT/UPDATE (write)
      │                              │

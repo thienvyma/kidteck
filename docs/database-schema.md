@@ -205,7 +205,36 @@ ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Admin read all profiles" ON profiles FOR SELECT USING (
   auth.uid() = id OR public.is_admin()
 );
-CREATE POLICY "Users update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
+
+-- Prevent self-service privilege escalation.
+CREATE OR REPLACE FUNCTION public.prevent_profile_role_change()
+RETURNS trigger AS $$
+BEGIN
+  IF auth.role() = 'authenticated'
+     AND auth.uid() = old.id
+     AND new.role IS DISTINCT FROM old.role THEN
+    RAISE EXCEPTION 'Role changes are not allowed';
+  END IF;
+
+  new.updated_at = now();
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS prevent_profile_role_change ON profiles;
+CREATE TRIGGER prevent_profile_role_change
+BEFORE UPDATE ON profiles
+FOR EACH ROW
+EXECUTE FUNCTION public.prevent_profile_role_change();
+
+DROP POLICY IF EXISTS "Users update own profile" ON profiles;
+CREATE POLICY "Users update own profile" ON profiles
+FOR UPDATE
+USING (auth.uid() = id)
+WITH CHECK (auth.uid() = id);
+
+REVOKE UPDATE ON TABLE profiles FROM authenticated;
+GRANT UPDATE (avatar_url, website_url, updated_at) ON TABLE profiles TO authenticated;
 
 -- Levels: public read (catalog)
 ALTER TABLE levels ENABLE ROW LEVEL SECURITY;

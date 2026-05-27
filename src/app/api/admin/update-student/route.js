@@ -1,35 +1,13 @@
-import { createServerClient } from '@/lib/supabase-server'
-import { createClient } from '@supabase/supabase-js'
+import { createServiceRoleClient, requireRole } from '@/lib/server-auth'
+import { requireTargetStudent } from '@/lib/student-target'
 import { NextResponse } from 'next/server'
 
 async function verifyAdmin() {
-  const supabase = await createServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { error: 'Unauthorized', status: 401 }
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.role !== 'admin') {
-    return { error: 'Forbidden - admin only', status: 403 }
-  }
-
-  return { user }
+  return requireRole('admin')
 }
 
 function createAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  )
+  return createServiceRoleClient()
 }
 
 function generateTemporaryPassword() {
@@ -82,6 +60,11 @@ export async function GET(request) {
     }
 
     const adminClient = createAdminClient()
+    const target = await requireTargetStudent(adminClient, studentId)
+    if (target.error) {
+      return NextResponse.json({ error: target.error }, { status: target.status })
+    }
+
     const { data, error } = await adminClient.auth.admin.getUserById(studentId)
 
     if (error) {
@@ -119,6 +102,11 @@ export async function POST(request) {
     }
 
     const adminClient = createAdminClient()
+    const target = await requireTargetStudent(adminClient, studentId)
+    if (target.error) {
+      return NextResponse.json({ error: target.error }, { status: target.status })
+    }
+
     const { error } = await adminClient.auth.admin.updateUserById(studentId, {
       password: newPassword,
     })
@@ -149,6 +137,10 @@ export async function PUT(request) {
     }
 
     const adminClient = createAdminClient()
+    const target = await requireTargetStudent(adminClient, studentId)
+    if (target.error) {
+      return NextResponse.json({ error: target.error }, { status: target.status })
+    }
 
     const updateData = {}
     if (fullName !== undefined) updateData.full_name = fullName
@@ -195,26 +187,11 @@ export async function DELETE(request) {
     }
 
     const adminClient = createAdminClient()
-    const { data: studentProfile, error: profileError } = await adminClient
-      .from('profiles')
-      .select('id, role, full_name')
-      .eq('id', studentId)
-      .maybeSingle()
-
-    if (profileError) {
-      return NextResponse.json({ error: profileError.message }, { status: 400 })
+    const target = await requireTargetStudent(adminClient, studentId)
+    if (target.error) {
+      return NextResponse.json({ error: target.error }, { status: target.status })
     }
-
-    if (!studentProfile) {
-      return NextResponse.json({ error: 'Student profile not found' }, { status: 404 })
-    }
-
-    if (studentProfile.role !== 'student') {
-      return NextResponse.json(
-        { error: 'Only student accounts can be deleted from this endpoint' },
-        { status: 400 }
-      )
-    }
+    const studentProfile = target.student
 
     const deleteResult = await adminClient.auth.admin.deleteUser(studentId)
     let fallbackCleanup = false

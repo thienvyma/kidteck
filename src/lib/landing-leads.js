@@ -1,7 +1,7 @@
 import 'server-only'
 
 import crypto from 'node:crypto'
-import { createClient } from '@supabase/supabase-js'
+import { createServiceRoleClient } from '@/lib/server-auth'
 
 const SITE_CONTENT_BUCKET = 'site-content'
 const LEADS_DIR = 'landing'
@@ -44,16 +44,7 @@ function getEventOrder(file) {
 }
 
 function createAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-    {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-    }
-  )
+  return createServiceRoleClient()
 }
 
 async function ensureBucket(adminClient) {

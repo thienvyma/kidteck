@@ -1,37 +1,14 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-import { createServerClient } from '@/lib/supabase-server'
+import { createServiceRoleClient, requireRole } from '@/lib/server-auth'
 
 const STUDENT_ROSTER_VIEW = 'admin_student_roster'
 
 async function verifyAdmin() {
-  const supabase = await createServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { error: 'Unauthorized', status: 401 }
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.role !== 'admin') {
-    return { error: 'Forbidden - admin only', status: 403 }
-  }
-
-  return { user }
+  return requireRole('admin')
 }
 
 function createAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  )
+  return createServiceRoleClient()
 }
 
 function readString(value) {

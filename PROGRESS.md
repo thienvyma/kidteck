@@ -1,5 +1,23 @@
 # 📊 PROGRESS.md — Nhật Ký Tiến Trình AIgenlabs
 
+## Current Status: S16 - Landing CMS + Rule Consolidation
+**Status**: In progress on 2026-05-27
+
+Current repo truth:
+
+- App is on `next@16.2.1` with `src/proxy.js` for route protection/session refresh.
+- Landing, admin, student, blog, leads, and landing CMS routes exist.
+- Aistudio UI demo is only a visual reference; production remains Next/Supabase/CSS Modules.
+- Current rules live in `AGENTS.md`, `RULES.md`, `docs/PROJECT_STYLE_GUIDE.md`, and `docs/VIBE_CODING_RULES.md`.
+
+Latest verified baseline:
+
+- `npm.cmd run lint` passed on 2026-05-27.
+- `npm.cmd run build` passed on 2026-05-27.
+- `node --test src\lib\blog-media.test.js src\app\blog\blog-layout.test.js` passed 5/5 on 2026-05-27.
+
+---
+
 ## Session Hiện Tại: S15 — UX Polish
 **Status**: ✅ Completed
 **Ngày**: 2026-03-25
@@ -13,7 +31,7 @@
 | S0 | ✅ | Foundation + Design System | CLAUDE.md, globals.css, layout.js |
 | S1 | ✅ | Landing Page v1 | page.js, page.module.css, Navbar.js |
 | S2 | ✅ | Landing Page Redesign | page.js, page.module.css, Navbar.js |
-| S3 | ✅ | Auth Core & Middleware | supabase.js, supabase-server.js, middleware.js |
+| S3 | ✅ | Auth Core & Route Guard | supabase.js, supabase-server.js, proxy.js |
 | S4 | ✅ | Auth UI | layout.js, auth.module.css, login, register |
 | S5 | ✅ | Admin Layout + Components | layout.js, Sidebar, StatsCard |
 | S6 | ✅ | Admin DataTable + Dashboard | DataTable.js, admin/page.js |
@@ -23,7 +41,7 @@
 | S10 | ✅ | Student Dashboard + Courses | CourseCard, dashboard, courses/page |
 | S11 | ✅ | Student Learning + Profile | courses/[id], LessonContent, profile |
 | S12 | ✅ | QA & Final Verification | (0 new files) |
-| **S13** | **✅** | **Security Hardening** | **middleware.js, route.js, sanitize.js** |
+| **S13** | **✅** | **Security Hardening** | **proxy.js, route.js, sanitize.js** |
 | **S14** | **✅** | **Admin CRUD Completion** | **courses/page, students/[id], route.js** |
 | **S15** | **✅** | **UX Polish** | **ConfirmDialog, PageSkeleton, payments, profile** |
 
@@ -62,14 +80,14 @@
 - ✅ Edit student profile (toggle edit mode + API route)
 - ✅ Delete student (confirm modal + cascade via FK)
 - ✅ Change enrollment status (pause/complete/activate)
-- ✅ Fix middleware comment lỗi thời
+- ✅ Fix route guard comment lỗi thời
 - ✅ Gate-check (`npm run build`) pass — 16 routes, 0 errors
 
 ### Files:
 - `src/app/admin/courses/page.js` (MODIFIED)
 - `src/app/admin/students/[id]/page.js` (MODIFIED)
 - `src/app/api/admin/update-student/route.js` (NEW)
-- `src/middleware.js` (MODIFIED)
+- `src/proxy.js` (MODIFIED)
 
 ### Lỗi Tồn Đọng:
 (không có)
@@ -83,13 +101,13 @@
 ## Session 13 — Security Hardening (Tóm tắt)
 
 ### Đã hoàn thành:
-- ✅ Fix 1: Server-side role check trong `middleware.js` (chặn student truy cập `/admin`)
+- ✅ Fix 1: Server-side role check trong `proxy.js` (chặn student truy cập `/admin`)
 - ✅ Fix 2: Tạo API Route `/api/admin/create-student` dùng Admin API (admin không bị logout)
 - ✅ Fix 3: DOMPurify sanitize trong `LessonContent.js` (chặn XSS)
 - ✅ Gate-check (`npm run build`) pass — 15 routes, 0 errors
 
 ### Files:
-- `src/middleware.js` (MODIFIED)
+- `src/proxy.js` (MODIFIED)
 - `src/app/api/admin/create-student/route.js` (NEW)
 - `src/components/admin/CreateStudentModal.js` (MODIFIED)
 - `src/lib/sanitize.js` (NEW)
@@ -136,13 +154,13 @@
 - ✅ `npm install @supabase/supabase-js @supabase/ssr`
 - ✅ `src/lib/supabase.js` — Browser client (createBrowserClient)
 - ✅ `src/lib/supabase-server.js` — Server client (createServerClient + cookies)
-- ✅ `src/middleware.js` — Route protection (role-based: admin→/admin, student→/student)
-- ✅ `npm run build` pass (Middleware detected)
+- ✅ `src/proxy.js` — Route protection (role-based: admin→/admin, student→/student)
+- ✅ `npm run build` pass (Proxy detected)
 
 ### Files đã tạo:
 - `src/lib/supabase.js`
 - `src/lib/supabase-server.js`
-- `src/middleware.js`
+- `src/proxy.js`
 - `.env.local`
 
 ## Session 4 — Tóm tắt
@@ -191,12 +209,12 @@
 
 ### Đã hoàn thành:
 - ✅ Fix login redirect: students → `/student`, admins → `/admin`
-- ✅ Middleware: bảo vệ `/student/*` routes
+- ✅ Proxy: bảo vệ `/student/*` routes
 - ✅ Final build pass — 14 routes, 0 errors
 
 ### Files đã sửa:
 - `src/app/(auth)/login/page.js` (MODIFIED)
-- `src/middleware.js` (MODIFIED)
+- `src/proxy.js` (MODIFIED)
 
 ---
 

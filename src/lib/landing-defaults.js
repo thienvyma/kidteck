@@ -13,26 +13,22 @@ export const defaultLandingContent = {
     footer: true,
   },
   header: {
-    contactLabel: 'Lien he',
+    contactLabel: 'Liên hệ',
     roadmapLabel: 'Lộ trình',
     faqLabel: 'FAQ',
     ctaLabel: 'Nhận lộ trình',
   },
   hero: {
-    eyebrow: 'AI Literacy • Problem Solving • Project thật',
-    title: 'Học AI để hiểu công nghệ, biết tự học đúng và làm chủ một dự án nhỏ',
+    eyebrow: 'Project-Based AI Learning for the Next Generation',
+    title: 'Học AI qua dự án thật và tư duy hệ thống',
     description:
-      'AIgenlabs giúp học viên chuyển từ nhịp tiêu thụ màn hình ngắn sang nhịp học sâu hơn: biết tìm thông tin đáng tin, biết giải quyết vấn đề, hiểu AI đang phát triển tới đâu và dùng công nghệ như một công cụ để tạo ra giá trị thật.',
+      'Sự phát triển phi mã của AI đang rút ngắn vòng đời của kiến thức và tái định nghĩa lợi thế cạnh tranh tương lai cho thế hệ gen Z và Alpha. Khác biệt không nằm ở công cụ, mà ở tư duy hệ thống và khả năng thích ứng. AIgenLabs đồng hành cùng học viên để giải mã bản chất công nghệ, tối ưu hóa hiệu suất thực chiến và chuyển hóa những ý tưởng sơ khởi thành dự án thực tế thông qua áp dụng Critical Thinking, System Mindset và Execution Driven Skills vào AI.',
     primaryCtaLabel: 'Nhận lộ trình phù hợp',
     secondaryCtaLabel: 'Xem các level hiện có',
-    trustItems: [
-      'Lớp nhỏ 8-12 học viên',
-      'Có lesson portal và tiến độ theo môn',
-      'Có buổi học thử để kiểm tra độ phù hợp',
-    ],
+    trustItems: [],
   },
   solution: {
-    title: 'AIgenlabs thiên về tư duy điều phối và triển khai',
+    title: 'AIgen Labs',
     subtitle:
       'Thay vì dừng ở prompt hay vibe coding, học viên được rèn 4 lớp nền tảng đi cùng nhau: tập trung sâu hơn, học đúng hơn, giải quyết vấn đề có hệ thống hơn và hiểu AI ở mức đủ chắc để thích nghi với sự thay đổi công nghệ.',
     showComparison: true,
@@ -53,26 +49,27 @@ export const defaultLandingContent = {
     pillars: [
       {
         icon: '🧠',
-        title: 'System Thinking',
+        title: 'Critical Thinking',
         description:
           'Học viên nhìn dự án như một hệ thống gồm mục tiêu, luồng công việc, chất lượng và đầu ra thay vì chỉ chăm chăm vào một bước kỹ thuật.',
       },
       {
         icon: '⚙️',
-        title: 'Operation Mindset',
+        title: 'System Mindset',
         description:
           'Biết chia việc, ưu tiên, giữ tiến độ và đưa một ý tưởng đi đến phiên bản đủ rõ để demo hoặc bàn giao.',
+      },
+      {
+        icon: '🚀',
+        title: 'Executing Strategies',
+        description:
+          'Vận hành cuộc sống - tối ưu thời gian, học tập và định hướng của chính mình.',
       },
       {
         icon: '🚀',
         title: 'AI as Leverage',
         description:
           'AI được dùng như đòn bẩy để tăng tốc nghiên cứu, tạo prototype và cải tiến sản phẩm, không phải để phó mặc toàn bộ phần suy nghĩ.',
-      },
-      {
-        icon: '',
-        title: '',
-        description: '',
       },
     ],
   },
@@ -238,7 +235,8 @@ export const defaultLandingContent = {
   },
   contactDirect: {
     title: 'Liên hệ trực tiếp',
-    subtitle: 'Đội ngũ AIgenlabs luôn sẵn sàng hỗ trợ và giải đáp thắc mắc của phụ huynh và học viên.',
+    subtitle:
+      'Đội ngũ AIgenlabs luôn sẵn sàng hỗ trợ và giải đáp thắc mắc của phụ huynh và học viên.',
   },
   footer: {
     logoSubtitle: 'AI Project Studio',
@@ -264,7 +262,8 @@ export const defaultLandingContent = {
         href: 'mailto:edu@aigenlabs.vn',
       },
     ],
-    copyright: '© 2026 AIgenlabs — Nền tảng AI & Tech cho học sinh. All rights reserved.',
+    copyright:
+      '© 2026 AIgenlabs — Nền tảng AI & Tech cho học sinh. All rights reserved.',
   },
 }
 

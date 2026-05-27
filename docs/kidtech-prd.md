@@ -64,7 +64,7 @@ aigenlabs-app/
 ├── docs/                              ← Tài liệu kỹ thuật chi tiết
 │   ├── INDEX.md                       ← Bản đồ cross-reference
 │   ├── database-schema.md             ← SQL schema + RLS + seed data
-│   ├── aigenlabs-prd.md                 ← Master Reference Document (file này)
+│   ├── kidtech-prd.md                   ← Master Reference Document (file này)
 │   ├── VIBECODING_GUIDE.md            ← Methodology reference
 │   └── phases/                        ← 1 Phase = 1 Session (9 directories)
 │       ├── phase-03-auth-core/        ← S3: Supabase clients + middleware
@@ -82,7 +82,7 @@ aigenlabs-app/
 │   └── icons/                         ← [CẦN TẠO] Icons
 │
 └── src/
-    ├── middleware.js                   ← [CẦN TẠO] Route protection
+    ├── proxy.js                        ← Route protection/session refresh
     │
     ├── app/
     │   ├── globals.css                ← ✅ Design system (tokens, utilities)
@@ -319,10 +319,10 @@ export default function EnrollForm({ levels }) {
 }
 ```
 
-### Middleware Protection Pattern
+### Proxy Protection Pattern
 ```
-// src/middleware.js
-export async function middleware(request) {
+// src/proxy.js
+export async function proxy(request) {
   const { pathname } = request.nextUrl
   
   // 1. Lấy session
@@ -619,7 +619,7 @@ Sections:
 
 ### Khi bắt đầu phiên mới (prompt template)
 ```
-Hãy đọc file docs/aigenlabs-prd.md (Master Reference Document) để hiểu toàn bộ 
+Hãy đọc file docs/kidtech-prd.md (Master Reference Document) để hiểu toàn bộ
 project context. Sau đó cho biết:
 1. Tiến độ hiện tại (Phase nào đã xong, Phase nào đang làm)
 2. Files nào đã tạo, files nào cần tạo
@@ -628,12 +628,12 @@ project context. Sau đó cho biết:
 
 ### Khi code (prompt template)  
 ```
-Đọc Section [N] trong docs/aigenlabs-prd.md. Tạo [file path] theo đúng spec.
+Đọc Section [N] trong docs/kidtech-prd.md. Tạo [file path] theo đúng spec.
 Tham khảo pattern từ [file đã có]. Dùng design tokens từ globals.css.
 ```
 
 ### Khi mất kết nối
 ```
-Tất cả context đã được lưu trong docs/aigenlabs-prd.md. AI mới chỉ cần đọc
+Tất cả context đã được lưu trong docs/kidtech-prd.md. AI mới chỉ cần đọc
 file đó là có ĐỦ thông tin để tiếp tục. Không cần hỏi lại bất kỳ điều gì.
 ```

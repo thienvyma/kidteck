@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import styles from '@/app/page.module.css'
+import { LEARNER_STAGE_OPTIONS } from '@/lib/landing-lead-validation'
 
 const INITIAL_FORM = {
   name: '',
@@ -164,16 +165,11 @@ export default function CTAForm({
           <option value="" disabled>
             Chọn nhóm phù hợp...
           </option>
-          <option value="12-13 tuổi • mới bắt đầu với AI và project">12-13 tuổi • mới bắt đầu</option>
-          <option value="14-15 tuổi • cần framework rõ hơn để học và làm dự án">
-            14-15 tuổi • cần framework rõ hơn
-          </option>
-          <option value="16 tuổi • muốn build project chỉn chu hơn">
-            16 tuổi • muốn build project chỉn chu
-          </option>
-          <option value="17-18 tuổi • muốn đi sâu product, AI và năng lực triển khai">
-            17-18 tuổi • muốn đi sâu product và AI
-          </option>
+          {LEARNER_STAGE_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
         </select>
       </div>
 

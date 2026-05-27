@@ -100,6 +100,19 @@ export default function LandingPageView({
   const footerContactLinks = (content.footer?.contactLinks || []).filter(
     (item) => item?.label?.trim() || item?.href?.trim()
   )
+  const normalizedFooterContactLinks = footerContactLinks.map((item) => ({
+    ...item,
+    href: formatExternalUrl(item.href),
+  }))
+  const footerSocialLinks = normalizedFooterContactLinks
+    .map((item) => item.href)
+    .filter((href) => href.startsWith('http'))
+  const footerTelephone = normalizedFooterContactLinks
+    .find((item) => item.href.startsWith('tel:'))
+    ?.href.replace('tel:', '')
+  const footerEmail = normalizedFooterContactLinks
+    .find((item) => item.href.startsWith('mailto:'))
+    ?.href.replace('mailto:', '')
   const showCommitmentGuarantee = content.commitment?.showGuarantee !== false
   const sectionVisibility = content.sectionVisibility || {}
   const showHeader = sectionVisibility.header !== false
@@ -140,12 +153,12 @@ export default function LandingPageView({
         url: 'https://aigenlabs.vn',
         logo: 'https://aigenlabs.vn/AIGen_blacklogo.png',
         description: content.hero.description,
-        sameAs: ['https://www.facebook.com/aigenlabs.vn'],
+        sameAs: footerSocialLinks,
         contactPoint: {
           '@type': 'ContactPoint',
-          telephone: '+84909044430',
+          telephone: footerTelephone || '+84909044430',
           contactType: 'customer service',
-          email: 'edu@aigenlabs.vn',
+          email: footerEmail || 'edu@aigenlabs.vn',
           availableLanguage: ['Vietnamese'],
         },
       },

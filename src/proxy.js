@@ -3,14 +3,13 @@ import { NextResponse } from 'next/server'
 import { getDashboardPathForRole, isAppRole } from '@/lib/auth-roles'
 
 /**
- * Proxy â€” Route Protection + Session Refresh
+ * Proxy - route protection and Supabase session refresh.
+ *
  * Logic:
- *   1. Refresh Supabase auth session (via cookies)
- *   2. ChÆ°a login + /admin/* hoáº·c /student/* â†’ redirect /login
- *   3. ÄÃ£ login â†’ Query profiles.role on every protected/auth request
- *      - Student â†’ /admin/* â†’ redirect /student
- *      - Admin â†’ /student/* â†’ redirect /admin
- *      - Auth pages (/login, /register) â†’ redirect theo role
+ * 1. Refresh Supabase auth session via cookies.
+ * 2. Redirect signed-out visitors from protected routes to `/login`.
+ * 3. Query `profiles.role` for protected/auth requests.
+ * 4. Redirect users away from surfaces their role cannot access.
  */
 export async function proxy(request) {
   let supabaseResponse = NextResponse.next({

@@ -1,19 +1,31 @@
 import { createServerClient as createSupabaseServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+function getRequiredEnv(name) {
+  const value = process.env[name]
+
+  if (!value) {
+    throw new Error(`${name} is not configured.`)
+  }
+
+  return value
+}
+
 /**
  * Supabase Server Client
- * Dùng trong: Server Components, Route Handlers, Server Actions
+ * Used in Server Components, Route Handlers, and Server Actions.
  * Import: import { createServerClient } from '@/lib/supabase-server'
- * 
- * PHẢI gọi với await vì cookies() là async trong Next.js 15+
+ *
+ * Must be awaited because cookies() is async in modern Next.js.
  */
 export async function createServerClient() {
   const cookieStore = await cookies()
+  const supabaseUrl = getRequiredEnv('NEXT_PUBLIC_SUPABASE_URL')
+  const supabaseAnonKey = getRequiredEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY')
 
   return createSupabaseServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
@@ -25,8 +37,7 @@ export async function createServerClient() {
               cookieStore.set(name, value, options)
             )
           } catch {
-            // setAll được gọi từ Server Component — không thể set cookies
-            // Middleware sẽ refresh session thay thế
+            // Server Components cannot set cookies; proxy refreshes the session instead.
           }
         },
       },

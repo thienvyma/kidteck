@@ -535,10 +535,10 @@ export default function AdminLandingPage() {
         throw new Error(result.error || 'Khong the luu landing content')
       }
 
-      const refreshed = await fetchContent({ silent: true })
-      if (!refreshed) {
-        throw new Error('Khong the doc lai noi dung landing sau khi luu')
-      }
+      const savedContent = result.content || content
+      setContent(savedContent)
+      setSavedContent(savedContent)
+      setContentUpdatedAt(result.updatedAt || '')
       setFeedback({
         type: 'success',
         text: 'Da luu noi dung landing. Khoi roadmap van tu dong bo tu phan Khoa hoc.',

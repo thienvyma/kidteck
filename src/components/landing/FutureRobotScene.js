@@ -76,7 +76,6 @@ export default function FutureRobotScene() {
               width={865}
               height={288}
               sizes="(max-width: 480px) 11rem, (max-width: 968px) 13rem, 15rem"
-              quality={100}
               priority
             />
           </div>

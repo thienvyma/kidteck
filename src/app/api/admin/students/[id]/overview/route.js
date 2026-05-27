@@ -1,37 +1,15 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-import { createServerClient } from '@/lib/supabase-server'
+import { createServiceRoleClient, requireRole } from '@/lib/server-auth'
+import { requireTargetStudent } from '@/lib/student-target'
 
 const MANAGED_ENROLLMENT_STATUSES = new Set(['active', 'paused', 'completed'])
 
 async function verifyAdmin() {
-  const supabase = await createServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { error: 'Unauthorized', status: 401 }
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.role !== 'admin') {
-    return { error: 'Forbidden - admin only', status: 403 }
-  }
-
-  return { user }
+  return requireRole('admin')
 }
 
 function createAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  )
+  return createServiceRoleClient()
 }
 
 function sortByOrder(items = []) {
@@ -51,6 +29,10 @@ export async function GET(_request, { params }) {
     }
 
     const adminClient = createAdminClient()
+    const target = await requireTargetStudent(adminClient, id)
+    if (target.error) {
+      return NextResponse.json({ error: target.error }, { status: target.status })
+    }
 
     const { data: profile, error: profileError } = await adminClient
       .from('profiles')
@@ -260,6 +242,11 @@ export async function PATCH(request, { params }) {
     }
 
     const adminClient = createAdminClient()
+    const target = await requireTargetStudent(adminClient, id)
+    if (target.error) {
+      return NextResponse.json({ error: target.error }, { status: target.status })
+    }
+
     const { data: existing, error: readError } = await adminClient
       .from('enrollments')
       .select('id')
