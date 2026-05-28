@@ -194,6 +194,7 @@ export default function AdminLandingPage() {
   const [activeSection, setActiveSection] = useState('header')
   const [collapsedSections, setCollapsedSections] = useState(() => createSectionState(false))
   const [sectionSwitcherOpen, setSectionSwitcherOpen] = useState(false)
+  const [versionDialogOpen, setVersionDialogOpen] = useState(false)
   const [previewDevice, setPreviewDevice] = useState('desktop')
   const [previewRefreshKey, setPreviewRefreshKey] = useState(0)
   const [previewLoading, setPreviewLoading] = useState(true)
@@ -235,6 +236,21 @@ export default function AdminLandingPage() {
   useEffect(() => {
     fetchContent()
   }, [fetchContent])
+
+  useEffect(() => {
+    if (!versionDialogOpen) {
+      return undefined
+    }
+
+    function handleEscape(event) {
+      if (event.key === 'Escape') {
+        setVersionDialogOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleEscape)
+    return () => window.removeEventListener('keydown', handleEscape)
+  }, [versionDialogOpen])
 
   const dirtySections = useMemo(
     () =>
@@ -643,6 +659,7 @@ export default function AdminLandingPage() {
         type: 'success',
         text: 'Da khoi phuc landing ve phien ban da chon. Ban rollback nay da duoc luu thanh mot phien ban moi.',
       })
+      setVersionDialogOpen(false)
       refreshPreview()
     } catch (error) {
       setFeedback({
@@ -1444,61 +1461,6 @@ export default function AdminLandingPage() {
 
               </form>
 
-              <div className={styles.landingVersionPanel}>
-                <div className={styles.landingVersionPanelHead}>
-                  <div>
-                    <span className={styles.landingEditorMetaTitle}>Phien ban landing</span>
-                    <p className={styles.accountNote}>
-                      Moi lan bam Luu se tao snapshot. Rollback tao them mot snapshot moi va giu lich su cu.
-                    </p>
-                  </div>
-                  <span className={styles.landingContextOrderBadge}>{landingVersions.length}</span>
-                </div>
-
-                {latestLandingVersions.length > 0 ? (
-                  <div className={styles.landingVersionList}>
-                    {latestLandingVersions.map((version) => {
-                      const isRollingBack = rollingBackVersionId === version.id
-                      const versionDate = formatTimestamp(version.createdAt)
-
-                      return (
-                        <div key={version.id} className={styles.landingVersionItem}>
-                          <div className={styles.landingVersionMeta}>
-                            <span className={styles.landingVersionTitle}>
-                              {getVersionSourceLabel(version.source)}
-                              {version.source === 'rollback' && version.restoredFromVersionId
-                                ? ' tu rollback'
-                                : ''}
-                            </span>
-                            <span className={styles.landingVersionDate}>
-                              {versionDate || 'Chua co thoi gian'} - {version.savedBy || 'Admin'}
-                            </span>
-                            {version.heroTitle && (
-                              <span className={styles.landingVersionHero}>{version.heroTitle}</span>
-                            )}
-                          </div>
-                          <button
-                            type="button"
-                            className={styles.landingVersionAction}
-                            onClick={() => handleRollbackVersion(version)}
-                            disabled={saving || Boolean(rollingBackVersionId)}
-                          >
-                            <span className={styles.landingContextActionButtonIcon} aria-hidden="true">
-                              <LandingPanelIcon kind="rollback" />
-                            </span>
-                            <span>{isRollingBack ? 'Dang rollback...' : 'Khoi phuc'}</span>
-                          </button>
-                        </div>
-                      )
-                    })}
-                  </div>
-                ) : (
-                  <p className={styles.accountNote}>
-                    Chua co snapshot. Ban dau tien se duoc tao ngay khi bam Luu landing content.
-                  </p>
-                )}
-              </div>
-
               <div className={styles.landingContextDock}>
                 <div className={styles.landingContextDockMeta}>
                   <span className={styles.landingEditorMetaTitle}>Thao tac nhanh</span>
@@ -1507,6 +1469,18 @@ export default function AdminLandingPage() {
                   </span>
                 </div>
                 <div className={styles.landingContextDockActions}>
+                  <button
+                    type="button"
+                    className={styles.landingVersionSummaryButton}
+                    onClick={() => setVersionDialogOpen(true)}
+                    aria-haspopup="dialog"
+                    aria-expanded={versionDialogOpen}
+                  >
+                    <span className={styles.landingContextActionButtonIcon} aria-hidden="true">
+                      <LandingPanelIcon kind="rollback" />
+                    </span>
+                    <span>Phien ban ({landingVersions.length})</span>
+                  </button>
                   <button
                     type="submit"
                     form="landing-editor-form"
@@ -1522,6 +1496,90 @@ export default function AdminLandingPage() {
                   </button>
                 </div>
               </div>
+
+              {versionDialogOpen && (
+                <div
+                  className={styles.landingVersionModalBackdrop}
+                  onClick={() => setVersionDialogOpen(false)}
+                >
+                  <div
+                    className={styles.landingVersionModal}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="landing-version-dialog-title"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <div className={styles.landingVersionModalHead}>
+                      <div>
+                        <span id="landing-version-dialog-title" className={styles.landingEditorMetaTitle}>
+                          Phien ban landing
+                        </span>
+                        <p className={styles.accountNote}>
+                          Chon mot snapshot de rollback. Rollback se tao them mot phien ban moi va giu lich su cu.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        className={styles.landingVersionModalClose}
+                        onClick={() => setVersionDialogOpen(false)}
+                        aria-label="Dong phien ban landing"
+                      >
+                        ×
+                      </button>
+                    </div>
+
+                    <div className={styles.landingVersionPanel}>
+                      <div className={styles.landingVersionPanelHead}>
+                        <span className={styles.landingContextOrderBadge}>{landingVersions.length} snapshot</span>
+                        <span className={styles.accountNote}>Dang hien {latestLandingVersions.length} ban gan nhat</span>
+                      </div>
+
+                      {latestLandingVersions.length > 0 ? (
+                        <div className={styles.landingVersionList}>
+                          {latestLandingVersions.map((version) => {
+                            const isRollingBack = rollingBackVersionId === version.id
+                            const versionDate = formatTimestamp(version.createdAt)
+
+                            return (
+                              <div key={version.id} className={styles.landingVersionItem}>
+                                <div className={styles.landingVersionMeta}>
+                                  <span className={styles.landingVersionTitle}>
+                                    {getVersionSourceLabel(version.source)}
+                                    {version.source === 'rollback' && version.restoredFromVersionId
+                                      ? ' tu rollback'
+                                      : ''}
+                                  </span>
+                                  <span className={styles.landingVersionDate}>
+                                    {versionDate || 'Chua co thoi gian'} - {version.savedBy || 'Admin'}
+                                  </span>
+                                  {version.heroTitle && (
+                                    <span className={styles.landingVersionHero}>{version.heroTitle}</span>
+                                  )}
+                                </div>
+                                <button
+                                  type="button"
+                                  className={styles.landingVersionAction}
+                                  onClick={() => handleRollbackVersion(version)}
+                                  disabled={saving || Boolean(rollingBackVersionId)}
+                                >
+                                  <span className={styles.landingContextActionButtonIcon} aria-hidden="true">
+                                    <LandingPanelIcon kind="rollback" />
+                                  </span>
+                                  <span>{isRollingBack ? 'Dang rollback...' : 'Khoi phuc'}</span>
+                                </button>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      ) : (
+                        <p className={styles.accountNote}>
+                          Chua co snapshot. Ban dau tien se duoc tao ngay khi bam Luu landing content.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </aside>
         </div>

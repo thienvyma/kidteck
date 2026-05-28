@@ -10,19 +10,46 @@ const inter = Inter({
   weight: ["300", "400", "500", "600", "700", "800", "900"],
 });
 
+const siteTitle = 'AIgenlabs — Project-Based AI Learning for the Next Generation'
+const siteDescription =
+  'Sự phát triển phi mã của AI đang rút ngắn vòng đời của kiến thức và tái định nghĩa lợi thế cạnh tranh tương lai cho thế hệ gen Z và Alpha. Khác biệt không nằm ở công cụ, mà ở tư duy hệ thống, hiểu rõ bản chất và chọn lọc công cụ phù hợp.'
+const siteLogo = '/AIGen_blacklogo.png'
+
 export const metadata = {
   metadataBase: new URL('https://aigenlabs.vn'),
-  title: "AIgenlabs — Nền tảng học AI & Product Mindset cho học sinh 12-17 tuổi",
-  description:
-    "Không chỉ là Vibe Coding hay Prompt. AIgenlabs rèn luyện tư duy điều phối, giải quyết vấn đề và làm chủ công nghệ AI (Cursor, Claude, Antigravity) để tạo dự án thật.",
-  keywords: "học lập trình ai, product mindset, vibe coding, aigenlabs, cursor, claude code, antigravity, học sinh 12 tuổi trở lên",
+  title: siteTitle,
+  description: siteDescription,
+  applicationName: 'AIgenlabs',
+  creator: 'AIgenlabs',
+  publisher: 'AIgenlabs',
+  keywords:
+    'project-based AI learning, AI learning for Gen Z, AI learning for Gen Alpha, học AI theo dự án, tư duy hệ thống, AIgenlabs',
+  icons: {
+    icon: [{ url: siteLogo, type: 'image/png', sizes: '865x288' }],
+    shortcut: [{ url: siteLogo, type: 'image/png', sizes: '865x288' }],
+    apple: [{ url: siteLogo, type: 'image/png', sizes: '865x288' }],
+  },
   openGraph: {
-    title: "AIgenlabs — Nền tảng học AI & Product Mindset",
-    description: "Giúp học viên 12 tuổi trở lên chuyển từ tiêu thụ màn hình ngắn sang học sâu, xây dựng sản phẩm thật.",
+    title: siteTitle,
+    description: siteDescription,
     url: 'https://aigenlabs.vn',
     siteName: 'AIgenlabs',
+    images: [
+      {
+        url: siteLogo,
+        width: 865,
+        height: 288,
+        alt: 'AIgenlabs Logo',
+      },
+    ],
     locale: 'vi_VN',
-    type: "website",
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: siteTitle,
+    description: siteDescription,
+    images: [siteLogo],
   },
 };
 

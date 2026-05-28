@@ -1927,9 +1927,9 @@
   position: sticky;
   top: 88px;
   align-self: start;
-  height: calc(100vh - 112px);
-  min-height: 720px;
-  overflow: hidden;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
 }
 
 .landingContextCard {
@@ -1941,9 +1941,12 @@
   border-radius: var(--radius-xl);
   background: var(--color-white);
   box-shadow: var(--shadow-sm);
-  height: 100%;
+  height: auto;
+  max-height: calc(100dvh - 112px);
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 .landingContextHead {
@@ -2110,10 +2113,10 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  flex: 1;
+  flex: 0 0 auto;
   min-height: 0;
-  overflow: auto;
-  padding-right: 0.25rem;
+  overflow: visible;
+  padding-right: 0;
 }
 
 .landingContextPrimaryEditor {
@@ -2214,7 +2217,91 @@
   opacity: 0.55;
 }
 
+.landingVersionSummaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  min-height: 44px;
+  padding: 0.72rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(108, 92, 231, 0.16);
+  background: rgba(108, 92, 231, 0.04);
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.landingVersionSummaryButton:hover {
+  border-color: rgba(108, 92, 231, 0.26);
+  background: rgba(108, 92, 231, 0.08);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 20px rgba(17, 24, 39, 0.08);
+}
+
+.landingVersionModalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(8px);
+}
+
+.landingVersionModal {
+  width: min(720px, 100%);
+  max-height: min(760px, calc(100dvh - 48px));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: var(--radius-xl);
+  background: var(--color-white);
+  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.22);
+  overflow-y: auto;
+}
+
+.landingVersionModalHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.landingVersionModalClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.45rem;
+  height: 2.45rem;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-full);
+  background: var(--color-white);
+  color: var(--color-gray-700);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.landingVersionModalClose:hover {
+  border-color: rgba(108, 92, 231, 0.24);
+  color: var(--color-primary);
+  background: rgba(108, 92, 231, 0.06);
+}
+
 .landingContextDock {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2997,6 +3084,7 @@
 
   .landingContextCard {
     height: auto;
+    max-height: none;
     overflow: visible;
   }
 
@@ -3169,6 +3257,7 @@
   }
 
   .landingContextActionButton,
+  .landingVersionSummaryButton,
   .landingVersionAction,
   .landingContextDockActions .landingContextActionButton {
     width: 100%;
@@ -3177,6 +3266,10 @@
   .landingVersionHero {
     max-width: none;
     white-space: normal;
+  }
+
+  .landingVersionModalHead {
+    flex-direction: column;
   }
 
   .landingPreviewFrameShellDesktop,
