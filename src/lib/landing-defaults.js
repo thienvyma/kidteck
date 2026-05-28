@@ -30,7 +30,7 @@ export const defaultLandingContent = {
   solution: {
     title: 'AIgen Labs',
     subtitle:
-      'Thay vì dừng ở prompt hay vibe coding, học viên được rèn 4 lớp nền tảng đi cùng nhau: tập trung sâu hơn, học đúng hơn, giải quyết vấn đề có hệ thống hơn và hiểu AI ở mức đủ chắc để thích nghi với sự thay đổi công nghệ.',
+      'Thay vì dừng ở prompt hay vibe coding, học viên được rèn các lớp nền tảng đi cùng nhau: tập trung sâu hơn, học đúng hơn, giải quyết vấn đề có hệ thống hơn, biết xây sản phẩm và hiểu AI ở mức đủ chắc để thích nghi với sự thay đổi công nghệ.',
     showComparison: true,
     beforeTitle: 'Làm theo cảm hứng',
     beforeItems: [
@@ -71,28 +71,18 @@ export const defaultLandingContent = {
         description:
           'AI được dùng như đòn bẩy để tăng tốc nghiên cứu, tạo prototype và cải tiến sản phẩm, không phải để phó mặc toàn bộ phần suy nghĩ.',
       },
+      {
+        icon: '🧩',
+        title: 'Product Mindset',
+        description:
+          'Biết nhìn ý tưởng như một sản phẩm có người dùng, phạm vi, trải nghiệm, tiêu chí hoàn thiện và cách đo giá trị rõ ràng.',
+      },
     ],
   },
   results: {
     title: 'Sau mỗi level, học viên đổi cả cách tiếp nhận lẫn cách hành động',
     subtitle:
       'Đích đến không chỉ là làm ra một bản demo, mà là hình thành được nhịp học, nhịp nghĩ và nhịp triển khai bền hơn trong một thời đại AI đổi rất nhanh.',
-    beforeTitle: 'Khi mới bắt đầu',
-    beforeItems: [
-      'Dễ bị cuốn vào nội dung ngắn và khó giữ tập trung lâu',
-      'Học trước quên sau, thiếu cách ghi nhớ và ôn lại hiệu quả',
-      'Tìm thông tin nhiều nhưng khó biết nguồn nào đáng tin',
-      'Gặp vấn đề mới thì chưa quen chia nhỏ để xử lý',
-      'Biết AI rất hot nhưng chưa hiểu mình nên học gì để đi cùng nó',
-    ],
-    afterTitle: 'Khi đã có framework',
-    afterItems: [
-      'Biết tự điều chỉnh nhịp học và giữ tập trung tốt hơn',
-      'Biết tự học, tìm nguồn tin đáng tin và học có chiến lược hơn',
-      'Biết chia bài toán thành bước nhỏ để giải quyết',
-      'Biết dùng AI như công cụ hỗ trợ thay vì phụ thuộc hoàn toàn',
-      'Có khả năng triển khai một project nhỏ với workflow rõ ràng hơn',
-    ],
     showcaseItems: [
       {
         icon: '🌐',

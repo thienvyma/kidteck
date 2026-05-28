@@ -94,8 +94,6 @@ export default function LandingPageView({
   const resultShowcaseItems = (content.results?.showcaseItems || []).filter(
     (item) => item?.title?.trim() || item?.description?.trim() || item?.icon?.trim()
   )
-  const resultBeforeItems = getRenderableStringList(content.results?.beforeItems)
-  const resultAfterItems = getRenderableStringList(content.results?.afterItems)
   const ctaBenefits = getRenderableStringList(content.cta?.benefits)
   const footerContactLinks = (content.footer?.contactLinks || []).filter(
     (item) => item?.label?.trim() || item?.href?.trim()
@@ -391,30 +389,6 @@ export default function LandingPageView({
           <div className={`${styles.sectionShell} ${styles.sectionShellBright}`}>
             <h2 className="section__title">{content.results.title}</h2>
             <p className="section__subtitle">{content.results.subtitle}</p>
-
-            <div className={styles['results__before-after']}>
-              <div className={`${styles.results__col} ${styles['results__col--before']}`}>
-                <h3 className={styles['results__col-title']}>{content.results.beforeTitle}</h3>
-                {resultBeforeItems.map((item) => (
-                  <div key={item} className={styles['results__col-item']}>
-                    <span>•</span>
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className={styles.results__arrow}>→</div>
-
-              <div className={`${styles.results__col} ${styles['results__col--after']}`}>
-                <h3 className={styles['results__col-title']}>{content.results.afterTitle}</h3>
-                {resultAfterItems.map((item) => (
-                  <div key={item} className={styles['results__col-item']}>
-                    <span>•</span>
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
 
             {resultShowcaseItems.length > 0 && (
               <div className={styles.results__showcase}>

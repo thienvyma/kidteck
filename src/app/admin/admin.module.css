@@ -2128,6 +2128,92 @@
   gap: var(--space-md);
 }
 
+.landingVersionPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border: 1px solid rgba(108, 92, 231, 0.12);
+  border-radius: var(--radius-xl);
+  background: rgba(108, 92, 231, 0.04);
+}
+
+.landingVersionPanelHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.landingVersionList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.landingVersionItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-sm);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: var(--radius-lg);
+  background: var(--color-white);
+}
+
+.landingVersionMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.landingVersionTitle {
+  color: var(--color-gray-900);
+  font-weight: 700;
+}
+
+.landingVersionDate,
+.landingVersionHero {
+  color: var(--color-gray-500);
+  font-size: var(--font-size-xs);
+}
+
+.landingVersionHero {
+  max-width: 22rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.landingVersionAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+  min-height: 2.35rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgba(108, 92, 231, 0.16);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--color-primary);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.landingVersionAction:hover:not(:disabled) {
+  border-color: rgba(108, 92, 231, 0.28);
+  background: rgba(108, 92, 231, 0.08);
+}
+
+.landingVersionAction:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .landingContextDock {
   display: flex;
   align-items: center;
@@ -3074,6 +3160,8 @@
   .landingContextActions,
   .landingContextActionGroup,
   .landingContextPager,
+  .landingVersionPanelHead,
+  .landingVersionItem,
   .landingContextDock,
   .landingContextDockActions {
     flex-direction: column;
@@ -3081,8 +3169,14 @@
   }
 
   .landingContextActionButton,
+  .landingVersionAction,
   .landingContextDockActions .landingContextActionButton {
     width: 100%;
+  }
+
+  .landingVersionHero {
+    max-width: none;
+    white-space: normal;
   }
 
   .landingPreviewFrameShellDesktop,

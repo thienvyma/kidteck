@@ -6,7 +6,7 @@ import { assertLandingContentWriteVersion } from './landing-content-version.js'
 test('landing content save requires a version when database content already exists', () => {
   assert.throws(
     () => assertLandingContentWriteVersion({ updatedAt: '2026-05-27T07:00:00Z' }, ''),
-    /Reload landing content before saving/
+    /Open the latest saved landing version before saving/
   )
 })
 

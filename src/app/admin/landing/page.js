@@ -55,6 +55,22 @@ function formatTimestamp(value) {
   })
 }
 
+function getVersionSourceLabel(source) {
+  if (source === 'baseline') {
+    return 'Ban goc'
+  }
+
+  if (source === 'rollback') {
+    return 'Rollback'
+  }
+
+  if (source === 'manual-update') {
+    return 'Dong bo production'
+  }
+
+  return 'Da luu'
+}
+
 function getPreviewTarget(sectionId) {
   return LANDING_EDITOR_SECTION_MAP[sectionId]?.previewTarget || 'hero'
 }
@@ -142,11 +158,12 @@ function LandingPanelIcon({ kind }) {
     )
   }
 
-  if (kind === 'reload') {
+  if (kind === 'rollback') {
     return (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
-        <path d="M21 12a9 9 0 1 1-2.64-6.36" />
-        <path d="M21 3v6h-6" />
+        <path d="M4 7h10a6 6 0 1 1-4.2 10.3" />
+        <path d="M4 7l4-4" />
+        <path d="M4 7l4 4" />
       </svg>
     )
   }
@@ -169,8 +186,10 @@ export default function AdminLandingPage() {
   const [content, setContent] = useState(() => cloneDefaultLandingContent())
   const [savedContent, setSavedContent] = useState(() => cloneDefaultLandingContent())
   const [contentUpdatedAt, setContentUpdatedAt] = useState('')
+  const [landingVersions, setLandingVersions] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [rollingBackVersionId, setRollingBackVersionId] = useState('')
   const [feedback, setFeedback] = useState(null)
   const [activeSection, setActiveSection] = useState('header')
   const [collapsedSections, setCollapsedSections] = useState(() => createSectionState(false))
@@ -197,6 +216,7 @@ export default function AdminLandingPage() {
       setContent(nextContent)
       setSavedContent(nextContent)
       setContentUpdatedAt(result.updatedAt || '')
+      setLandingVersions(Array.isArray(result.versions) ? result.versions : [])
       return true
     } catch (error) {
       console.error('fetch landing content error:', error)
@@ -240,6 +260,10 @@ export default function AdminLandingPage() {
   )
 
   const hasUnsavedChanges = Object.values(dirtySections).some(Boolean)
+  const latestLandingVersions = useMemo(
+    () => [...landingVersions].reverse().slice(0, 8),
+    [landingVersions]
+  )
   const lastSavedLabel = formatTimestamp(contentUpdatedAt)
   const editorStatusLabel = saving ? 'Dang luu' : hasUnsavedChanges ? 'Chua luu' : 'Da dong bo'
   const editorStatusTone = saving ? 'pending' : hasUnsavedChanges ? 'warning' : 'success'
@@ -542,24 +566,6 @@ export default function AdminLandingPage() {
     }))
   }
 
-  async function handleReloadFromServer() {
-    if (
-      hasUnsavedChanges &&
-      !window.confirm('Ban dang co thay doi chua luu. Tai lai tu server se bo phan dang chinh. Tiep tuc?')
-    ) {
-      return
-    }
-
-    const refreshed = await fetchContent()
-    if (refreshed) {
-      setFeedback({
-        type: 'success',
-        text: 'Da tai lai landing content tu server.',
-      })
-      refreshPreview()
-    }
-  }
-
   async function handleSubmit(event) {
     event.preventDefault()
     setSaving(true)
@@ -581,9 +587,10 @@ export default function AdminLandingPage() {
       setContent(savedContent)
       setSavedContent(savedContent)
       setContentUpdatedAt(result.updatedAt || '')
+      setLandingVersions(Array.isArray(result.versions) ? result.versions : [])
       setFeedback({
         type: 'success',
-        text: 'Da luu noi dung landing. Khoi roadmap van tu dong bo tu phan Khoa hoc.',
+        text: 'Da luu noi dung landing va tao mot phien ban moi. Khoi roadmap van tu dong bo tu phan Khoa hoc.',
       })
       refreshPreview()
     } catch (error) {
@@ -593,6 +600,57 @@ export default function AdminLandingPage() {
       })
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleRollbackVersion(version) {
+    if (!version?.id || rollingBackVersionId) {
+      return
+    }
+
+    if (
+      hasUnsavedChanges &&
+      !window.confirm('Ban dang co thay doi chua luu. Rollback se thay ban nhap hien tai bang phien ban da chon. Tiep tuc?')
+    ) {
+      return
+    }
+
+    if (!window.confirm(`Khoi phuc landing ve phien ban ${formatTimestamp(version.createdAt) || version.id}?`)) {
+      return
+    }
+
+    setRollingBackVersionId(version.id)
+    setFeedback(null)
+
+    try {
+      const response = await fetch('/api/admin/landing-content/rollback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ versionId: version.id, expectedUpdatedAt: contentUpdatedAt }),
+      })
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Khong the rollback landing content')
+      }
+
+      const nextContent = result.content || content
+      setContent(nextContent)
+      setSavedContent(nextContent)
+      setContentUpdatedAt(result.updatedAt || '')
+      setLandingVersions(Array.isArray(result.versions) ? result.versions : [])
+      setFeedback({
+        type: 'success',
+        text: 'Da khoi phuc landing ve phien ban da chon. Ban rollback nay da duoc luu thanh mot phien ban moi.',
+      })
+      refreshPreview()
+    } catch (error) {
+      setFeedback({
+        type: 'error',
+        text: error.message || 'Khong the rollback landing content',
+      })
+    } finally {
+      setRollingBackVersionId('')
     }
   }
 
@@ -1065,18 +1123,10 @@ export default function AdminLandingPage() {
             Mo landing that
           </a>
           <button
-            type="button"
-            className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
-            onClick={handleReloadFromServer}
-            disabled={saving}
-          >
-            Tai lai tu server
-          </button>
-          <button
             type="submit"
             form="landing-editor-form"
             className={`${styles.quickActionBtn} ${styles['quickActionBtn--primary']}`}
-            disabled={saving}
+            disabled={saving || Boolean(rollingBackVersionId)}
           >
             {saving
               ? 'Dang luu...'
@@ -1150,7 +1200,7 @@ export default function AdminLandingPage() {
                   type="button"
                   className={`${styles.quickActionBtn} ${styles['quickActionBtn--outline']}`}
                   onClick={refreshPreview}
-                  disabled={saving}
+                  disabled={saving || Boolean(rollingBackVersionId)}
                 >
                   Tai lai preview
                 </button>
@@ -1394,30 +1444,74 @@ export default function AdminLandingPage() {
 
               </form>
 
+              <div className={styles.landingVersionPanel}>
+                <div className={styles.landingVersionPanelHead}>
+                  <div>
+                    <span className={styles.landingEditorMetaTitle}>Phien ban landing</span>
+                    <p className={styles.accountNote}>
+                      Moi lan bam Luu se tao snapshot. Rollback tao them mot snapshot moi va giu lich su cu.
+                    </p>
+                  </div>
+                  <span className={styles.landingContextOrderBadge}>{landingVersions.length}</span>
+                </div>
+
+                {latestLandingVersions.length > 0 ? (
+                  <div className={styles.landingVersionList}>
+                    {latestLandingVersions.map((version) => {
+                      const isRollingBack = rollingBackVersionId === version.id
+                      const versionDate = formatTimestamp(version.createdAt)
+
+                      return (
+                        <div key={version.id} className={styles.landingVersionItem}>
+                          <div className={styles.landingVersionMeta}>
+                            <span className={styles.landingVersionTitle}>
+                              {getVersionSourceLabel(version.source)}
+                              {version.source === 'rollback' && version.restoredFromVersionId
+                                ? ' tu rollback'
+                                : ''}
+                            </span>
+                            <span className={styles.landingVersionDate}>
+                              {versionDate || 'Chua co thoi gian'} - {version.savedBy || 'Admin'}
+                            </span>
+                            {version.heroTitle && (
+                              <span className={styles.landingVersionHero}>{version.heroTitle}</span>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            className={styles.landingVersionAction}
+                            onClick={() => handleRollbackVersion(version)}
+                            disabled={saving || Boolean(rollingBackVersionId)}
+                          >
+                            <span className={styles.landingContextActionButtonIcon} aria-hidden="true">
+                              <LandingPanelIcon kind="rollback" />
+                            </span>
+                            <span>{isRollingBack ? 'Dang rollback...' : 'Khoi phuc'}</span>
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className={styles.accountNote}>
+                    Chua co snapshot. Ban dau tien se duoc tao ngay khi bam Luu landing content.
+                  </p>
+                )}
+              </div>
+
               <div className={styles.landingContextDock}>
                 <div className={styles.landingContextDockMeta}>
                   <span className={styles.landingEditorMetaTitle}>Thao tac nhanh</span>
                   <span className={styles.accountNote}>
-                    Luu hoac tai lai ma khong can cuon xuong cuoi form.
+                    Luu landing content de cap nhat public va tao phien ban rollback.
                   </span>
                 </div>
                 <div className={styles.landingContextDockActions}>
                   <button
-                    type="button"
-                    className={`${styles.landingContextActionButton} ${styles.landingContextActionButtonGhost}`}
-                    onClick={handleReloadFromServer}
-                    disabled={saving}
-                  >
-                    <span className={styles.landingContextActionButtonIcon} aria-hidden="true">
-                      <LandingPanelIcon kind="reload" />
-                    </span>
-                    <span className={styles.landingContextActionButtonLabel}>Tai lai tu server</span>
-                  </button>
-                  <button
                     type="submit"
                     form="landing-editor-form"
                     className={`${styles.landingContextActionButton} ${styles.landingContextActionButtonPrimary}`}
-                    disabled={saving}
+                    disabled={saving || Boolean(rollingBackVersionId)}
                   >
                     <span className={styles.landingContextActionButtonIcon} aria-hidden="true">
                       <LandingPanelIcon kind="save" />

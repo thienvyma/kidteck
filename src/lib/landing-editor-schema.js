@@ -101,9 +101,8 @@ export const LANDING_EDITOR_SECTIONS = [
         type: 'repeater',
         arrayField: 'pillars',
         title: 'Solution pillars',
-        note: 'Không render quá 4 card ở desktop vì layout public hiện tại đang chia 4 cột.',
+        note: 'Có thể thêm 5 pillar hoặc nhiều hơn. Landing public tự dàn card theo kích thước màn hình.',
         minItems: 1,
-        maxItems: 4,
         addLabel: 'Thêm pillar',
         itemTitlePrefix: 'Pillar',
         createItem: 'card',
@@ -133,7 +132,7 @@ export const LANDING_EDITOR_SECTIONS = [
     label: 'Results',
     badge: 'Outcome',
     title: 'Results',
-    lead: 'Khối before/after và các output mà học viên có thể tạo ra.',
+    lead: 'Các output mà học viên có thể tạo ra.',
     contentKey: 'results',
     previewTarget: 'results',
     fieldGroups: [
@@ -146,13 +145,6 @@ export const LANDING_EDITOR_SECTIONS = [
       },
     ],
     editorBlocks: [
-      {
-        type: 'comparison',
-        columns: [
-          { titleKey: 'beforeTitle', itemsKey: 'beforeItems', label: 'Cột trước', rows: 5 },
-          { titleKey: 'afterTitle', itemsKey: 'afterItems', label: 'Cột sau', rows: 5 },
-        ],
-      },
       {
         type: 'repeater',
         arrayField: 'showcaseItems',

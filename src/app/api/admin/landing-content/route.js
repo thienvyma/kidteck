@@ -7,6 +7,10 @@ async function verifyAdmin() {
   return requireRole('admin')
 }
 
+function getAdminVersionAuthor(auth) {
+  return auth?.profile?.full_name || auth?.user?.email || 'Admin'
+}
+
 export async function GET() {
   try {
     const auth = await verifyAdmin()
@@ -14,10 +18,10 @@ export async function GET() {
       return NextResponse.json({ error: auth.error }, { status: auth.status })
     }
 
-    const { content, updatedAt } = await getLandingContentDocument({
+    const { content, updatedAt, versions } = await getLandingContentDocument({
       fallbackOnError: false,
     })
-    return NextResponse.json({ content, updatedAt })
+    return NextResponse.json({ content, updatedAt, versions })
   } catch (error) {
     console.error('landing-content GET error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -38,6 +42,7 @@ export async function PUT(request) {
 
     const saved = await saveLandingContent(body.content, {
       expectedUpdatedAt: body.expectedUpdatedAt,
+      savedBy: getAdminVersionAuthor(auth),
     })
     revalidatePath('/')
     revalidatePath('/blog')
@@ -45,6 +50,7 @@ export async function PUT(request) {
       success: true,
       content: saved.content,
       updatedAt: saved.updatedAt,
+      versions: saved.versions,
     })
   } catch (error) {
     console.error('landing-content PUT error:', error)

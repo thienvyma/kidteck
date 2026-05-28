@@ -9,9 +9,11 @@ const LANDING_CONTENT_ROW_ID = 'default'
 const LANDING_CONTENT_SELECT = 'id, content, created_at, updated_at'
 const LANDING_CONTENT_CONFLICT_CODE = 'LANDING_CONTENT_CONFLICT'
 const LANDING_CONTENT_CONFLICT_MESSAGE =
-  'Landing content has changed on the server. Reload before saving.'
-
-let landingContentSeedPromise = null
+  'Landing content has changed on the server. Open the latest saved version before saving.'
+const LANDING_CONTENT_VERSION_NOT_FOUND_CODE = 'LANDING_CONTENT_VERSION_NOT_FOUND'
+const LANDING_CONTENT_VERSION_NOT_FOUND_MESSAGE = 'Landing content version was not found.'
+const LANDING_CONTENT_HISTORY_KEY = '_versions'
+const LANDING_CONTENT_HISTORY_LIMIT = 50
 
 function createAdminClient() {
   try {
@@ -31,6 +33,14 @@ function readString(value, fallback) {
 
 function readOptionalString(value) {
   return readString(value, '')
+}
+
+function createVersionId() {
+  if (globalThis.crypto?.randomUUID) {
+    return globalThis.crypto.randomUUID()
+  }
+
+  return `landing-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
 }
 
 function readBoolean(value, fallback) {
@@ -167,10 +177,6 @@ export function normalizeLandingContent(input) {
     results: {
       title: readString(input?.results?.title, fallback.results.title),
       subtitle: readString(input?.results?.subtitle, fallback.results.subtitle),
-      beforeTitle: readString(input?.results?.beforeTitle, fallback.results.beforeTitle),
-      beforeItems: readStringArray(input?.results?.beforeItems, fallback.results.beforeItems),
-      afterTitle: readString(input?.results?.afterTitle, fallback.results.afterTitle),
-      afterItems: readStringArray(input?.results?.afterItems, fallback.results.afterItems),
       showcaseItems: normalizeObjectArray(
         input?.results?.showcaseItems,
         fallback.results.showcaseItems
@@ -246,11 +252,80 @@ export function normalizeLandingContent(input) {
   }
 }
 
+function normalizeLandingContentVersions(value) {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value
+    .map((version) => {
+      const id = readOptionalString(version?.id)
+
+      if (!id || !version?.content || typeof version.content !== 'object') {
+        return null
+      }
+
+      return {
+        id,
+        createdAt: readOptionalString(version?.createdAt),
+        savedBy: readString(version?.savedBy, 'Admin'),
+        source: readString(version?.source, 'save'),
+        restoredFromVersionId: readOptionalString(version?.restoredFromVersionId),
+        content: normalizeLandingContent(version.content),
+      }
+    })
+    .filter(Boolean)
+    .slice(-LANDING_CONTENT_HISTORY_LIMIT)
+}
+
+function summarizeLandingContentVersions(versions) {
+  return versions.map((version) => ({
+    id: version.id,
+    createdAt: version.createdAt,
+    savedBy: version.savedBy,
+    source: version.source,
+    restoredFromVersionId: version.restoredFromVersionId,
+    heroTitle: version.content.hero?.title || '',
+    visibleSections: Object.values(version.content.sectionVisibility || {}).filter(Boolean).length,
+  }))
+}
+
+function createLandingContentVersion(content, options = {}) {
+  const normalized = normalizeLandingContent(content)
+
+  return {
+    id: createVersionId(),
+    createdAt: readOptionalString(options.createdAt) || new Date().toISOString(),
+    savedBy: readString(options.savedBy, 'Admin'),
+    source: readString(options.source, 'save'),
+    restoredFromVersionId: readOptionalString(options.restoredFromVersionId),
+    content: normalized,
+  }
+}
+
+function withLandingContentVersions(content, versions) {
+  return {
+    ...normalizeLandingContent(content),
+    [LANDING_CONTENT_HISTORY_KEY]: normalizeLandingContentVersions(versions),
+  }
+}
+
+function getLandingContentVersionsFromRow(row) {
+  return normalizeLandingContentVersions(row?.content?.[LANDING_CONTENT_HISTORY_KEY])
+}
+
+function appendLandingContentVersion(versions, version) {
+  return [...versions, version].slice(-LANDING_CONTENT_HISTORY_LIMIT)
+}
+
 function mapLandingContentRecord(row) {
+  const versions = getLandingContentVersionsFromRow(row)
+
   return {
     content: normalizeLandingContent(row?.content || {}),
     createdAt: readOptionalString(row?.created_at),
     updatedAt: readOptionalString(row?.updated_at),
+    versions: summarizeLandingContentVersions(versions),
   }
 }
 
@@ -260,7 +335,13 @@ function createLandingContentConflictError() {
   return error
 }
 
-async function fetchDatabaseLandingContent(adminClient) {
+function createLandingContentVersionNotFoundError() {
+  const error = new Error(LANDING_CONTENT_VERSION_NOT_FOUND_MESSAGE)
+  error.code = LANDING_CONTENT_VERSION_NOT_FOUND_CODE
+  return error
+}
+
+async function fetchDatabaseLandingContentRow(adminClient) {
   const { data, error } = await adminClient
     .from(LANDING_CONTENT_TABLE)
     .select(LANDING_CONTENT_SELECT)
@@ -271,16 +352,22 @@ async function fetchDatabaseLandingContent(adminClient) {
     throw error
   }
 
+  return data || null
+}
+
+async function fetchDatabaseLandingContent(adminClient) {
+  const data = await fetchDatabaseLandingContentRow(adminClient)
+
   return data ? mapLandingContentRecord(data) : null
 }
 
-async function insertDatabaseLandingContent(adminClient, content) {
+async function insertDatabaseLandingContent(adminClient, content, versions = []) {
   const now = new Date().toISOString()
   const { data, error } = await adminClient
     .from(LANDING_CONTENT_TABLE)
     .insert({
       id: LANDING_CONTENT_ROW_ID,
-      content,
+      content: withLandingContentVersions(content, versions),
       created_at: now,
       updated_at: now,
     })
@@ -294,11 +381,11 @@ async function insertDatabaseLandingContent(adminClient, content) {
   return mapLandingContentRecord(data)
 }
 
-async function updateDatabaseLandingContent(adminClient, content, expectedUpdatedAt) {
+async function updateDatabaseLandingContent(adminClient, content, expectedUpdatedAt, versions = []) {
   let query = adminClient
     .from(LANDING_CONTENT_TABLE)
     .update({
-      content,
+      content: withLandingContentVersions(content, versions),
       updated_at: new Date().toISOString(),
     })
     .eq('id', LANDING_CONTENT_ROW_ID)
@@ -318,35 +405,6 @@ async function updateDatabaseLandingContent(adminClient, content, expectedUpdate
   return data ? mapLandingContentRecord(data) : null
 }
 
-async function ensureLandingContentSeeded(adminClient) {
-  if (landingContentSeedPromise) {
-    return landingContentSeedPromise
-  }
-
-  landingContentSeedPromise = (async () => {
-    const existing = await fetchDatabaseLandingContent(adminClient)
-    if (existing) {
-      return existing
-    }
-
-    const defaultContent = cloneDefaultLandingContent()
-
-    try {
-      return await insertDatabaseLandingContent(adminClient, defaultContent)
-    } catch (error) {
-      if (error?.code === '23505') {
-        return fetchDatabaseLandingContent(adminClient)
-      }
-
-      throw error
-    }
-  })().finally(() => {
-    landingContentSeedPromise = null
-  })
-
-  return landingContentSeedPromise
-}
-
 export async function getLandingContentDocument(options = {}) {
   const fallbackOnError = options.fallbackOnError === true
   const fallback = cloneDefaultLandingContent()
@@ -358,7 +416,7 @@ export async function getLandingContentDocument(options = {}) {
     }
 
     console.warn('getLandingContentDocument fallback: Supabase admin client is not configured.')
-    return { content: fallback, createdAt: '', updatedAt: '' }
+    return { content: fallback, createdAt: '', updatedAt: '', versions: [] }
   }
 
   try {
@@ -367,19 +425,19 @@ export async function getLandingContentDocument(options = {}) {
       return current
     }
 
-    const seeded = await ensureLandingContentSeeded(adminClient)
-    if (!seeded) {
-      throw new Error('Landing content seed failed.')
+    if (fallbackOnError) {
+      console.warn('getLandingContentDocument fallback: landing content row is missing.')
+      return { content: fallback, createdAt: '', updatedAt: '', versions: [] }
     }
 
-    return seeded
+    throw new Error('Landing content row is missing. Save from admin to create the canonical production content.')
   } catch (error) {
     if (!fallbackOnError) {
       throw error
     }
 
     console.warn('getLandingContentDocument fallback:', error?.message || error)
-    return { content: fallback, createdAt: '', updatedAt: '' }
+    return { content: fallback, createdAt: '', updatedAt: '', versions: [] }
   }
 }
 
@@ -467,13 +525,34 @@ export async function saveLandingContent(content, options = {}) {
   const normalized = normalizeLandingContent(content)
   assertLandingContentCanPublish(normalized)
   const expectedUpdatedAt = readOptionalString(options.expectedUpdatedAt)
+  const savedBy = readString(options.savedBy, 'Admin')
 
-  const current = await fetchDatabaseLandingContent(adminClient)
+  const currentRow = await fetchDatabaseLandingContentRow(adminClient)
+  const current = currentRow ? mapLandingContentRecord(currentRow) : null
   assertLandingContentWriteVersion(current, expectedUpdatedAt)
+  let versions = getLandingContentVersionsFromRow(currentRow)
+
+  if (currentRow && versions.length === 0) {
+    versions = [
+      createLandingContentVersion(current.content, {
+        createdAt: current.updatedAt || current.createdAt,
+        savedBy: 'System',
+        source: 'baseline',
+      }),
+    ]
+  }
+
+  versions = appendLandingContentVersion(
+    versions,
+    createLandingContentVersion(normalized, {
+      savedBy,
+      source: 'save',
+    })
+  )
 
   if (!current) {
     try {
-      return await insertDatabaseLandingContent(adminClient, normalized)
+      return await insertDatabaseLandingContent(adminClient, normalized, versions)
     } catch (error) {
       if (error?.code === '23505') {
         throw createLandingContentConflictError()
@@ -487,7 +566,8 @@ export async function saveLandingContent(content, options = {}) {
     const saved = await updateDatabaseLandingContent(
       adminClient,
       normalized,
-      expectedUpdatedAt
+      expectedUpdatedAt,
+      versions
     )
 
     if (!saved) {
@@ -497,7 +577,57 @@ export async function saveLandingContent(content, options = {}) {
     return saved
   }
 
-  return updateDatabaseLandingContent(adminClient, normalized)
+  return updateDatabaseLandingContent(adminClient, normalized, undefined, versions)
+}
+
+export async function rollbackLandingContentVersion(versionId, options = {}) {
+  const adminClient = createAdminClient()
+  if (!adminClient) {
+    throw new Error('Supabase admin client is not configured.')
+  }
+
+  const expectedUpdatedAt = readOptionalString(options.expectedUpdatedAt)
+  const savedBy = readString(options.savedBy, 'Admin')
+  const currentRow = await fetchDatabaseLandingContentRow(adminClient)
+  const current = currentRow ? mapLandingContentRecord(currentRow) : null
+  assertLandingContentWriteVersion(current, expectedUpdatedAt)
+
+  if (!currentRow) {
+    throw createLandingContentVersionNotFoundError()
+  }
+
+  const versions = getLandingContentVersionsFromRow(currentRow)
+  const targetVersionId = readOptionalString(versionId)
+  const targetVersion = versions.find((version) => version.id === targetVersionId)
+
+  if (!targetVersion) {
+    throw createLandingContentVersionNotFoundError()
+  }
+
+  const restoredContent = normalizeLandingContent(targetVersion.content)
+  assertLandingContentCanPublish(restoredContent)
+
+  const nextVersions = appendLandingContentVersion(
+    versions,
+    createLandingContentVersion(restoredContent, {
+      savedBy,
+      source: 'rollback',
+      restoredFromVersionId: targetVersion.id,
+    })
+  )
+
+  const saved = await updateDatabaseLandingContent(
+    adminClient,
+    restoredContent,
+    expectedUpdatedAt,
+    nextVersions
+  )
+
+  if (!saved) {
+    throw createLandingContentConflictError()
+  }
+
+  return saved
 }
 
 export async function getLandingLevels() {
