@@ -13,7 +13,7 @@ const inter = Inter({
 const siteTitle = 'AIgenlabs — Project-Based AI Learning for the Next Generation'
 const siteDescription =
   'Sự phát triển phi mã của AI đang rút ngắn vòng đời của kiến thức và tái định nghĩa lợi thế cạnh tranh tương lai cho thế hệ gen Z và Alpha. Khác biệt không nằm ở công cụ, mà ở tư duy hệ thống, hiểu rõ bản chất và chọn lọc công cụ phù hợp.'
-const siteLogo = '/AIGen_blacklogo.png'
+const siteIcon = '/aigenlabs-meta-icon.png'
 
 export const metadata = {
   metadataBase: new URL('https://aigenlabs.vn'),
@@ -25,9 +25,9 @@ export const metadata = {
   keywords:
     'project-based AI learning, AI learning for Gen Z, AI learning for Gen Alpha, học AI theo dự án, tư duy hệ thống, AIgenlabs',
   icons: {
-    icon: [{ url: siteLogo, type: 'image/png', sizes: '865x288' }],
-    shortcut: [{ url: siteLogo, type: 'image/png', sizes: '865x288' }],
-    apple: [{ url: siteLogo, type: 'image/png', sizes: '865x288' }],
+    icon: [{ url: siteIcon, type: 'image/png', sizes: '512x512' }],
+    shortcut: [{ url: siteIcon, type: 'image/png', sizes: '512x512' }],
+    apple: [{ url: siteIcon, type: 'image/png', sizes: '512x512' }],
   },
   openGraph: {
     title: siteTitle,
@@ -36,9 +36,9 @@ export const metadata = {
     siteName: 'AIgenlabs',
     images: [
       {
-        url: siteLogo,
-        width: 865,
-        height: 288,
+        url: siteIcon,
+        width: 512,
+        height: 512,
         alt: 'AIgenlabs Logo',
       },
     ],
@@ -46,10 +46,10 @@ export const metadata = {
     type: 'website',
   },
   twitter: {
-    card: 'summary_large_image',
+    card: 'summary',
     title: siteTitle,
     description: siteDescription,
-    images: [siteLogo],
+    images: [siteIcon],
   },
 };
 
