@@ -4,7 +4,7 @@ import test from 'node:test'
 
 const layoutSource = readFileSync(new URL('./layout.js', import.meta.url), 'utf8')
 
-function readPngSize(fileUrl) {
+function readPngInfo(fileUrl) {
   const bytes = readFileSync(fileUrl)
 
   assert.equal(bytes.subarray(0, 8).toString('hex'), '89504e470d0a1a0a')
@@ -12,6 +12,7 @@ function readPngSize(fileUrl) {
   return {
     width: bytes.readUInt32BE(16),
     height: bytes.readUInt32BE(20),
+    colorType: bytes[25],
   }
 }
 
@@ -33,12 +34,14 @@ test('site metadata uses the approved title, description, and project logo', () 
 })
 
 test('metadata image assets use preview-safe dimensions', () => {
-  assert.deepEqual(readPngSize(new URL('../../public/aigenlabs-meta-icon.png', import.meta.url)), {
+  assert.deepEqual(readPngInfo(new URL('../../public/aigenlabs-meta-icon.png', import.meta.url)), {
     width: 512,
     height: 512,
+    colorType: 2,
   })
-  assert.deepEqual(readPngSize(new URL('./icon.png', import.meta.url)), {
+  assert.deepEqual(readPngInfo(new URL('./icon.png', import.meta.url)), {
     width: 512,
     height: 512,
+    colorType: 2,
   })
 })
